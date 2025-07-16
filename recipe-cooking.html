@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食谱制作过程 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/recipe-cooking.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 固定背景图片 -->
+        <div class="recipe-hero">
+            <div class="recipe-image"></div>
+        </div>
+        
+        <!-- 步骤容器 -->
+        <div class="steps-container">
+            <!-- 步骤内容将由JavaScript动态生成 -->
+        </div>
+
+        <!-- 底部操作栏 -->
+        <div class="bottom-action-bar flex-bar">
+            <button class="bar-btn next-btn" title="下一步">
+                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M8 12l8 8 8-8" stroke="#888" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="bar-btn prev-btn" title="上一步">
+                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M8 20l8-8 8 8" stroke="#888" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="bar-btn wave-btn" title="沟通状态">
+                <svg width="40" height="32" viewBox="0 0 40 32">
+                    <rect x="7" y="12" width="6" height="16" rx="3" fill="#FFA242"/>
+                    <rect x="17" y="6" width="6" height="24" rx="3" fill="#FFA242"/>
+                    <rect x="27" y="12" width="6" height="16" rx="3" fill="#FFA242"/>
+                </svg>
+            </div>
+            <button class="bar-btn close-btn" title="关闭">
+                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M10 10l12 12M22 10l-12 12" stroke="#FF3B30" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    </div>
+    <script src="js/recipe-cooking.js"></script>
+    <div id="step-toast" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:14px 28px;border-radius:24px;font-size:20px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.18);transition:opacity 0.3s;">切换提示</div>
+</body>
+</html>

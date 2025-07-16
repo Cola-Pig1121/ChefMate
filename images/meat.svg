@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- 盘子 -->
+  <ellipse cx="200" cy="200" rx="140" ry="70" fill="#f5f5f5" stroke="#ddd" stroke-width="2"/>
+  <ellipse cx="200" cy="200" rx="120" ry="60" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  
+  <!-- 红烧肉 -->
+  <!-- 主体肉块 -->
+  <path d="M140,170 Q170,150 200,160 Q230,170 260,160 Q270,180 260,200 Q230,220 200,210 Q170,200 140,210 Q130,190 140,170 Z" fill="#8d4925" stroke="#5d2906" stroke-width="2"/>
+  
+  <!-- 肉块纹理 -->
+  <path d="M150,180 Q180,170 210,180" fill="none" stroke="#5d2906" stroke-width="1" opacity="0.7"/>
+  <path d="M160,190 Q190,180 220,190" fill="none" stroke="#5d2906" stroke-width="1" opacity="0.7"/>
+  <path d="M170,200 Q200,190 230,200" fill="none" stroke="#5d2906" stroke-width="1" opacity="0.7"/>
+  
+  <!-- 肉块高光 -->
+  <path d="M180,165 Q200,160 220,165" fill="none" stroke="#d7854e" stroke-width="2" opacity="0.8"/>
+  <path d="M190,175 Q210,170 230,175" fill="none" stroke="#d7854e" stroke-width="2" opacity="0.8"/>
+  
+  <!-- 酱汁 -->
+  <ellipse cx="200" cy="210" rx="90" ry="20" fill="#6d1c09" opacity="0.5"/>
+  
+  <!-- 配菜 - 葱花 -->
+  <path d="M160,160 L165,150" stroke="#4caf50" stroke-width="1"/>
+  <path d="M165,160 L170,145" stroke="#4caf50" stroke-width="1"/>
+  <path d="M230,160 L235,150" stroke="#4caf50" stroke-width="1"/>
+  <path d="M235,160 L240,145" stroke="#4caf50" stroke-width="1"/>
+  
+  <!-- 配菜 - 辣椒 -->
+  <path d="M190,155 L195,145" stroke="#e53935" stroke-width="1"/>
+  <path d="M210,155 L205,145" stroke="#e53935" stroke-width="1"/>
+  
+  <!-- 筷子 -->
+  <path d="M300,150 L330,220" stroke="#8d6e63" stroke-width="3"/>
+  <path d="M310,150 L340,220" stroke="#8d6e63" stroke-width="3"/>
+  
+  <!-- 蒸汽 -->
+  <path d="M180,140 Q185,130 190,140" fill="none" stroke="#e0e0e0" stroke-width="1" opacity="0.7"/>
+  <path d="M200,135 Q205,125 210,135" fill="none" stroke="#e0e0e0" stroke-width="1" opacity="0.7"/>
+  <path d="M220,140 Q225,130 230,140" fill="none" stroke="#e0e0e0" stroke-width="1" opacity="0.7"/>
+</svg>

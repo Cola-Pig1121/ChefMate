@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜谱详情 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/recipe-detail.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <div class="recipe-detail">
+                <!-- 顶部图片区域 -->
+                <div class="recipe-hero">
+                    <div class="recipe-image"></div>
+                    <div class="top-actions">
+                        <div class="action-btn back-btn">
+                            <img src="images/back.svg" alt="返回">
+                        </div>
+                        <div class="action-btn share-btn">
+                            <img src="images/share.svg" alt="分享">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容区域 -->
+                <div class="recipe-content">
+                    <div class="content-wrapper">
+                        <!-- 基本信息 -->
+                        <div class="recipe-info-section">
+                            <div class="recipe-header">
+                                <div class="recipe-title">
+                                    <div class="recipe-category">健康轻食</div>
+                                    <h1 class="recipe-name">牛油果番茄沙拉</h1>
+                                </div>
+                                <div class="recipe-stats">
+                                    <div class="stat-item">
+                                        <img src="images/time.svg" alt="时间">
+                                        <span>40min</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <img src="images/likes.svg" alt="点赞">
+                                        <span>500+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 备菜清单 -->
+                        <div class="ingredients-section">
+                            <h2>备菜清单</h2>
+                            <div class="ingredients-group">
+                                <h3>素菜</h3>
+                                <ul>
+                                    <li><span class="ingredient-checkbox"></span>西红柿 2 颗</li>
+                                    <li><span class="ingredient-checkbox"></span>牛油果 1 颗</li>
+                                    <li><span class="ingredient-checkbox"></span>黄瓜 1 根</li>
+                                    <li><span class="ingredient-checkbox"></span>洋葱 1 颗</li>
+                                </ul>
+                            </div>
+                            <div class="ingredients-group">
+                                <h3>调味料</h3>
+                                <ul>
+                                    <li><span class="ingredient-checkbox"></span>沙拉酱 150ml（约等于两勺）</li>
+                                </ul>
+                            </div>
+                            <div class="shopping-actions">
+                                <button class="add-to-cart-btn">添加到购菜篮</button>
+                                <div class="portion-control">
+                                    <button class="portion-btn decrease">-</button>
+                                    <span class="portion-count">1份</span>
+                                    <button class="portion-btn increase">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 步骤概览 -->
+                        <div class="steps-section">
+                            <h2>步骤概览</h2>
+                            <div class="step-item">
+                                <span>步骤一：将蔬菜切好</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部操作栏 -->
+                <div class="bottom-action-bar">
+                    <button class="start-cooking-btn" id="startCookingBtn">开始AI辅助烹饪</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/recipe-detail.js"></script>
+    <script>
+function getRecipeTypeFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('recipe') || 'salad';
+}
+var btn = document.getElementById('startCookingBtn');
+if(btn) {
+    var recipeType = getRecipeTypeFromUrl();
+    btn.onclick = function(){
+        window.location.href = 'recipe-cooking.html?recipe=' + recipeType + '&from=' + recipeType;
+    };
+}
+</script>
+</body>
+</html> 

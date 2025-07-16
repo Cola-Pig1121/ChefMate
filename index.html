@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefMate - 你的私人厨师</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部搜索栏 -->
+            <div class="top-bar">
+                <div class="user-avatar">
+                    <img src="images/logo.svg" alt="用户头像">
+                </div>
+                <div class="search-bar">
+                    <div class="search-icon">
+                        <img src="images/search.svg" alt="搜索">
+                    </div>
+                    <span class="search-placeholder">点击搜索食谱</span>
+                </div>
+                <div class="notification-icon">
+                    <img src="images/notification.svg" alt="通知">
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <!-- 欢迎语 -->
+                <div class="welcome-section">
+                    <h1>打卡记录</h1>
+                </div>
+
+                <!-- 日期选择器 -->
+                <div class="date-selector">
+                    <div class="date-item completed">
+                        <div class="date-circle"></div>
+                        <span>7</span>
+                    </div>
+                    <div class="date-item completed">
+                        <div class="date-circle"></div>
+                        <span>8</span>
+                    </div>
+                    <div class="date-item">
+                        <div class="date-circle"></div>
+                        <span>9</span>
+                    </div>
+                    <div class="date-item completed">
+                        <div class="date-circle"></div>
+                        <span>10</span>
+                    </div>
+                    <div class="date-item completed">
+                        <div class="date-circle"></div>
+                        <span>11</span>
+                    </div>
+                    <div class="date-item">
+                        <div class="date-circle"></div>
+                        <span>12</span>
+                    </div>
+                    <div class="date-item completed">
+                        <div class="date-circle"></div>
+                        <span>13</span>
+                    </div>
+                </div>
+
+                <!-- 推荐菜品 -->
+                <div class="recommendations">
+                    <h2>推荐</h2>
+                    <div class="recipe-cards">
+                        <!-- 牛油果番茄沙拉 -->
+                        <div class="recipe-card">
+                            <div class="recipe-image" style="background-image: url('images/沙拉.jpeg')"></div>
+                            <h3>牛油果番茄沙拉</h3>
+                            <div class="recipe-info">
+                                <div class="info-item">
+                                    <img src="images/time.svg" alt="时间">
+                                    <span>40min</span>
+                                </div>
+                                <div class="info-item">
+                                    <img src="images/likes.svg" alt="点赞">
+                                    <span>500+</span>
+                                </div>
+                            </div>
+                            <!-- 开始烹饪按钮已删除 -->
+                        </div>
+
+                        <!-- 糖醋排骨 -->
+                        <div class="recipe-card">
+                            <div class="recipe-image" style="background-image: url('images/排骨.jpg')"></div>
+                            <h3>糖醋排骨</h3>
+                            <div class="recipe-info">
+                                <div class="info-item">
+                                    <img src="images/time.svg" alt="时间">
+                                    <span>40min</span>
+                                </div>
+                                <div class="info-item">
+                                    <img src="images/likes.svg" alt="点赞">
+                                    <span>500+</span>
+                                </div>
+                            </div>
+                            <!-- 开始烹饪按钮已删除 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 语音输入提示框 -->
+            <div class="voice-input-container">
+                <div class="voice-input-hint">按住说话，上滑取消</div>
+                <div class="voice-input-animation"></div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <img src="images/home.svg" alt="主页">
+                </div>
+                <div class="nav-item start-cooking">
+                    <span>开始烹饪</span>
+                </div>
+                <div class="nav-item">
+                    <img src="images/profile.svg" alt="个人">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/script.js"></script>
+</body>
+</html>

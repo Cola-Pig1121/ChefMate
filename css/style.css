@@ -1,0 +1,436 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 渐变函数 */
+@keyframes fadeInBlurTop {
+    0% {
+        background: rgba(255, 255, 255, 1);
+        backdrop-filter: blur(10px);
+    }
+    100% {
+        background: rgba(255, 255, 255, 0);
+        backdrop-filter: blur(0px);
+    }
+}
+
+@keyframes fadeInBlurBottom {
+    0% {
+        background: rgba(255, 255, 255, 0);
+        backdrop-filter: blur(0px);
+    }
+    100% {
+        background: rgba(255, 255, 255, 1);
+        backdrop-filter: blur(10px);
+    }
+}
+
+body {
+    font-family: 'OPPOSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #fff;
+    color: #000;
+}
+
+.app-container {
+    max-width: 394px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    background: #fff;
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.main-frame {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* 顶部搜索栏 */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 394px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+    background: linear-gradient(180deg,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0.8) 20%,
+        rgba(255, 255, 255, 0.6) 40%,
+        rgba(255, 255, 255, 0.4) 60%,
+        rgba(255, 255, 255, 0.2) 80%,
+        rgba(255, 255, 255, 0) 100%
+    );
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* 添加相对定位 */
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block; /* 确保图片正确显示 */
+    max-width: 100%; /* 确保图片不会超出容器 */
+    max-height: 100%; /* 确保图片不会超出容器 */
+}
+
+.search-bar {
+    flex: 1;
+    height: 50px;
+    background: #fafafa;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 10px;
+}
+
+.search-icon img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.5;
+}
+
+.search-placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 15px;
+}
+
+.notification-icon {
+    width: 50px;
+    height: 50px;
+    background: #fafafa;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-icon img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.5;
+}
+
+/* 主要内容区 */
+.main-content {
+    flex: 1;
+    padding: 90px 25px 120px 25px;  /* 增加底部内边距 */
+    overflow-y: auto;
+}
+
+/* 欢迎语 */
+.welcome-section {
+    margin-top: 24px;
+}
+
+.welcome-section h1 {
+    font-size: 25px;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.welcome-section p {
+    font-size: 15px;
+    color: rgba(0, 0, 0, 1);
+}
+
+/* 日期选择器 */
+.date-selector {
+    background: #fafafa;
+    border-radius: 25px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.date-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.date-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    background: #d1d1d1;
+}
+
+.date-item.completed .date-circle {
+    background: #ffa242;
+}
+
+.date-item span {
+    font-size: 15px;
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: 500;
+}
+
+/* 推荐菜品 */
+.recommendations {
+    margin-top: 10px;
+}
+
+.recommendations h2 {
+    font-size: 25px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.recipe-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recipe-card {
+    border-radius: 25px;
+    overflow: hidden;
+    position: relative;
+}
+
+.recipe-image {
+    width: 100%;
+    height: 200px;
+    border-radius: 25px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.recipe-card h3 {
+    font-size: 20px;
+    font-weight: 400;
+    margin: 0 12px 10px 12px;
+    color: #000;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.recipe-info {
+    display: flex;
+    align-items: center;
+    padding: 0 12px 20px;
+    gap: 10px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.info-item img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.5;
+}
+
+.info-item span {
+    font-size: 15px;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+/* 底部导航栏 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 394px;
+    padding: 15px 25px 25px 25px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    background: linear-gradient(0deg,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0.8) 60%,
+        rgba(255, 255, 255, 0.6) 80%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 100;
+}
+
+.bottom-nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(0deg,
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(255, 255, 255, 0.6) 40%,
+            rgba(255, 255, 255, 0.4) 60%,
+            rgba(255, 255, 255, 0.2) 80%,
+            rgba(255, 255, 255, 0) 100%
+        );
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.bottom-nav::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(0deg,
+            rgba(255, 255, 255, 0.6) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0.2) 70%,
+            rgba(255, 255, 255, 0) 100%
+        );
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: none;
+    z-index: -2;
+}
+
+/* 左侧导航按钮 */
+.nav-item:first-child {
+    justify-self: end;
+    margin-right: 15px;
+}
+
+/* 右侧导航按钮 */
+.nav-item:last-child {
+    justify-self: start;
+    margin-left: 15px;
+}
+
+.nav-item {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item img {
+    width: 30px;
+    height: 30px;
+    opacity: 0.5;
+}
+
+.bottom-nav .nav-item.active img {
+    filter: drop-shadow(0 2px 8px #FFA242) brightness(1.2);
+}
+.bottom-nav .nav-item.active {
+    border-bottom: 3px solid #FFA242;
+}
+
+/* 语音输入相关样式 */
+.voice-input-container {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: none;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.voice-input-container.active {
+    display: block;
+}
+
+.voice-input-container.cancel {
+    opacity: 0.5;
+}
+
+.voice-input-hint {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.voice-input-animation {
+    width: 60px;
+    height: 60px;
+    background: #FF9500;
+    border-radius: 50%;
+    margin: 0 auto;
+    position: relative;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.7);
+    }
+    
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 149, 0, 0);
+    }
+    
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 149, 0, 0);
+    }
+}
+
+.start-cooking {
+    width: 150px;
+    height: 60px;
+    background: #ffa242;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    grid-column: 2;
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+.start-cooking span {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.start-cooking.recording {
+    background-color: #FF9500;
+    color: white;
+}
