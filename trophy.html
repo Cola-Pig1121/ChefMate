@@ -3,76 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>烹饪完成！</title>
+    <title>连胜纪录 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
-        body {
-            background: #fffbe6;
-            font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
+        .trophy-container {
+            padding: 80px 25px 120px 25px;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .trophy-card {
+            background: #fafafa;
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .trophy-title {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .trophy-icon {
+            width: 35px;
+            height: 35px;
+            background: #FFA242;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .streak-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .calendar-day.completed {
+            background: #FFA242;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid #FFA242;
+            color: #FFA242;
+        }
+        
+        .streak-progress {
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            width: 100%;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #FFA242;
+            border-radius: 5px;
+        }
+        
+        .streak-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .stat-block {
             display: flex;
             flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #FFA242;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: 5px;
+        }
+        
+        .achievements {
+            margin-top: 30px;
+        }
+        
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .achievement-item:last-child {
+            border-bottom: none;
+        }
+        
+        .achievement-icon {
+            width: 45px;
+            height: 45px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
-        .trophy-box {
-            background: #fff;
-            border-radius: 32px;
-            box-shadow: 0 8px 32px rgba(255, 168, 0, 0.12);
-            padding: 40px 32px 32px 32px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 340px;
-        }
-        .trophy-icon {
-            margin-bottom: 24px;
-        }
-        .trophy-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #FFA242;
-            margin-bottom: 12px;
-        }
-        .trophy-desc {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 32px;
-            text-align: center;
-        }
-        .back-btn {
+        
+        .achievement-icon.unlocked {
             background: #FFA242;
-            color: #fff;
-            font-size: 22px;
-            font-weight: 700;
-            border: none;
-            border-radius: 32px;
-            padding: 14px 48px;
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(255, 168, 0, 0.10);
-            transition: background 0.2s;
+            color: white;
         }
-        .back-btn:active {
-            background: #ff8c00;
+        
+        .achievement-info {
+            flex: 1;
+        }
+        
+        .achievement-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .achievement-desc {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: 2px;
+        }
+        
+        .achievement-progress {
+            font-size: 14px;
+            color: #FFA242;
+            margin-top: 2px;
         }
     </style>
 </head>
 <body>
-    <div class="trophy-box">
-        <div class="trophy-icon">
-            <!-- 简单SVG奖杯 -->
-            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="40" fill="#FFF3E0"/>
-                <path d="M24 28h32v10a16 16 0 0 1-32 0V28z" fill="#FFA242"/>
-                <rect x="34" y="54" width="12" height="10" rx="4" fill="#FFD180"/>
-                <rect x="30" y="64" width="20" height="6" rx="3" fill="#FFD180"/>
-                <path d="M24 28c-6 0-8 6-8 10s2 10 8 10M56 28c6 0 8 6 8 10s-2 10-8 10" stroke="#FFA242" stroke-width="3" fill="none"/>
-            </svg>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部搜索栏 -->
+            <div class="top-bar">
+                <div class="user-avatar" onclick="window.location.href='home.html'">
+                    <img src="images/back.svg" alt="返回">
+                </div>
+                <div class="search-bar">
+                    <span class="search-placeholder">连胜纪录</span>
+                </div>
+                <div class="notification-icon">
+                    <img src="images/share.svg" alt="分享">
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <div class="trophy-container">
+                    <div class="header">
+                        <h1>你的烹饪连胜记录</h1>
+                        <p>连续烹饪可以获得成就和奖励</p>
+                    </div>
+                    
+                    <div class="trophy-card">
+                        <div class="trophy-title">
+                            <div class="trophy-icon">5</div>
+                            <span>当前连胜</span>
+                        </div>
+                        
+                        <div class="streak-calendar">
+                            <!-- 前一周 -->
+                            <div class="calendar-day">1</div>
+                            <div class="calendar-day">2</div>
+                            <div class="calendar-day">3</div>
+                            <div class="calendar-day">4</div>
+                            <div class="calendar-day">5</div>
+                            <div class="calendar-day">6</div>
+                            <div class="calendar-day completed">7</div>
+                            
+                            <!-- 当前周 -->
+                            <div class="calendar-day completed">8</div>
+                            <div class="calendar-day">9</div>
+                            <div class="calendar-day completed">10</div>
+                            <div class="calendar-day completed">11</div>
+                            <div class="calendar-day">12</div>
+                            <div class="calendar-day completed">13</div>
+                            <div class="calendar-day today">14</div>
+                        </div>
+                        
+                        <div class="streak-progress">
+                            <div>距离连胜成就：7天连胜</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 70%"></div>
+                            </div>
+                            <div style="text-align: right;">5/7天</div>
+                        </div>
+                        
+                        <div class="streak-stats">
+                            <div class="stat-block">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">当前连胜</div>
+                            </div>
+                            <div class="stat-block">
+                                <div class="stat-value">15</div>
+                                <div class="stat-label">总烹饪次数</div>
+                            </div>
+                            <div class="stat-block">
+                                <div class="stat-value">7</div>
+                                <div class="stat-label">最长连胜</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="achievements">
+                        <h2>烹饪成就</h2>
+                        
+                        <div class="achievement-item">
+                            <div class="achievement-icon unlocked">
+                                <span>3</span>
+                            </div>
+                            <div class="achievement-info">
+                                <div class="achievement-name">初级厨师</div>
+                                <div class="achievement-desc">连续烹饪3天</div>
+                                <div class="achievement-progress">已达成</div>
+                            </div>
+                        </div>
+                        
+                        <div class="achievement-item">
+                            <div class="achievement-icon unlocked">
+                                <span>5</span>
+                            </div>
+                            <div class="achievement-info">
+                                <div class="achievement-name">进阶厨师</div>
+                                <div class="achievement-desc">连续烹饪5天</div>
+                                <div class="achievement-progress">已达成</div>
+                            </div>
+                        </div>
+                        
+                        <div class="achievement-item">
+                            <div class="achievement-icon">
+                                <span>7</span>
+                            </div>
+                            <div class="achievement-info">
+                                <div class="achievement-name">专业厨师</div>
+                                <div class="achievement-desc">连续烹饪7天</div>
+                                <div class="achievement-progress">进度：5/7天</div>
+                            </div>
+                        </div>
+                        
+                        <div class="achievement-item">
+                            <div class="achievement-icon">
+                                <span>14</span>
+                            </div>
+                            <div class="achievement-info">
+                                <div class="achievement-name">厨神</div>
+                                <div class="achievement-desc">连续烹饪14天</div>
+                                <div class="achievement-progress">进度：5/14天</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <img src="images/home.svg" alt="主页">
+                </div>
+                <div class="nav-item start-cooking">
+                    <span>开始烹饪</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='profile.html'">
+                    <img src="images/profile.svg" alt="个人">
+                </div>
+            </div>
         </div>
-        <div class="trophy-title">恭喜你，烹饪完成！</div>
-        <div class="trophy-desc">你已顺利完成所有步骤，快去享用美味吧！</div>
-        <button class="back-btn" onclick="window.location.href='recipe-detail.html'">返回菜谱</button>
     </div>
 </body>
 </html> 

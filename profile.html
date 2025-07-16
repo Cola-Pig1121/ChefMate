@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 个人中心专用样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e8f7f0 0%, #f0e9fa 100%);
+            color: #333;
+        }
+        
+        .app-container {
+            background: transparent;
+        }
+        
+        .main-frame {
+            background: transparent;
+        }
+        
+        .top-icons {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 25px;
+        }
+        
+        .top-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        
+        .main-content {
+            padding: 0;
+            position: relative;
+        }
+        
+        .profile-bg {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            height: 340px;
+            background: linear-gradient(135deg, #ffa242 0%, #ff7676 100%);
+            z-index: 1;
+        }
+        
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f2f2f2;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 15px;
+            border: 3px solid white;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .profile-name {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .profile-bio-container {
+            width: 90%;
+            background: transparent;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        
+        .profile-bio-top {
+            background-color: rgba(255, 120, 80, 0.7);
+            color: #fff;
+            padding: 12px 15px;
+            text-align: center;
+            font-size: 16px;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .profile-bio-bottom {
+            background-color: #fff;
+            color: #333;
+            padding: 12px 15px;
+            text-align: center;
+            font-size: 16px;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .profile-bio-short {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 15px;
+            max-width: 90%;
+            line-height: 1.4;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+
+        .edit-profile {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 20px;
+            padding: 8px 24px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        
+        .profile-bio {
+            display: none;
+        }
+
+        .bio-title {
+            display: none;
+        }
+
+        .bio-content {
+            display: none;
+        }
+        
+        .contact-icons {
+            display: none;
+        }
+        
+        .contact-icon {
+            display: none;
+        }
+
+        .section-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-top: 0;
+            padding-bottom: 5px;
+        }
+
+        .section-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #666;
+            position: relative;
+        }
+
+        .section-tab.active {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .section-tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 25%;
+            width: 50%;
+            height: 3px;
+            background: #333;
+        }
+
+        .section-content {
+            padding: 15px 0 0;
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .collection-item {
+            background: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .collection-image {
+            width: 100%;
+            height: 130px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .collection-info {
+            padding: 8px;
+        }
+
+        .collection-name {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .collection-item-bottom {
+            padding: 8px;
+            background: #f9f9f9;
+        }
+
+        .collection-item-bottom-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .collection-id {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .collection-price {
+            display: flex;
+            align-items: center;
+        }
+
+        .collection-price img {
+            width: 16px;
+            height: 16px;
+            margin-right: 3px;
+        }
+
+        .collection-price span {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .collection-meta {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .collection-meta .price {
+            display: flex;
+            align-items: center;
+        }
+
+        .collection-meta img {
+            width: 16px;
+            height: 16px;
+            margin-right: 3px;
+        }
+        
+        .content-area {
+            position: relative;
+            margin-top: -45px;
+            background: #fff;
+            border-radius: 25px 25px 0 0;
+            min-height: calc(100vh - 295px);
+            z-index: 2;
+            padding: 15px 20px;
+            padding-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <div class="profile-bg"></div>
+                <!-- 个人信息 -->
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="用户头像">
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name">Aion</div>
+                        <button class="edit-profile">编辑资料</button>
+                    </div>
+                </div>
+
+                <div class="content-area">
+                    <!-- 分段内容 -->
+                    <div class="section-tabs">
+                        <div class="section-tab active">笔记</div>
+                        <div class="section-tab">收藏</div>
+                        <div class="section-tab">喜欢</div>
+                    </div>
+
+                    <div class="section-content">
+                        <!-- 收藏的菜系 -->
+                        <div class="collection-grid">
+                            <div class="collection-item" onclick="window.location.href='recipe-detail.html?recipe=salad'">
+                                <div class="collection-image" style="background-image: url('images/沙拉.jpeg')"></div>
+                                <div class="collection-info">
+                                    <div class="collection-name">Hypebeast</div>
+                                    <div class="collection-item-bottom">
+                                        <div class="collection-item-bottom-info">
+                                            <span class="collection-id">#2122</span>
+                                            <div class="collection-price">
+                                                <img src="images/time.svg" alt="ETH">
+                                                <span>0.5 ETH</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="collection-item" onclick="window.location.href='recipe-detail.html?recipe=ribs'">
+                                <div class="collection-image" style="background-image: url('images/排骨.jpg')"></div>
+                                <div class="collection-info">
+                                    <div class="collection-name">Hypebeast</div>
+                                    <div class="collection-item-bottom">
+                                        <div class="collection-item-bottom-info">
+                                            <span class="collection-id">#2122</span>
+                                            <div class="collection-price">
+                                                <img src="images/time.svg" alt="ETH">
+                                                <span>0.5 ETH</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页签切换功能
+        document.querySelectorAll('.section-tab').forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                // 清除所有active状态
+                document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+                // 设置当前点击的为active
+                tab.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html> 
