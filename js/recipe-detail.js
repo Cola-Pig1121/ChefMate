@@ -109,13 +109,38 @@ document.addEventListener('DOMContentLoaded', function() {
     var addBtn = document.querySelector('.add-to-cart-btn');
     if (addBtn) {
         addBtn.addEventListener('click', function() {
-            // 获取选中的食材和调味料数量
-            var checkedCount = document.querySelectorAll('.ingredient-checkbox.checked').length;
+            // 获取选中的食材
+            var checkedIngredients = document.querySelectorAll('.ingredient-checkbox.checked');
             // 获取份数
             var portionText = document.querySelector('.portion-count')?.textContent || '1份';
             var portion = parseInt(portionText) || 1;
-            var total = checkedCount * portion;
-            alert('已添加 ' + total + ' 项到购菜篮（' + checkedCount + ' 种食材 × ' + portion + ' 份）');
+            
+            // 收集选中的食材数据
+            var basketItems = [];
+            checkedIngredients.forEach(function(item) {
+                var itemText = item.parentElement.textContent.trim();
+                var itemName = itemText.split(' ')[0]; // 提取食材名称
+                var itemQuantity = itemText.match(/\d+/g); // 提取数字
+                
+                basketItems.push({
+                    name: itemName,
+                    quantity: itemQuantity ? itemQuantity[0] : 1,
+                    unit: itemText.match(/[颗根片勺]/g) ? itemText.match(/[颗根片勺]/g)[0] : '',
+                    portion: portion
+                });
+            });
+            
+            // 保存到localStorage
+            var existingItems = JSON.parse(localStorage.getItem('basketItems') || '[]');
+            var newBasket = existingItems.concat(basketItems);
+            localStorage.setItem('basketItems', JSON.stringify(newBasket));
+            
+            alert('已添加 ' + checkedIngredients.length + ' 种食材到购菜篮！');
+            
+            // 跳转到购菜篮页面
+            if (confirm('是否立即前往购菜篮查看？')) {
+                window.location.href = 'shopping-basket.html';
+            }
         });
     }
 
