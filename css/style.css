@@ -95,6 +95,15 @@ body {
     max-height: 100%; /* 确保图片不会超出容器 */
 }
 
+/* 首页文本样式 */
+.home-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    width: 100%;
+}
+
 .search-bar {
     flex: 1;
     height: 50px;
