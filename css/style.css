@@ -264,9 +264,8 @@ body {
     transform: translateX(-50%);
     width: 394px;
     padding: 15px 25px 25px 25px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     background: linear-gradient(0deg,
         rgba(255, 255, 255, 1) 0%,
@@ -322,19 +321,18 @@ body {
 
 /* 左侧导航按钮 */
 .nav-item:first-child {
-    justify-self: end;
-    margin-right: 15px;
+    display: flex;
+    justify-content: center;
 }
 
 /* 右侧导航按钮 */
 .nav-item:last-child {
-    justify-self: start;
-    margin-left: 15px;
+    display: flex;
+    justify-content: center;
 }
 
 .nav-item {
-    width: 35px;
-    height: 35px;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -349,8 +347,21 @@ body {
 .bottom-nav .nav-item.active img {
     filter: drop-shadow(0 2px 8px #FFA242) brightness(1.2);
 }
+
 .bottom-nav .nav-item.active {
-    border-bottom: 3px solid #FFA242;
+    position: relative;
+}
+
+.bottom-nav .nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15px;
+    height: 3px;
+    background-color: #FFA242;
+    border-radius: 1.5px;
 }
 
 /* 语音输入相关样式 */
