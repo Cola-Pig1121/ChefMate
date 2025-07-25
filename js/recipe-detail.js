@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 返回按钮
     backBtn.addEventListener('click', function() {
-        window.location.href = 'index.html';
+        window.location.href = 'home.html';
     });
 
     // 分享按钮
