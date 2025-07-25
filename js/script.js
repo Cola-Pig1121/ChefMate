@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 初始化底部导航栏
+    initBottomNavigation();
     // 加载用户头像
     loadUserAvatar();
     // 标签切换功能
@@ -239,6 +241,107 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', updateBlur);
     // 初始化效果
     updateBlur();
+    
+    // 初始化底部导航栏功能
+    function initBottomNavigation() {
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        const currentPage = getCurrentPage();
+        
+        // 设置当前页面的active状态
+        setActiveNavItem(currentPage);
+        
+        // 为每个导航项添加点击事件
+        navItems.forEach((item, index) => {
+            item.addEventListener('click', function(e) {
+                // 如果已经是当前页面，不执行跳转
+                if (this.classList.contains('active')) {
+                    e.preventDefault();
+                    // 添加一个小的弹跳动画表示已经在当前页面
+                    this.style.animation = 'none';
+                    setTimeout(() => {
+                        this.style.animation = 'navBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                    }, 10);
+                    return;
+                }
+                
+                // 添加点击动画
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+                
+                // 延迟跳转以显示动画
+                setTimeout(() => {
+                    // 执行原有的跳转逻辑
+                    const onclick = this.getAttribute('onclick');
+                    if (onclick) {
+                        eval(onclick);
+                    }
+                }, 200);
+            });
+            
+            // 添加触摸反馈
+            item.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            item.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+    }
+    
+    // 获取当前页面名称
+    function getCurrentPage() {
+        const path = window.location.pathname;
+        const page = path.substring(path.lastIndexOf('/') + 1);
+        
+        // 处理不同的页面名称
+        switch(page) {
+            case 'home.html':
+            case 'index.html':
+            case '':
+                return 'home';
+            case 'shopping-basket.html':
+                return 'shopping';
+            case 'profile.html':
+                return 'profile';
+            default:
+                return 'home';
+        }
+    }
+    
+    // 设置活跃的导航项
+    function setActiveNavItem(currentPage) {
+        const navItems = document.querySelectorAll('.bottom-nav .nav-item');
+        
+        // 清除所有active状态
+        navItems.forEach(item => item.classList.remove('active'));
+        
+        // 根据当前页面设置active状态
+        let activeIndex = 0;
+        switch(currentPage) {
+            case 'home':
+                activeIndex = 0;
+                break;
+            case 'shopping':
+                activeIndex = 1;
+                break;
+            case 'profile':
+                activeIndex = 2;
+                break;
+        }
+        
+        if (navItems[activeIndex]) {
+            navItems[activeIndex].classList.add('active');
+            // 添加进入动画
+            setTimeout(() => {
+                navItems[activeIndex].style.animation = 'navBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            }, 100);
+        }
+    }
     
     // 加载用户头像函数
     function loadUserAvatar() {

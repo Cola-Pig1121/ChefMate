@@ -343,49 +343,196 @@ body {
     z-index: -2;
 }
 
-/* 左侧导航按钮 */
-.nav-item:first-child {
-    display: flex;
-    justify-content: center;
-}
-
-/* 右侧导航按钮 */
-.nav-item:last-child {
-    display: flex;
-    justify-content: center;
-}
-
+/* 导航项基础样式 */
 .nav-item {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    padding: 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
 }
 
+/* 导航项悬停效果 */
+.nav-item:hover {
+    background: rgba(255, 162, 66, 0.1);
+    transform: scale(1.05);
+}
+
+/* 导航项点击效果 */
+.nav-item:active {
+    transform: scale(0.95);
+    transition: all 0.1s ease;
+}
+
+/* 导航图标基础样式 */
 .nav-item img {
     width: 30px;
     height: 30px;
-    opacity: 0.5;
+    opacity: 0.4;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: grayscale(0.3);
 }
 
-.bottom-nav .nav-item.active img {
-    filter: drop-shadow(0 2px 8px #FFA242) brightness(1.2);
-}
-
+/* 选中状态的导航项 */
 .bottom-nav .nav-item.active {
-    position: relative;
+    background: rgba(255, 162, 66, 0.15);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 162, 66, 0.2);
 }
 
+/* 选中状态的图标 */
+.bottom-nav .nav-item.active img {
+    opacity: 1;
+    filter: drop-shadow(0 2px 8px rgba(255, 162, 66, 0.4)) 
+            brightness(1.2) 
+            saturate(1.3)
+            grayscale(0);
+    transform: translateY(-2px);
+}
+
+/* 选中状态的底部指示器 */
 .bottom-nav .nav-item.active::after {
     content: '';
     position: absolute;
-    bottom: -5px;
+    bottom: -8px;
     left: 50%;
     transform: translateX(-50%);
-    width: 25px;
+    width: 30px;
     height: 3px;
-    background-color: #FFA242;
-    border-radius: 1.5px;
+    background: linear-gradient(90deg, 
+        rgba(255, 162, 66, 0.6) 0%, 
+        #FFA242 50%, 
+        rgba(255, 162, 66, 0.6) 100%);
+    border-radius: 2px;
+    box-shadow: 0 2px 6px rgba(255, 162, 66, 0.3);
+    animation: indicatorGlow 2s ease-in-out infinite alternate;
+}
+
+/* 指示器发光动画 */
+@keyframes indicatorGlow {
+    0% {
+        box-shadow: 0 2px 6px rgba(255, 162, 66, 0.3);
+        opacity: 0.8;
+    }
+    100% {
+        box-shadow: 0 2px 12px rgba(255, 162, 66, 0.5);
+        opacity: 1;
+    }
+}
+
+/* 导航项弹跳动画 */
+@keyframes navBounce {
+    0% { transform: scale(1.1) translateY(0); }
+    50% { transform: scale(1.15) translateY(-3px); }
+    100% { transform: scale(1.1) translateY(0); }
+}
+
+/* 选中时的弹跳效果 */
+.bottom-nav .nav-item.active {
+    animation: navBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 图标旋转动画（可选） */
+@keyframes iconRotate {
+    0% { transform: translateY(-2px) rotate(0deg); }
+    100% { transform: translateY(-2px) rotate(360deg); }
+}
+
+/* 为特定图标添加旋转效果（可选，比如设置图标） */
+.bottom-nav .nav-item.active:last-child img {
+    animation: iconRotate 0.8s ease-in-out;
+}
+
+/* 导航项加载动画 */
+@keyframes navItemLoad {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 页面加载时的导航项动画 */
+.bottom-nav .nav-item {
+    animation: navItemLoad 0.5s ease-out;
+}
+
+.bottom-nav .nav-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.bottom-nav .nav-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.bottom-nav .nav-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .nav-item:hover {
+        background: transparent;
+        transform: none;
+    }
+    
+    .nav-item:active {
+        background: rgba(255, 162, 66, 0.2);
+        transform: scale(0.95);
+    }
+}
+
+/* 深色模式支持（可选） */
+@media (prefers-color-scheme: dark) {
+    .bottom-nav {
+        background: linear-gradient(0deg,
+            rgba(0, 0, 0, 0.9) 0%,
+            rgba(0, 0, 0, 0.7) 60%,
+            rgba(0, 0, 0, 0.5) 80%,
+            rgba(0, 0, 0, 0) 100%
+        );
+    }
+    
+    .nav-item:hover {
+        background: rgba(255, 162, 66, 0.15);
+    }
+    
+    .bottom-nav .nav-item.active {
+        background: rgba(255, 162, 66, 0.25);
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 394px) {
+    .nav-item {
+        padding: 6px;
+    }
+    
+    .nav-item img {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .bottom-nav .nav-item.active::after {
+        width: 25px;
+        height: 2px;
+    }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .nav-item img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
 }
 
 /* 语音输入相关样式 */
