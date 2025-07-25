@@ -226,11 +226,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             additionalInfo: additionalInfo
                         };
                     } else if (isWeightVolume) {
-                        // 重量/体积物品：按比例调整重量，但购物篮数量为1
-                        var newQuantity = originalQuantity * portion;
+                        // 重量/体积物品：购物时应该买多份相同重量的物品，而不是一份更重的物品
+                        // 例如：4份500g排骨 = 4个500g的排骨包装，而不是1个2000g的排骨
                         return {
-                            actualQuantity: 1,
-                            unitDescription: newQuantity + unit,
+                            actualQuantity: portion,
+                            unitDescription: originalQuantity + unit,
                             additionalInfo: additionalInfo
                         };
                     } else {
