@@ -530,7 +530,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 显示大步骤切换提示
                 showStepToast('已进入 ' + stepData[currentStep].name + '：' + stepData[currentStep].subtitle);
             } else {
-                // 已经是最后一个大步骤的最后一个小步骤，跳转奖杯页面
+                // 已经是最后一个大步骤的最后一个小步骤，记录做菜完成并跳转奖杯页面
+                recordCookingCompletion();
                 window.location.href = 'trophy.html';
             }
         }
@@ -576,5 +577,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 stepsContainer.scrollTop = 0;
             }
         }
+    }
+    
+    // 记录做菜完成
+    function recordCookingCompletion() {
+        const today = new Date();
+        const dateKey = formatDateKey(today);
+        
+        // 获取现有的做菜频率数据
+        let cookingFrequency = JSON.parse(localStorage.getItem('chefmate_cooking_frequency') || '{}');
+        
+        // 增加今天的做菜次数
+        if (cookingFrequency[dateKey]) {
+            cookingFrequency[dateKey]++;
+        } else {
+            cookingFrequency[dateKey] = 1;
+        }
+        
+        // 保存更新后的数据
+        localStorage.setItem('chefmate_cooking_frequency', JSON.stringify(cookingFrequency));
+        
+        // 记录完成的食谱信息（可选，用于更详细的统计）
+        const completedRecipes = JSON.parse(localStorage.getItem('chefmate_completed_recipes') || '[]');
+        const recipeInfo = {
+            date: today.toISOString(),
+            type: recipeType,
+            name: recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉'),
+            timestamp: Date.now()
+        };
+        completedRecipes.push(recipeInfo);
+        localStorage.setItem('chefmate_completed_recipes', JSON.stringify(completedRecipes));
+        
+        // 标记为真实数据，避免被示例数据覆盖
+        localStorage.setItem('chefmate_has_real_data', 'true');
+        
+        console.log('做菜完成记录已保存:', dateKey, cookingFrequency[dateKey]);
+    }
+    
+    // 格式化日期为键值（YYYY-MM-DD）
+    function formatDateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 });

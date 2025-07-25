@@ -119,8 +119,8 @@
         function initChart() {
             console.log('开始初始化图表...');
             
-            // 模拟做饭数据
-            const cookingData = [1, 2, 0, 1, 3, 2, 1, 0, 1, 2, 3, 1, 2, 0, 1, 2, 1, 3, 2, 1, 2];
+            // 获取真实的做饭数据
+            const cookingData = getCookingFrequencyData();
             
             // 检查Chart.js是否加载
             if (typeof Chart === 'undefined') {
@@ -210,30 +210,20 @@
             }
             
             const container = document.querySelector('.chart-container');
+            const cookingData = getCookingFrequencyData();
+            
             if (container) {
+                // 根据真实数据生成柱状图
+                const maxValue = Math.max(...cookingData, 1); // 避免除以0
+                const bars = cookingData.map(value => {
+                    const height = Math.max((value / maxValue) * 160, value > 0 ? 20 : 8); // 最小高度20px，无数据时8px
+                    const opacity = value > 0 ? 1 : 0.3;
+                    return `<div style="width: 12px; height: ${height}px; background: #FFA242; border-radius: 2px; opacity: ${opacity};"></div>`;
+                }).join('');
+                
                 container.innerHTML = `
                     <div style="display: flex; align-items: end; justify-content: space-between; height: 200px; padding: 20px; background: white; border-radius: 12px;">
-                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 20px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 120px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 20px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 100px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 100px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 120px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
-                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                        ${bars}
                     </div>
                     <div style="text-align: center; margin-top: 10px; color: #999; font-size: 14px;">近三周做饭频率趋势</div>
                 `;
@@ -261,8 +251,71 @@
             document.getElementById('longestStreak').textContent = longestStreak;
         }
         
+        // 获取真实的做菜频率数据（近21天）
+        function getCookingFrequencyData() {
+            const cookingFrequency = JSON.parse(localStorage.getItem('chefmate_cooking_frequency') || '{}');
+            const cookingData = [];
+            const today = new Date();
+            
+            // 生成近21天的数据
+            for (let i = 20; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateKey = formatDateKey(date);
+                
+                // 获取该日期的做菜次数，如果没有记录则为0
+                cookingData.push(cookingFrequency[dateKey] || 0);
+            }
+            
+            return cookingData;
+        }
+        
+        // 格式化日期为键值（YYYY-MM-DD）
+        function formatDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 初始化一些示例数据（仅在没有数据时）
+        function initializeSampleData() {
+            const existingData = localStorage.getItem('chefmate_cooking_frequency');
+            const hasRealData = localStorage.getItem('chefmate_has_real_data');
+            
+            // 只有在没有真实数据且没有现有数据时才初始化示例数据
+            if (!hasRealData && (!existingData || existingData === '{}')) {
+                // 只有在完全没有数据时才创建示例数据
+                const sampleData = {};
+                const today = new Date();
+                
+                // 添加过去几天的随机做菜记录，但不包括今天
+                for (let i = 1; i <= 20; i++) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - i);
+                    const dateKey = formatDateKey(date);
+                    
+                    // 随机生成0-3次做菜记录，但大部分天数为0或1
+                    const random = Math.random();
+                    if (random < 0.5) {
+                        sampleData[dateKey] = 0; // 50%的天数不做菜
+                    } else if (random < 0.8) {
+                        sampleData[dateKey] = 1; // 30%的天数做1次
+                    } else if (random < 0.95) {
+                        sampleData[dateKey] = 2; // 15%的天数做2次
+                    } else {
+                        sampleData[dateKey] = 3; // 5%的天数做3次
+                    }
+                }
+                
+                localStorage.setItem('chefmate_cooking_frequency', JSON.stringify(sampleData));
+                console.log('已初始化示例做菜数据');
+            }
+        }
+        
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
+            initializeSampleData(); // 初始化示例数据
             setTimeout(initChart, 1000); // 延迟1秒确保所有资源加载完成
         });
     </script>
