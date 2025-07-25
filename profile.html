@@ -42,62 +42,34 @@
                     </div>
                 </div>
 
-                <!-- 标签与内容区域 -->
-                <div class="section-tabs">
-                    <div class="section-tab active">笔记</div>
-                    <div class="section-tab">收藏</div>
-                    <div class="section-tab">喜欢</div>
-                </div>
-
-                <div class="section-content">
-                    <!-- 笔记/收藏的菜谱 -->
-                    <div class="collection-grid">
-                        <div class="collection-item" onclick="window.location.href='recipe-detail.html?recipe=salad'">
-                            <div class="collection-image" style="background-image: url('images/沙拉.jpeg')"></div>
-                            <div class="collection-info">
-                                <div class="collection-name">牛油果番茄沙拉</div>
-                                <div class="collection-meta">
-                                    <div class="meta-item">
-                                        <img src="images/time.svg" alt="时间">
-                                        <span>40min</span>
-                                    </div>
-                                    <div class="meta-item">
-                                        <img src="images/likes.svg" alt="点赞">
-                                        <span>500+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="collection-item" onclick="window.location.href='recipe-detail.html?recipe=ribs'">
-                            <div class="collection-image" style="background-image: url('images/排骨.jpg')"></div>
-                            <div class="collection-info">
-                                <div class="collection-name">糖醋排骨</div>
-                                <div class="collection-meta">
-                                    <div class="meta-item">
-                                        <img src="images/time.svg" alt="时间">
-                                        <span>60min</span>
-                                    </div>
-                                    <div class="meta-item">
-                                        <img src="images/likes.svg" alt="点赞">
-                                        <span>800+</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- 空状态展示 -->
-                        <div class="empty-state" style="display: none;">
-                            <img src="images/logo.svg" alt="暂无内容">
-                            <p>暂无笔记，开始记录美食生活吧！</p>
-                        </div>
+                <!-- 功能菜单列表 -->
+                <div class="menu-list">
+                    <div class="menu-item">
+                        <div class="menu-text">收藏</div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-text">设置</div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-text">反馈</div>
+                        <div class="menu-arrow">›</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 底部导航栏 - 纯文字版 -->
-            <div class="bottom-nav-text">
-                <div class="nav-text-item" onclick="window.location.href='home.html'">首页</div>
-                <div class="nav-text-item" onclick="window.location.href='shopping-basket.html'">购菜篮</div>
-                <div class="nav-text-item active">我的</div>
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='home.html'">
+                    <img src="images/首页_home-two (1).svg" alt="主页">
+                </div>
+                <div class="nav-item" onclick="window.location.href='shopping-basket.html'">
+                    <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
+                </div>
+                <div class="nav-item active">
+                    <img src="images/人员_people.svg" alt="个人">
+                </div>
             </div>
         </div>
     </div>
