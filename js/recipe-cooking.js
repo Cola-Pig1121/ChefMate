@@ -179,7 +179,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const waveBtn = document.querySelector('.wave-btn');
     let isCommunicating = false;
     let recognition;
-    let synthesis;
+    let isFirstCommunication = true;
+    let spokenResponses = new Set();
     function initSpeech() {
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'zh-CN';
@@ -197,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 recognition.start();
             }
         };
-        synthesis = window.speechSynthesis;
     }
     function containsSensitiveWords(text) {
         const sensitiveWords = ['你妹', '妈的', '傻逼', '混蛋', 'fuck', 'shit'];
@@ -231,32 +231,36 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 const responseText = data.answer;
-                speakResponse(responseText);
+                const audioUrl = data.audio_url ? `http://127.0.0.1:5000${data.audio_url}` : null;
+                speakResponse(responseText, audioUrl);
             })
             .catch(error => {
                 console.error('Fetch error:', error);
                 speakResponse('服务暂时不可用，请稍后再试');
             });
     }
-    function speakResponse(text) {
-        if (!synthesis) return;
+    function speakResponse(text, audioUrl) {
+        if (spokenResponses.has(text)) {
+            return;
+        }
+        spokenResponses.add(text);
         showStepToast(`助手: ${text}`);
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-CN';
-        utterance.rate = 0.9;
-        synthesis.cancel();
-        utterance.onend = function () {
-            if (text.includes('服务暂时不可用')) {
-                stopCommunication();
+        if (audioUrl) {
+            let audio = document.getElementById('tts-audio');
+            if (!audio) {
+                audio = document.createElement('audio');
+                audio.id = 'tts-audio';
+                document.body.appendChild(audio);
             }
-        };
-        utterance.onerror = function (event) {
-            stopCommunication();
-        };
-        try {
-            synthesis.speak(utterance);
-        } catch (error) {
-            stopCommunication();
+            audio.src = audioUrl;
+            audio.onended = function () {
+                const filename = audioUrl.split('/').pop();
+                fetch(`http://127.0.0.1:5000/api/delete_audio/${filename}`, { method: 'DELETE' })
+                    .catch(error => console.error('Delete audio error:', error));
+            };
+            audio.play().catch(e => {
+                showStepToast('请点击页面以播放语音');
+            });
         }
     }
     function toggleCommunication() {
@@ -273,16 +277,41 @@ document.addEventListener('DOMContentLoaded', function () {
         isCommunicating = true;
         waveBtn.classList.add('active');
         recognition.start();
-        speakResponse(`已进入沟通模式，请问关于${stepData[currentStep].subtitle}的什么问题？`);
+        if (isFirstCommunication) {
+            const initialText = `已进入沟通模式，请问关于${stepData[currentStep].subtitle}的什么问题？`;
+            fetch('http://127.0.0.1:5000/api/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userText: initialText,
+                    systemContent: 'dummy',
+                    is_initial: true
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const responseText = data.answer;
+                    const audioUrl = data.audio_url ? `http://127.0.0.1:5000${data.audio_url}` : null;
+                    speakResponse(responseText, audioUrl);
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+            isFirstCommunication = false;
+        }
     }
     function stopCommunication() {
         isCommunicating = false;
         waveBtn.classList.remove('active');
         if (recognition) {
             recognition.stop();
-        }
-        if (synthesis) {
-            synthesis.cancel();
         }
     }
     if (waveBtn) {
