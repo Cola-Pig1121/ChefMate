@@ -106,6 +106,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // 语音输入功能
     const startCookingBtn = document.querySelector('.start-cooking');
     const voiceInputContainer = document.querySelector('.voice-input-container');
+    
+    // 检查元素是否存在
+    if (!startCookingBtn) {
+        console.log('start-cooking按钮不存在，跳过语音输入功能');
+        return;
+    }
     let touchStartY = 0;
     let isRecording = false;
     let longPressTimer;

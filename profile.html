@@ -61,23 +61,49 @@
                         <div class="menu-arrow">›</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 底部导航栏 -->
-            <div class="bottom-nav">
-                <div class="nav-item" onclick="window.location.href='home.html'">
-                    <img src="images/首页_home-two (1).svg" alt="主页">
+                <!-- 做饭频率统计图表 -->
+                <div class="cooking-stats-section">
+                    <h2>近三周做饭频率</h2>
+                    <div class="chart-container" style="position: relative; height: 250px; margin-bottom: 20px;">
+                        <canvas id="cookingFrequencyChart"></canvas>
+                    </div>
+                    <div class="stats-summary" style="display: flex; justify-content: space-around; margin-top: 15px;">
+                        <div class="stat-item" style="text-align: center;">
+                            <span class="stat-number" id="totalCookingDays"
+                                style="display: block; font-size: 24px; font-weight: bold; color: #FFA242;">0</span>
+                            <span class="stat-label" style="font-size: 12px; color: #666;">总做饭天数</span>
+                        </div>
+                        <div class="stat-item" style="text-align: center;">
+                            <span class="stat-number" id="avgCookingPerWeek"
+                                style="display: block; font-size: 24px; font-weight: bold; color: #FFA242;">0</span>
+                            <span class="stat-label" style="font-size: 12px; color: #666;">周平均次数</span>
+                        </div>
+                        <div class="stat-item" style="text-align: center;">
+                            <span class="stat-number" id="longestStreak"
+                                style="display: block; font-size: 24px; font-weight: bold; color: #FFA242;">0</span>
+                            <span class="stat-label" style="font-size: 12px; color: #666;">最长连续天数</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="nav-item" onclick="window.location.href='shopping-basket.html'">
-                    <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
-                </div>
-                <div class="nav-item active">
-                    <img src="images/人员_people.svg" alt="个人">
-                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="window.location.href='home.html'">
+                <img src="images/首页_home-two (1).svg" alt="主页">
+            </div>
+            <div class="nav-item" onclick="window.location.href='shopping-basket.html'">
+                <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
+            </div>
+            <div class="nav-item active">
+                <img src="images/人员_people.svg" alt="个人">
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
     <script src="js/profile.js"></script>
     <script>
@@ -87,6 +113,157 @@
                 // 页面从缓存中恢复，重新加载数据
                 location.reload();
             }
+        });
+
+        // 初始化图表函数
+        function initChart() {
+            console.log('开始初始化图表...');
+            
+            // 模拟做饭数据
+            const cookingData = [1, 2, 0, 1, 3, 2, 1, 0, 1, 2, 3, 1, 2, 0, 1, 2, 1, 3, 2, 1, 2];
+            
+            // 检查Chart.js是否加载
+            if (typeof Chart === 'undefined') {
+                console.log('Chart.js未加载，显示备用图表');
+                showFallbackChart();
+                updateStats(cookingData);
+                return;
+            }
+            
+            console.log('Chart.js已加载，创建图表');
+            
+            try {
+                // 获取canvas元素
+                const canvas = document.getElementById('cookingFrequencyChart');
+                if (!canvas) {
+                    console.error('找不到canvas元素');
+                    showFallbackChart();
+                    updateStats(cookingData);
+                    return;
+                }
+                
+                const ctx = canvas.getContext('2d');
+                
+                // 生成日期标签（近21天）
+                const labels = [];
+                const today = new Date();
+                for (let i = 20; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - i);
+                    labels.push((date.getMonth() + 1) + '/' + date.getDate());
+                }
+                
+                // 创建图表
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '做饭次数',
+                            data: cookingData,
+                            borderColor: '#FFA242',
+                            backgroundColor: 'rgba(255, 162, 66, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#FFA242',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 4,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                console.log('图表创建成功');
+                updateStats(cookingData);
+                
+            } catch (error) {
+                console.error('创建图表时出错:', error);
+                showFallbackChart();
+                updateStats(cookingData);
+            }
+        }
+        
+        // 显示备用图表（纯CSS实现）
+        function showFallbackChart() {
+            const canvas = document.getElementById('cookingFrequencyChart');
+            if (canvas) {
+                canvas.style.display = 'none';
+            }
+            
+            const container = document.querySelector('.chart-container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="display: flex; align-items: end; justify-content: space-between; height: 200px; padding: 20px; background: white; border-radius: 12px;">
+                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 20px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 120px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 20px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 100px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 100px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 120px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 40px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 60px; background: #FFA242; border-radius: 2px;"></div>
+                        <div style="width: 12px; height: 80px; background: #FFA242; border-radius: 2px;"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px; color: #999; font-size: 14px;">近三周做饭频率趋势</div>
+                `;
+            }
+        }
+        
+        // 更新统计数据
+        function updateStats(cookingData) {
+            const totalDays = cookingData.filter(day => day > 0).length;
+            const avgPerWeek = (cookingData.reduce((a, b) => a + b, 0) / 3).toFixed(1);
+            
+            let longestStreak = 0;
+            let currentStreak = 0;
+            cookingData.forEach(day => {
+                if (day > 0) {
+                    currentStreak++;
+                    longestStreak = Math.max(longestStreak, currentStreak);
+                } else {
+                    currentStreak = 0;
+                }
+            });
+            
+            document.getElementById('totalCookingDays').textContent = totalDays;
+            document.getElementById('avgCookingPerWeek').textContent = avgPerWeek;
+            document.getElementById('longestStreak').textContent = longestStreak;
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initChart, 1000); // 延迟1秒确保所有资源加载完成
         });
     </script>
 </body>
