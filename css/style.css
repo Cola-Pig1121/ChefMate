@@ -152,6 +152,7 @@ body {
 /* 欢迎语 */
 .welcome-section {
     margin-top: 24px;
+    margin-bottom: 20px;
 }
 
 .welcome-section h1 {
@@ -163,6 +164,20 @@ body {
 .welcome-section p {
     font-size: 15px;
     color: rgba(0, 0, 0, 1);
+}
+
+/* 统一容器样式 */
+.date-selector, .basket-container, .profile-container, .section-tabs, .section-content {
+    margin-bottom: 20px;
+}
+
+/* 统一卡片样式 */
+.recipe-card, .collection-item, .shopping-item {
+    margin-bottom: 10px;
+}
+
+.recipe-info, .collection-info {
+    padding: 12px;
 }
 
 /* 日期选择器 */

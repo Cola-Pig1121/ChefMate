@@ -5,7 +5,7 @@
     background-color: #fafafa;
     border-radius: 25px;
     padding: 20px;
-    margin-bottom: 20px;
+    /* margin-bottom由统一样式控制 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -56,6 +56,7 @@
     background-color: #fafafa;
     border-radius: 25px 25px 0 0;
     overflow: hidden;
+    /* margin-bottom由统一样式控制，但这里需要覆盖为0 */
     margin-bottom: 0;
 }
 
@@ -93,7 +94,7 @@
     background-color: #fff;
     border-radius: 0 0 25px 25px;
     padding: 20px;
-    margin-bottom: 20px;
+    /* margin-bottom由统一样式控制 */
 }
 
 /* 收藏菜谱网格 */
@@ -124,13 +125,14 @@
 }
 
 .collection-info {
-    padding: 10px;
+    padding: 12px;
 }
 
 .collection-name {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 5px;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    color: #000;
 }
 
 .collection-meta {
