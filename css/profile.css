@@ -1,8 +1,19 @@
 /* 个人中心专用样式 */
+body {
+    background-color: #f2f2f2;
+}
+
+.app-container {
+    background-color: #f2f2f2;
+}
+
+.main-frame {
+    background-color: #f2f2f2;
+}
 
 /* 个人信息区域 */
 .profile-container {
-    background-color: #fafafa;
+    background-color: #fff;
     border-radius: 25px;
     padding: 20px;
     /* margin-bottom由统一样式控制 */
@@ -67,152 +78,65 @@
     box-shadow: 0 1px 4px rgba(255, 162, 66, 0.3);
 }
 
-/* 标签切换 */
-.section-tabs {
-    display: flex;
-    background-color: #fafafa;
-    border-radius: 25px 25px 0 0;
-    overflow: hidden;
-    /* margin-bottom由统一样式控制，但这里需要覆盖为0 */
-    margin-bottom: 0;
-}
-
-.section-tab {
-    flex: 1;
-    text-align: center;
-    padding: 15px 0;
-    font-size: 16px;
-    color: #666;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.section-tab.active {
-    color: #000;
-    font-weight: 500;
-    background-color: #fff;
-}
-
-.section-tab.active:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30px;
-    height: 3px;
-    background-color: #ffa242;
-    border-radius: 1.5px;
-}
-
-/* 内容区域 */
-.section-content {
-    background-color: #fff;
-    border-radius: 0 0 25px 25px;
-    padding: 20px;
-    /* margin-bottom由统一样式控制 */
-}
-
-/* 收藏菜谱网格 */
-.collection-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-}
-
-.collection-item {
+/* 功能菜单列表样式 */
+.menu-list {
     background-color: #fff;
     border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    margin: 15px 0;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
 }
 
-.collection-item:active {
-    transform: scale(0.98);
-}
-
-.collection-image {
-    width: 100%;
-    height: 120px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 15px 15px 0 0;
-}
-
-.collection-info {
-    padding: 12px;
-}
-
-.collection-name {
-    font-size: 20px;
-    font-weight: 400;
-    margin-bottom: 10px;
-    color: #000;
-}
-
-.collection-meta {
+.menu-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
 }
 
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.menu-item:last-child {
+    border-bottom: none;
 }
 
-.meta-item img {
-    width: 16px;
-    height: 16px;
-    opacity: 0.5;
+.menu-text {
+    font-size: 16px;
+    color: #333;
 }
 
-.meta-item span {
-    font-size: 14px;
-    color: #666;
+.menu-arrow {
+    color: #ccc;
+    font-size: 22px;
+    font-weight: 300;
 }
 
-/* 个人数据统计 */
-.user-stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
+.menu-item:active {
+    background-color: #f9f9f9;
 }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* 这里可以添加未来可能需要的其他样式 */
+
+/* 增加一些额外的菜单样式 */
+.menu-list + .menu-list {
+    margin-top: 20px;
 }
 
-.stat-value {
-    font-size: 20px;
-    font-weight: 600;
+.menu-item-highlight {
     color: #ffa242;
 }
 
-.stat-label {
-    font-size: 14px;
-    color: #666;
+.menu-item-badge {
+    background-color: #ff5252;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 12px;
 }
 
-/* 空状态提示 */
-.empty-state {
+/* 版本号样式 */
+.version-info {
     text-align: center;
-    padding: 30px 0;
     color: #999;
-}
-
-.empty-state img {
-    width: 60px;
-    height: 60px;
-    opacity: 0.3;
-    margin-bottom: 15px;
-}
-
-.empty-state p {
-    font-size: 14px;
+    font-size: 12px;
+    margin-top: 30px;
+    padding-bottom: 20px;
 } 

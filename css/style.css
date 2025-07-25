@@ -469,3 +469,45 @@ body {
     background-color: #FF9500;
     color: white;
 }
+
+/* 纯文字底部导航栏 */
+.bottom-nav-text {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 394px;
+    padding: 15px 0;
+    display: flex;
+    justify-content: space-around;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    z-index: 100;
+}
+
+.nav-text-item {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #999;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.nav-text-item.active {
+    color: #ffa242;
+    font-weight: 500;
+}
+
+.nav-text-item.active:after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background-color: #ffa242;
+    border-radius: 1px;
+}
