@@ -63,7 +63,6 @@ body {
     padding: 25px;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* 将元素分布在两端 */
     gap: 10px;
     z-index: 100;
     background: linear-gradient(180deg,
@@ -76,18 +75,14 @@ body {
     );
 }
 
-/* 顶部页面标题 */
-.page-title {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start; /* 左对齐 */
+/* 没有搜索框时顶部导航栏的布局 */
+.top-bar {
+    justify-content: space-between;
 }
 
-.page-title h2 {
-    font-size: 20px;
-    color: #333;
-    font-weight: 500;
-    margin: 0;
+/* 当存在搜索框时的布局 */
+.top-bar .search-bar {
+    flex: 1;
 }
 
 .user-avatar {
@@ -111,7 +106,6 @@ body {
 }
 
 .search-bar {
-    flex: 1;
     height: 50px;
     background: #fafafa;
     border-radius: 15px;
