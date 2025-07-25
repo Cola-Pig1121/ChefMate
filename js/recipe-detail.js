@@ -25,13 +25,13 @@ document.addEventListener('DOMContentLoaded', function() {
             time: '40min',
             likes: '500+',
             ingredients: [
-                '西红柿 2 颗',
-                '牛油果 1 颗',
-                '黄瓜 1 根',
-                '洋葱 1 颗'
+                '西红柿 2颗，中等大小',
+                '牛油果 1颗，熟透的',
+                '黄瓜 1根，新鲜',
+                '洋葱 1颗，中等大小'
             ],
             condiments: [
-                '沙拉酱 150ml（约等于两勺）'
+                '沙拉酱 150ml，约等于两勺'
             ],
             steps: [
                 '将西红柿、牛油果、黄瓜、洋葱洗净切块。',
@@ -47,17 +47,17 @@ document.addEventListener('DOMContentLoaded', function() {
             time: '60min',
             likes: '800+',
             ingredients: [
-                '排骨 500g',
-                '生姜 3 片',
-                '葱 1 根',
-                '蒜 2 瓣'
+                '排骨 500g，新鲜',
+                '生姜 3片，去皮',
+                '葱 1根，新鲜',
+                '蒜 2瓣，去皮'
             ],
             condiments: [
-                '生抽 2勺',
-                '老抽 1勺',
-                '醋 2勺',
-                '糖 3勺',
-                '料酒 1勺'
+                '生抽 2勺，约30ml',
+                '老抽 1勺，约15ml',
+                '醋 2勺，米醋',
+                '糖 3勺，白砂糖',
+                '料酒 1勺，约15ml'
             ],
             steps: [
                 '排骨冷水下锅，焯水去血沫，捞出沥干。',
@@ -131,8 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // 智能解析数量和单位
                 var parseResult = parseIngredientQuantity(itemText, portion);
-                var finalQuantity = parseResult.quantity;
-                var description = parseResult.description;
+                var actualQuantity = parseResult.actualQuantity; // 实际需要的数量
+                var unitDescription = parseResult.unitDescription; // 单位描述
+                var additionalInfo = parseResult.additionalInfo; // 额外信息
                 
                 // 确定分类
                 var category = 'vegetables'; // 默认分类
@@ -144,11 +145,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     category = 'fruits';
                 }
                 
+                // 构建描述
+                var description = unitDescription;
+                if (additionalInfo) {
+                    description += '，' + additionalInfo;
+                }
+                
                 // 检查是否已存在相同物品
-                var existingItem = existingMarketData.find(data => data.name === itemName);
+                var existingItem = existingMarketData.find(data => data.name === itemName && data.description === description);
                 if (existingItem) {
-                    // 如果已存在，增加购买次数（而不是重量）
-                    existingItem.quantity += 1;
+                    // 如果已存在相同描述的物品，增加数量
+                    existingItem.quantity += actualQuantity;
                 } else {
                     // 如果不存在，添加新物品
                     var newItem = {
@@ -156,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         name: itemName,
                         description: description,
                         category: category,
-                        quantity: 1, // 购物篮中的quantity表示购买次数，不是总量
+                        quantity: actualQuantity, // 实际需要的数量
                         checked: false
                     };
                     existingMarketData.push(newItem);
@@ -167,70 +174,87 @@ document.addEventListener('DOMContentLoaded', function() {
             // 智能解析食材数量的函数
             function parseIngredientQuantity(itemText, portion) {
                 // 定义可数单位（这些单位的数量会随份数变化）
-                var countableUnits = ['颗', '根', '片', '勺', '包', '个', '只', '条', '块'];
+                var countableUnits = ['颗', '根', '片', '勺', '包', '个', '只', '条', '块', '瓣'];
                 // 定义重量/体积单位（这些单位的数量会按比例调整）
                 var weightVolumeUnits = ['g', '克', 'kg', '公斤', 'ml', '毫升', 'l', '升'];
                 
-                // 匹配数量和单位的正则表达式
-                var quantityMatch = itemText.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z\u4e00-\u9fa5]+)/);
+                // 中文数字转换映射
+                var chineseNumbers = {
+                    '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+                    '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+                    '零': 0, '两': 2, '半': 0.5
+                };
+                
+                // 提取食材名称（第一个空格前的部分）
+                var itemName = itemText.split(' ')[0];
+                
+                // 更强的正则表达式，支持中文数字和阿拉伯数字
+                var quantityMatch = itemText.match(/([一二三四五六七八九十零两半\d]+(?:\.\d+)?)\s*([颗根片勺包个只条块瓣gml克公斤毫升升]+)/);
                 
                 if (quantityMatch) {
-                    var originalQuantity = parseFloat(quantityMatch[1]);
+                    var quantityStr = quantityMatch[1];
                     var unit = quantityMatch[2];
-                    var itemName = itemText.split(' ')[0];
+                    
+                    // 转换中文数字为阿拉伯数字
+                    var originalQuantity;
+                    if (/^[\d.]+$/.test(quantityStr)) {
+                        // 阿拉伯数字
+                        originalQuantity = parseFloat(quantityStr);
+                    } else {
+                        // 中文数字
+                        originalQuantity = chineseNumbers[quantityStr] || 1;
+                    }
                     
                     // 判断是否为可数单位
                     var isCountable = countableUnits.some(countUnit => unit.includes(countUnit));
                     var isWeightVolume = weightVolumeUnits.some(weightUnit => unit.includes(weightUnit));
                     
+                    // 提取额外信息（逗号后的描述）
+                    var additionalInfo = '';
+                    if (itemText.includes('，')) {
+                        additionalInfo = itemText.split('，').slice(1).join('，');
+                    } else if (itemText.includes(',')) {
+                        additionalInfo = itemText.split(',').slice(1).join(',');
+                    }
+                    
                     if (isCountable) {
-                        // 可数物品：数量随份数成比例增加
-                        var newQuantity = originalQuantity * portion;
-                        var description = newQuantity + unit;
-                        if (itemText.includes('，') || itemText.includes(',')) {
-                            var additionalInfo = itemText.split(/[，,]/)[1];
-                            description += '，' + additionalInfo;
-                        }
+                        // 可数物品：实际数量 = 原始数量 × 份数
+                        var totalQuantity = originalQuantity * portion;
                         return {
-                            quantity: 1,
-                            description: description
+                            actualQuantity: totalQuantity,
+                            unitDescription: unit,
+                            additionalInfo: additionalInfo
                         };
                     } else if (isWeightVolume) {
-                        // 重量/体积物品：按比例调整重量
+                        // 重量/体积物品：按比例调整重量，但购物篮数量为1
                         var newQuantity = originalQuantity * portion;
-                        var description = newQuantity + unit;
-                        if (itemText.includes('，') || itemText.includes(',')) {
-                            var additionalInfo = itemText.split(/[，,]/)[1];
-                            description += '，' + additionalInfo;
-                        }
                         return {
-                            quantity: 1,
-                            description: description
+                            actualQuantity: 1,
+                            unitDescription: newQuantity + unit,
+                            additionalInfo: additionalInfo
                         };
                     } else {
                         // 其他单位：保持原样但标注份数
-                        var description = originalQuantity + unit;
+                        var unitDesc = originalQuantity + unit;
                         if (portion > 1) {
-                            description += '（' + portion + '份用量）';
-                        }
-                        if (itemText.includes('，') || itemText.includes(',')) {
-                            var additionalInfo = itemText.split(/[，,]/)[1];
-                            description += '，' + additionalInfo;
+                            unitDesc += '（' + portion + '份用量）';
                         }
                         return {
-                            quantity: 1,
-                            description: description
+                            actualQuantity: 1,
+                            unitDescription: unitDesc,
+                            additionalInfo: additionalInfo
                         };
                     }
                 } else {
                     // 没有匹配到数量单位，按份数处理
-                    var description = itemText;
+                    var unitDesc = itemText;
                     if (portion > 1) {
-                        description += '（' + portion + '份）';
+                        unitDesc += '（' + portion + '份）';
                     }
                     return {
-                        quantity: 1,
-                        description: description
+                        actualQuantity: 1,
+                        unitDescription: unitDesc,
+                        additionalInfo: ''
                     };
                 }
             }
