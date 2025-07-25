@@ -65,13 +65,35 @@
     overflow-x: auto;
     padding-bottom: 10px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
     gap: 10px;
+    /* 确保PC端也能滚动 */
+    scroll-behavior: smooth;
+}
+
+/* PC端鼠标滚轮支持 */
+@media (hover: hover) {
+    .category-tabs {
+        overflow-x: scroll;
+    }
 }
 
 .category-tabs::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
+    height: 4px;
+}
+
+.category-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.category-tabs::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 2px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
 }
 
 .tab {
@@ -85,12 +107,51 @@
     cursor: pointer;
     flex-shrink: 0;
     min-width: fit-content;
+    position: relative;
 }
 
 .tab.active {
     background-color: #ffa242;
     color: white;
     box-shadow: 0 2px 8px rgba(255, 162, 66, 0.3);
+}
+
+.tab:not(.add-category-tab):not([data-category="all"]):hover .delete-category {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.delete-category {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    background: #ff5252;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.delete-category:hover {
+    background: #ff3030;
+    transform: scale(1.1);
+}
+
+/* 移动端长按显示删除按钮 */
+@media (hover: none) {
+    .tab:not(.add-category-tab):not([data-category="all"]).show-delete .delete-category {
+        opacity: 1;
+        pointer-events: all;
+    }
 }
 
 /* 购物清单容器 */
@@ -504,4 +565,34 @@
 
 .btn-confirm:active {
     background: #ff9020;
+}/* 添
+加分类按钮样式 */
+.add-category-tab {
+    background: #f0f0f0 !important;
+    color: #666 !important;
+    border: 2px dashed #ddd !important;
+    font-size: 13px !important;
+}
+
+.add-category-tab:hover {
+    background: #e8e8e8 !important;
+    border-color: #FFA242 !important;
+    color: #FFA242 !important;
+}/* 添加分类按钮样式
+ */
+.add-category-tab {
+    background: linear-gradient(135deg, #FFA242, #ff9020) !important;
+    color: white !important;
+    font-weight: 500;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.add-category-tab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 162, 66, 0.3);
+}
+
+.add-category-tab:active {
+    transform: scale(0.95);
 }

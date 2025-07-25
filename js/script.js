@@ -110,95 +110,101 @@ document.addEventListener('DOMContentLoaded', function() {
     // 检查元素是否存在
     if (!startCookingBtn) {
         console.log('start-cooking按钮不存在，跳过语音输入功能');
-        return;
+        // 继续执行其他代码，不要return
+    } else {
+        // 只有当按钮存在时才绑定语音输入事件
+        initVoiceInput(startCookingBtn, voiceInputContainer);
     }
-    let touchStartY = 0;
-    let isRecording = false;
-    let longPressTimer;
+    
+    function initVoiceInput(startCookingBtn, voiceInputContainer) {
+        let touchStartY = 0;
+        let isRecording = false;
+        let longPressTimer;
 
-    // 禁用默认的触摸行为
-    document.addEventListener('touchmove', function(e) {
-        if (isRecording) {
+        // 禁用默认的触摸行为
+        document.addEventListener('touchmove', function(e) {
+            if (isRecording) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // 长按开始录音
+        startCookingBtn.addEventListener('touchstart', function(e) {
+            console.log('Touch start detected'); // 调试日志
+            touchStartY = e.touches[0].clientY;
+            
+            // 设置长按定时器
+            longPressTimer = setTimeout(() => {
+                console.log('Long press triggered'); // 调试日志
+                isRecording = true;
+                startCookingBtn.classList.add('recording');
+                if (voiceInputContainer) voiceInputContainer.classList.add('active');
+                // 这里可以添加开始录音的逻辑
+                console.log('开始录音');
+            }, 500); // 500ms长按触发
+        }, { passive: false });
+
+        // 触摸移动时检测是否需要取消
+        startCookingBtn.addEventListener('touchmove', function(e) {
+            console.log('Touch move detected'); // 调试日志
+            if (isRecording) {
+                const currentY = e.touches[0].clientY;
+                const moveDistance = touchStartY - currentY;
+                console.log('Move distance:', moveDistance); // 调试日志
+                
+                // 如果向上移动超过50像素，显示取消状态
+                if (moveDistance > 50) {
+                    if (voiceInputContainer) voiceInputContainer.classList.add('cancel');
+                } else {
+                    if (voiceInputContainer) voiceInputContainer.classList.remove('cancel');
+                }
+            }
+        }, { passive: false });
+
+        // 触摸结束时处理录音结果
+        startCookingBtn.addEventListener('touchend', function(e) {
+            console.log('Touch end detected'); // 调试日志
+            clearTimeout(longPressTimer);
+            
+            if (isRecording) {
+                const endY = e.changedTouches[0].clientY;
+                const moveDistance = touchStartY - endY;
+                console.log('Final move distance:', moveDistance); // 调试日志
+                
+                if (moveDistance > 50) {
+                    // 取消录音
+                    console.log('取消录音');
+                } else {
+                    // 完成录音
+                    console.log('完成录音');
+                }
+                
+                // 重置状态
+                isRecording = false;
+                startCookingBtn.classList.remove('recording');
+                if (voiceInputContainer) voiceInputContainer.classList.remove('active');
+                if (voiceInputContainer) voiceInputContainer.classList.remove('cancel');
+            }
+        });
+
+        // 触摸取消时清理状态
+        startCookingBtn.addEventListener('touchcancel', function() {
+            console.log('Touch cancelled'); // 调试日志
+            clearTimeout(longPressTimer);
+            if (isRecording) {
+                isRecording = false;
+                startCookingBtn.classList.remove('recording');
+                if (voiceInputContainer) voiceInputContainer.classList.remove('active');
+                if (voiceInputContainer) voiceInputContainer.classList.remove('cancel');
+                console.log('录音被中断');
+            }
+        });
+
+        // 防止长按时出现系统菜单
+        startCookingBtn.addEventListener('contextmenu', function(e) {
             e.preventDefault();
-        }
-    }, { passive: false });
-
-    // 长按开始录音
-    startCookingBtn.addEventListener('touchstart', function(e) {
-        console.log('Touch start detected'); // 调试日志
-        touchStartY = e.touches[0].clientY;
-        
-        // 设置长按定时器
-        longPressTimer = setTimeout(() => {
-            console.log('Long press triggered'); // 调试日志
-            isRecording = true;
-            startCookingBtn.classList.add('recording');
-            voiceInputContainer.classList.add('active');
-            // 这里可以添加开始录音的逻辑
-            console.log('开始录音');
-        }, 500); // 500ms长按触发
-    }, { passive: false });
-
-    // 触摸移动时检测是否需要取消
-    startCookingBtn.addEventListener('touchmove', function(e) {
-        console.log('Touch move detected'); // 调试日志
-        if (isRecording) {
-            const currentY = e.touches[0].clientY;
-            const moveDistance = touchStartY - currentY;
-            console.log('Move distance:', moveDistance); // 调试日志
-            
-            // 如果向上移动超过50像素，显示取消状态
-            if (moveDistance > 50) {
-                voiceInputContainer.classList.add('cancel');
-            } else {
-                voiceInputContainer.classList.remove('cancel');
-            }
-        }
-    }, { passive: false });
-
-    // 触摸结束时处理录音结果
-    startCookingBtn.addEventListener('touchend', function(e) {
-        console.log('Touch end detected'); // 调试日志
-        clearTimeout(longPressTimer);
-        
-        if (isRecording) {
-            const endY = e.changedTouches[0].clientY;
-            const moveDistance = touchStartY - endY;
-            console.log('Final move distance:', moveDistance); // 调试日志
-            
-            if (moveDistance > 50) {
-                // 取消录音
-                console.log('取消录音');
-            } else {
-                // 完成录音
-                console.log('完成录音');
-            }
-            
-            // 重置状态
-            isRecording = false;
-            startCookingBtn.classList.remove('recording');
-            voiceInputContainer.classList.remove('active');
-            voiceInputContainer.classList.remove('cancel');
-        }
-    });
-
-    // 触摸取消时清理状态
-    startCookingBtn.addEventListener('touchcancel', function() {
-        console.log('Touch cancelled'); // 调试日志
-        clearTimeout(longPressTimer);
-        if (isRecording) {
-            isRecording = false;
-            startCookingBtn.classList.remove('recording');
-            voiceInputContainer.classList.remove('active');
-            voiceInputContainer.classList.remove('cancel');
-            console.log('录音被中断');
-        }
-    });
-
-    // 防止长按时出现系统菜单
-    startCookingBtn.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-    });
+        });
+    }
 
     // 食谱卡片点击跳转
     const recipeCards = document.querySelectorAll('.recipe-card');
@@ -210,12 +216,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    const content = document.querySelector('.main-content');
     const topBar = document.querySelector('.top-bar');
     const bottomNav = document.querySelector('.bottom-nav');
 
     function updateBlur() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const maxScroll = document.documentElement.scrollHeight - document.documentElement.clientHeight;
         const scrollPercentage = Math.min(Math.max(scrollTop / maxScroll, 0), 1);
 

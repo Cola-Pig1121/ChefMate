@@ -119,32 +119,133 @@ document.addEventListener('DOMContentLoaded', function() {
             var portionText = document.querySelector('.portion-count')?.textContent || '1份';
             var portion = parseInt(portionText) || 1;
             
-            // 收集选中的食材数据
-            var basketItems = [];
+            // 获取现有的购物数据
+            var existingMarketData = JSON.parse(localStorage.getItem('chefmate_market_data') || '[]');
+            
+            // 收集选中的食材数据并转换为购物篮格式
+            var addedCount = 0;
             checkedIngredients.forEach(function(item) {
                 var itemText = item.parentElement.textContent.trim();
-                var itemName = itemText.split(' ')[0]; // 提取食材名称
-                var itemQuantity = itemText.match(/\d+/g); // 提取数字
+                var parts = itemText.split(' ');
+                var itemName = parts[0]; // 提取食材名称
                 
-                basketItems.push({
-                    name: itemName,
-                    quantity: itemQuantity ? itemQuantity[0] : 1,
-                    unit: itemText.match(/[颗根片勺]/g) ? itemText.match(/[颗根片勺]/g)[0] : '',
-                    portion: portion
-                });
+                // 智能解析数量和单位
+                var parseResult = parseIngredientQuantity(itemText, portion);
+                var finalQuantity = parseResult.quantity;
+                var description = parseResult.description;
+                
+                // 确定分类
+                var category = 'vegetables'; // 默认分类
+                if (itemName.includes('排骨') || itemName.includes('肉')) {
+                    category = 'meat';
+                } else if (itemName.includes('醋') || itemName.includes('糖') || itemName.includes('酱') || itemName.includes('料酒') || itemName.includes('生抽') || itemName.includes('老抽')) {
+                    category = 'seasoning';
+                } else if (itemName.includes('牛油果')) {
+                    category = 'fruits';
+                }
+                
+                // 检查是否已存在相同物品
+                var existingItem = existingMarketData.find(data => data.name === itemName);
+                if (existingItem) {
+                    // 如果已存在，增加购买次数（而不是重量）
+                    existingItem.quantity += 1;
+                } else {
+                    // 如果不存在，添加新物品
+                    var newItem = {
+                        id: 'recipe_item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        name: itemName,
+                        description: description,
+                        category: category,
+                        quantity: 1, // 购物篮中的quantity表示购买次数，不是总量
+                        checked: false
+                    };
+                    existingMarketData.push(newItem);
+                }
+                addedCount++;
             });
             
-            // 保存到localStorage
-            var existingItems = JSON.parse(localStorage.getItem('basketItems') || '[]');
-            var newBasket = existingItems.concat(basketItems);
-            localStorage.setItem('basketItems', JSON.stringify(newBasket));
-            
-            alert('已添加 ' + checkedIngredients.length + ' 种食材到购菜篮！');
-            
-            // 跳转到购菜篮页面
-            if (confirm('是否立即前往购菜篮查看？')) {
-                window.location.href = 'shopping-basket.html';
+            // 智能解析食材数量的函数
+            function parseIngredientQuantity(itemText, portion) {
+                // 定义可数单位（这些单位的数量会随份数变化）
+                var countableUnits = ['颗', '根', '片', '勺', '包', '个', '只', '条', '块'];
+                // 定义重量/体积单位（这些单位的数量会按比例调整）
+                var weightVolumeUnits = ['g', '克', 'kg', '公斤', 'ml', '毫升', 'l', '升'];
+                
+                // 匹配数量和单位的正则表达式
+                var quantityMatch = itemText.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z\u4e00-\u9fa5]+)/);
+                
+                if (quantityMatch) {
+                    var originalQuantity = parseFloat(quantityMatch[1]);
+                    var unit = quantityMatch[2];
+                    var itemName = itemText.split(' ')[0];
+                    
+                    // 判断是否为可数单位
+                    var isCountable = countableUnits.some(countUnit => unit.includes(countUnit));
+                    var isWeightVolume = weightVolumeUnits.some(weightUnit => unit.includes(weightUnit));
+                    
+                    if (isCountable) {
+                        // 可数物品：数量随份数成比例增加
+                        var newQuantity = originalQuantity * portion;
+                        var description = newQuantity + unit;
+                        if (itemText.includes('，') || itemText.includes(',')) {
+                            var additionalInfo = itemText.split(/[，,]/)[1];
+                            description += '，' + additionalInfo;
+                        }
+                        return {
+                            quantity: 1,
+                            description: description
+                        };
+                    } else if (isWeightVolume) {
+                        // 重量/体积物品：按比例调整重量
+                        var newQuantity = originalQuantity * portion;
+                        var description = newQuantity + unit;
+                        if (itemText.includes('，') || itemText.includes(',')) {
+                            var additionalInfo = itemText.split(/[，,]/)[1];
+                            description += '，' + additionalInfo;
+                        }
+                        return {
+                            quantity: 1,
+                            description: description
+                        };
+                    } else {
+                        // 其他单位：保持原样但标注份数
+                        var description = originalQuantity + unit;
+                        if (portion > 1) {
+                            description += '（' + portion + '份用量）';
+                        }
+                        if (itemText.includes('，') || itemText.includes(',')) {
+                            var additionalInfo = itemText.split(/[，,]/)[1];
+                            description += '，' + additionalInfo;
+                        }
+                        return {
+                            quantity: 1,
+                            description: description
+                        };
+                    }
+                } else {
+                    // 没有匹配到数量单位，按份数处理
+                    var description = itemText;
+                    if (portion > 1) {
+                        description += '（' + portion + '份）';
+                    }
+                    return {
+                        quantity: 1,
+                        description: description
+                    };
+                }
             }
+            
+            // 保存到localStorage
+            localStorage.setItem('chefmate_market_data', JSON.stringify(existingMarketData));
+            
+            showMessage('已添加 ' + addedCount + ' 种食材到购菜篮！');
+            
+            // 询问是否跳转到购菜篮页面
+            setTimeout(() => {
+                if (confirm('是否立即前往购菜篮查看？')) {
+                    window.location.href = 'shopping-basket.html';
+                }
+            }, 500);
         });
     }
 
