@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑资料 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/edit-profile.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部导航栏 -->
+            <div class="top-bar">
+                <div class="action-btn back-btn" onclick="window.location.href='profile.html'">
+                    <img src="images/back.svg" alt="返回">
+                </div>
+                <div class="page-title">编辑资料</div>
+                <div class="action-btn save-btn" id="saveBtn">
+                    <span>保存</span>
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <form id="profileForm" class="profile-form">
+                    <!-- 头像编辑 -->
+                    <div class="avatar-section">
+                        <div class="avatar-container">
+                            <img id="avatarPreview" src="https://randomuser.me/api/portraits/women/44.jpg" alt="头像">
+                            <div class="avatar-overlay">
+                                <img src="images/camera.svg" alt="更换头像">
+                            </div>
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="avatar-hint">点击更换头像</div>
+                    </div>
+
+                    <!-- 基本信息 -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="username">用户名</label>
+                            <input type="text" id="username" name="username" placeholder="请输入用户名" maxlength="20">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">手机号</label>
+                            <input type="tel" id="phone" name="phone" placeholder="请输入手机号" maxlength="11">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">邮箱</label>
+                            <input type="email" id="email" name="email" placeholder="请输入邮箱地址">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">性别</label>
+                            <select id="gender" name="gender">
+                                <option value="">请选择性别</option>
+                                <option value="male">男</option>
+                                <option value="female">女</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birthday">生日</label>
+                            <input type="date" id="birthday" name="birthday">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bio">个人简介</label>
+                            <textarea id="bio" name="bio" placeholder="介绍一下自己吧..." maxlength="200"></textarea>
+                            <div class="char-count">
+                                <span id="bioCount">0</span>/200
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 偏好设置 -->
+                    <div class="form-section">
+                        <h3>饮食偏好</h3>
+                        <div class="preference-group">
+                            <div class="preference-item">
+                                <label>
+                                    <input type="checkbox" name="dietary" value="vegetarian">
+                                    <span class="checkmark"></span>
+                                    素食主义
+                                </label>
+                            </div>
+                            <div class="preference-item">
+                                <label>
+                                    <input type="checkbox" name="dietary" value="vegan">
+                                    <span class="checkmark"></span>
+                                    纯素食
+                                </label>
+                            </div>
+                            <div class="preference-item">
+                                <label>
+                                    <input type="checkbox" name="dietary" value="gluten-free">
+                                    <span class="checkmark"></span>
+                                    无麸质
+                                </label>
+                            </div>
+                            <div class="preference-item">
+                                <label>
+                                    <input type="checkbox" name="dietary" value="low-carb">
+                                    <span class="checkmark"></span>
+                                    低碳水
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 烹饪技能 -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="cookingLevel">烹饪水平</label>
+                            <select id="cookingLevel" name="cookingLevel">
+                                <option value="">请选择烹饪水平</option>
+                                <option value="beginner">新手</option>
+                                <option value="intermediate">中级</option>
+                                <option value="advanced">高级</option>
+                                <option value="expert">专家</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="favoritesCuisine">喜欢的菜系</label>
+                            <select id="favoritesCuisine" name="favoritesCuisine">
+                                <option value="">请选择喜欢的菜系</option>
+                                <option value="chinese">中式</option>
+                                <option value="western">西式</option>
+                                <option value="japanese">日式</option>
+                                <option value="korean">韩式</option>
+                                <option value="thai">泰式</option>
+                                <option value="italian">意式</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/edit-profile.js"></script>
+</body>
+
+</html>

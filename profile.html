@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/profile.css">
 </head>
+
 <body>
     <div class="app-container">
         <div class="main-frame">
@@ -38,7 +40,7 @@
                             <div class="profile-name">Aion</div>
                             <div class="profile-email">186****3779</div>
                         </div>
-                        <button class="edit-profile">编辑资料</button>
+                        <button class="edit-profile" onclick="window.location.href='edit-profile.html'">编辑资料</button>
                     </div>
                 </div>
 
@@ -78,5 +80,15 @@
 
     <script src="js/script.js"></script>
     <script src="js/profile.js"></script>
+    <script>
+        // 页面显示时重新加载用户资料
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                // 页面从缓存中恢复，重新加载数据
+                location.reload();
+            }
+        });
+    </script>
 </body>
-</html> 
+
+</html>

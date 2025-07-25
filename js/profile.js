@@ -1,5 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化标签切换功能
+    // 加载用户资料
+    loadUserProfile();
+    
+    // 编辑资料按钮 - 移到前面确保优先执行
+    const editButton = document.querySelector('.edit-profile');
+    console.log('Edit button found:', editButton); // 调试信息
+    if (editButton) {
+        editButton.addEventListener('click', function(e) {
+            console.log('Edit button clicked'); // 调试信息
+            e.preventDefault();
+            window.location.href = 'edit-profile.html';
+        });
+    } else {
+        console.error('Edit button not found!');
+    }
+    
+    // 初始化标签切换功能（如果存在的话）
     const tabItems = document.querySelectorAll('.section-tab');
     const contentContainer = document.querySelector('.collection-grid');
     
@@ -41,27 +57,34 @@ document.addEventListener('DOMContentLoaded', function() {
         ]
     };
     
-    // 切换标签功能
-    tabItems.forEach((tab, index) => {
-        tab.addEventListener('click', function() {
-            // 移除所有active状态
-            tabItems.forEach(t => t.classList.remove('active'));
-            // 添加active状态到当前标签
-            tab.classList.add('active');
-            
-            // 根据选中的标签显示不同内容
-            if (index === 0) {
-                renderItems(userData.notes, '笔记');
-            } else if (index === 1) {
-                renderItems(userData.favorites, '收藏');
-            } else if (index === 2) {
-                renderItems(userData.likes, '喜欢');
-            }
+    // 切换标签功能（只有当元素存在时才执行）
+    if (tabItems.length > 0 && contentContainer) {
+        tabItems.forEach((tab, index) => {
+            tab.addEventListener('click', function() {
+                // 移除所有active状态
+                tabItems.forEach(t => t.classList.remove('active'));
+                // 添加active状态到当前标签
+                tab.classList.add('active');
+                
+                // 根据选中的标签显示不同内容
+                if (index === 0) {
+                    renderItems(userData.notes, '笔记');
+                } else if (index === 1) {
+                    renderItems(userData.favorites, '收藏');
+                } else if (index === 2) {
+                    renderItems(userData.likes, '喜欢');
+                }
+            });
         });
-    });
+        
+        // 默认显示笔记标签内容
+        renderItems(userData.notes, '笔记');
+    }
     
     // 渲染内容项
     function renderItems(items, type) {
+        if (!contentContainer) return; // 如果容器不存在就直接返回
+        
         if (items.length === 0) {
             // 显示空状态
             contentContainer.innerHTML = `
@@ -98,14 +121,32 @@ document.addEventListener('DOMContentLoaded', function() {
         contentContainer.innerHTML = itemsHTML;
     }
     
-    // 默认显示笔记标签内容
-    renderItems(userData.notes, '笔记');
-    
-    // 编辑资料按钮
-    const editButton = document.querySelector('.edit-profile');
-    if (editButton) {
-        editButton.addEventListener('click', function() {
-            alert('编辑资料功能即将上线，敬请期待！');
-        });
+    // 加载用户资料函数
+    function loadUserProfile() {
+        const defaultUserData = {
+            username: 'Aion',
+            phone: '186****3779',
+            avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+        };
+        
+        const savedData = localStorage.getItem('chefmate_user_profile');
+        const userData = savedData ? { ...defaultUserData, ...JSON.parse(savedData) } : defaultUserData;
+        
+        // 更新页面显示
+        const profileName = document.querySelector('.profile-name');
+        const profileEmail = document.querySelector('.profile-email');
+        const profileAvatar = document.querySelector('.profile-avatar img');
+        
+        if (profileName) {
+            profileName.textContent = userData.username || '未设置';
+        }
+        
+        if (profileEmail) {
+            profileEmail.textContent = userData.phone || userData.email || '未设置';
+        }
+        
+        if (profileAvatar && userData.avatar) {
+            profileAvatar.src = userData.avatar;
+        }
     }
 }); 
