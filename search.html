@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索食谱 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/search.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 搜索栏 -->
+            <div class="search-header">
+                <div class="search-input-container">
+                    <div class="back-btn" onclick="window.location.href='home.html'">
+                        <img src="images/back.svg" alt="返回">
+                    </div>
+                    <div class="search-input-wrapper">
+                        <input type="text" id="searchInput" placeholder="搜索食谱、食材或菜系..." autocomplete="off">
+                        <div class="search-icon">
+                            <img src="images/search.svg" alt="搜索">
+                        </div>
+                        <div class="clear-btn" id="clearBtn" style="display: none;">
+                            <img src="images/close.svg" alt="清除">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <!-- 搜索建议 -->
+                <div class="search-suggestions" id="searchSuggestions">
+                    <div class="suggestions-section">
+                        <h3>热门搜索</h3>
+                        <div class="suggestion-tags">
+                            <span class="suggestion-tag" data-keyword="牛油果">牛油果</span>
+                            <span class="suggestion-tag" data-keyword="沙拉">沙拉</span>
+                            <span class="suggestion-tag" data-keyword="排骨">排骨</span>
+                            <span class="suggestion-tag" data-keyword="汤">汤</span>
+                            <span class="suggestion-tag" data-keyword="素食">素食</span>
+                            <span class="suggestion-tag" data-keyword="快手菜">快手菜</span>
+                        </div>
+                    </div>
+
+                    <div class="suggestions-section">
+                        <h3>菜系分类</h3>
+                        <div class="suggestion-tags">
+                            <span class="suggestion-tag" data-keyword="川菜">川菜</span>
+                            <span class="suggestion-tag" data-keyword="粤菜">粤菜</span>
+                            <span class="suggestion-tag" data-keyword="湘菜">湘菜</span>
+                            <span class="suggestion-tag" data-keyword="西餐">西餐</span>
+                            <span class="suggestion-tag" data-keyword="日料">日料</span>
+                            <span class="suggestion-tag" data-keyword="韩式">韩式</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 搜索历史 -->
+                <div class="search-history" id="searchHistory" style="display: none;">
+                    <div class="history-header">
+                        <h3>搜索历史</h3>
+                        <button class="clear-history-btn" id="clearHistoryBtn">清空</button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <!-- 历史记录将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+
+                <!-- 搜索结果 -->
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <div class="results-header">
+                        <h3 id="resultsTitle">搜索结果</h3>
+                        <div class="filter-btn" id="filterBtn">
+                            <img src="images/filter.svg" alt="筛选">
+                        </div>
+                    </div>
+                    <div class="results-list" id="resultsList">
+                        <!-- 搜索结果将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+
+                <!-- 无结果状态 -->
+                <div class="no-results" id="noResults" style="display: none;">
+                    <div class="no-results-icon">
+                        <img src="images/search-empty.svg" alt="无结果">
+                    </div>
+                    <div class="no-results-text">
+                        <h3>没有找到相关食谱</h3>
+                        <p>试试其他关键词或浏览推荐内容</p>
+                    </div>
+                    <button class="browse-btn" onclick="window.location.href='home.html'">浏览推荐</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/search.js"></script>
+</body>
+
+</html>

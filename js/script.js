@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 加载用户头像
+    loadUserAvatar();
     // 标签切换功能
     window.showTab = function(tabId) {
         // 隐藏所有内容
@@ -44,11 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 搜索框点击事件
-    const searchBar = document.getElementById('search-bar');
+    const searchBar = document.querySelector('.search-bar');
     if (searchBar) {
         searchBar.addEventListener('click', function() {
-            // 这里可以添加搜索功能
-            alert('搜索功能即将推出！');
+            window.location.href = 'search.html';
         });
     }
     
@@ -227,6 +228,21 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', updateBlur);
     // 初始化效果
     updateBlur();
+    
+    // 加载用户头像函数
+    function loadUserAvatar() {
+        const defaultUserData = {
+            avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+        };
+        
+        const savedData = localStorage.getItem('chefmate_user_profile');
+        const userData = savedData ? { ...defaultUserData, ...JSON.parse(savedData) } : defaultUserData;
+        
+        const userAvatarImg = document.getElementById('userAvatarImg');
+        if (userAvatarImg && userData.avatar) {
+            userAvatarImg.src = userData.avatar;
+        }
+    }
 });
 
 // 添加平滑滚动效果
