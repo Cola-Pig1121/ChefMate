@@ -375,3 +375,57 @@ body {
 .wave-btn svg {
     pointer-events: none;
 }
+
+/* 沟通状态按钮动画样式 */
+.wave-btn {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.wave-btn svg rect {
+    fill: #FFA242;
+    transition: all 0.3s ease;
+}
+
+.wave-btn.active svg rect {
+    fill: #4CAF50;
+    animation: wave 1.5s infinite;
+}
+
+.wave-btn.active::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 2px solid rgba(76, 175, 80, 0.5);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes wave {
+    0%, 100% {
+        height: 8px;
+        y: 12px;
+    }
+    50% {
+        height: 16px;
+        y: 4px;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    70% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}
