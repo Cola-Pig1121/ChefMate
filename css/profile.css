@@ -67,6 +67,21 @@
     box-shadow: 0 1px 4px rgba(255, 162, 66, 0.3);
 }
 
+/* 打卡记录部分 */
+.profile-section {
+    background-color: #fafafa;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #333;
+}
+
 /* 功能菜单列表样式 */
 .menu-list {
     background-color: #fafafa;
