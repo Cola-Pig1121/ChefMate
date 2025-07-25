@@ -80,7 +80,7 @@ body {
 .page-title {
     display: flex;
     align-items: center;
-    justify-content: flex-end; /* 右对齐 */
+    justify-content: flex-start; /* 左对齐 */
 }
 
 .page-title h2 {
