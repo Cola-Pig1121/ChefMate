@@ -1,313 +1,296 @@
+// 购菜篮页面功能
 document.addEventListener('DOMContentLoaded', function() {
-    // 从localStorage加载购物清单
-    loadShoppingList();
-    
-    // 加载购物清单函数
-    function loadShoppingList() {
-        const shoppingList = document.querySelector('.shopping-list');
-        const basketItems = JSON.parse(localStorage.getItem('basketItems') || '[]');
-        
-        // 如果有保存的购物项目，清空默认展示的项目
-        if (basketItems.length > 0) {
-            shoppingList.innerHTML = '';
-            
-            // 添加每个购物项目到清单
-            basketItems.forEach((item, index) => {
-                const itemHtml = `
-                    <div class="shopping-item">
-                        <div class="item-check">
-                            <input type="checkbox" id="item${index}">
-                            <label for="item${index}"></label>
-                        </div>
-                        <div class="item-info">
-                            <h3>${item.name}</h3>
-                            <p>${item.quantity}${item.unit || ''} × ${item.portion || 1}份</p>
-                        </div>
-                        <div class="item-quantity">
-                            <button class="quantity-btn minus">-</button>
-                            <span class="quantity">${item.portion || 1}</span>
-                            <button class="quantity-btn plus">+</button>
-                        </div>
-                    </div>
-                `;
-                shoppingList.innerHTML += itemHtml;
-            });
-            
-            // 重新绑定事件处理
-            bindEventHandlers();
-        }
-    }
-    
-    // 绑定事件处理函数
-    function bindEventHandlers() {
-        // 重新绑定数量调整按钮
-        const minusButtons = document.querySelectorAll('.minus');
-        const plusButtons = document.querySelectorAll('.plus');
-        
-        minusButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const quantityElement = this.nextElementSibling;
-                let quantity = parseInt(quantityElement.textContent);
-                
-                if (quantity > 1) {
-                    quantity--;
-                    quantityElement.textContent = quantity;
-                    updateItemInStorage(button, quantity);
-                }
-            });
-        });
-        
-        plusButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const quantityElement = this.previousElementSibling;
-                let quantity = parseInt(quantityElement.textContent);
-                
-                quantity++;
-                quantityElement.textContent = quantity;
-                updateItemInStorage(button, quantity);
-            });
-        });
-        
-        // 重新绑定复选框功能
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const item = this.closest('.shopping-item');
-                if (this.checked) {
-                    item.style.opacity = '0.6';
-                } else {
-                    item.style.opacity = '1';
-                }
-            });
-        });
-        
-        // 重新绑定滑动手势
-        let touchStartX = 0;
-        const items = document.querySelectorAll('.shopping-item');
-        
-        items.forEach(item => {
-            item.addEventListener('touchstart', function(e) {
-                touchStartX = e.touches[0].clientX;
-            });
-            
-            item.addEventListener('touchmove', function(e) {
-                const touchEndX = e.touches[0].clientX;
-                const diff = touchStartX - touchEndX;
-                
-                if (diff > 100) {
-                    this.classList.add('slide-left');
-                } else {
-                    this.classList.remove('slide-left');
-                }
-            });
-            
-            item.addEventListener('touchend', function(e) {
-                if (this.classList.contains('slide-left')) {
-                    if (confirm('确定要删除此项吗？')) {
-                        this.style.opacity = '0';
-                        setTimeout(() => {
-                            // 删除localStorage中对应的项目
-                            const index = Array.from(document.querySelectorAll('.shopping-item')).indexOf(this);
-                            removeItemFromStorage(index);
-                            this.remove();
-                        }, 300);
-                    } else {
-                        this.classList.remove('slide-left');
-                    }
-                }
-            });
-        });
-    }
-    
-    // 更新localStorage中的项目数量
-    function updateItemInStorage(button, newQuantity) {
-        const item = button.closest('.shopping-item');
-        const index = Array.from(document.querySelectorAll('.shopping-item')).indexOf(item);
-        
-        const basketItems = JSON.parse(localStorage.getItem('basketItems') || '[]');
-        if (basketItems[index]) {
-            basketItems[index].portion = newQuantity;
-            localStorage.setItem('basketItems', JSON.stringify(basketItems));
-        }
-    }
-    
-    // 从localStorage中删除项目
-    function removeItemFromStorage(index) {
-        const basketItems = JSON.parse(localStorage.getItem('basketItems') || '[]');
-        if (index >= 0 && index < basketItems.length) {
-            basketItems.splice(index, 1);
-            localStorage.setItem('basketItems', JSON.stringify(basketItems));
-        }
-    }
-    // 分类标签切换
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
+    const categoryTabs = document.querySelectorAll('.tab');
+    const shoppingItems = document.querySelectorAll('.shopping-item');
+    const quantityBtns = document.querySelectorAll('.quantity-btn');
+    const clearBtn = document.querySelector('.clear-btn');
+    const shareBtn = document.querySelector('.share-btn');
+    const addItemBtn = document.querySelector('.add-item-button');
+
+    // 分类筛选功能
+    categoryTabs.forEach(tab => {
         tab.addEventListener('click', function() {
             // 移除所有active状态
-            tabs.forEach(t => t.classList.remove('active'));
+            categoryTabs.forEach(t => t.classList.remove('active'));
             // 添加active状态到当前标签
             this.classList.add('active');
             
-            // 获取当前选中的分类
-            const category = this.textContent.trim();
-            filterItems(category);
-        });
-    });
-    
-    // 根据分类过滤购物清单
-    function filterItems(category) {
-        const items = document.querySelectorAll('.shopping-item');
-        
-        if (category === '全部') {
-            // 显示所有项目
-            items.forEach(item => {
-                item.style.display = 'flex';
-            });
-            return;
-        }
-        
-        // 这里可以根据实际情况进行分类过滤
-        // 此处为简化示例，实际应用中需要为每个项目添加分类属性
-        items.forEach(item => {
-            const itemName = item.querySelector('h3').textContent;
-            let showItem = false;
+            const selectedCategory = this.dataset.category;
             
-            if (category === '蔬菜' && (itemName.includes('番茄') || itemName.includes('牛油果'))) {
-                showItem = true;
-            } else if (category === '肉类' && itemName.includes('排骨')) {
-                showItem = true;
-            } else if (category === '调料' && (itemName.includes('醋') || itemName.includes('砂糖'))) {
-                showItem = true;
-            }
-            
-            item.style.display = showItem ? 'flex' : 'none';
-        });
-    }
-    
-    // 数量调整按钮
-    const minusButtons = document.querySelectorAll('.minus');
-    const plusButtons = document.querySelectorAll('.plus');
-    
-    minusButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const quantityElement = this.nextElementSibling;
-            let quantity = parseInt(quantityElement.textContent);
-            
-            if (quantity > 1) {
-                quantity--;
-                quantityElement.textContent = quantity;
-            }
-        });
-    });
-    
-    plusButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const quantityElement = this.previousElementSibling;
-            let quantity = parseInt(quantityElement.textContent);
-            
-            quantity++;
-            quantityElement.textContent = quantity;
-        });
-    });
-    
-    // 清空已选按钮
-    const clearButton = document.querySelector('.clear-btn');
-    clearButton.addEventListener('click', function() {
-        const checkedItems = document.querySelectorAll('input[type="checkbox"]:checked');
-        
-        if (checkedItems.length === 0) {
-            alert('请先选择要删除的食材');
-            return;
-        }
-        
-        if (confirm('确定要删除选中的' + checkedItems.length + '个食材吗？')) {
-            // 收集要删除的索引
-            const indexesToRemove = [];
-            checkedItems.forEach(checkbox => {
-                const item = checkbox.closest('.shopping-item');
-                const index = Array.from(document.querySelectorAll('.shopping-item')).indexOf(item);
-                indexesToRemove.push(index);
-                
-                item.style.opacity = '0';
-                setTimeout(() => {
-                    item.remove();
-                }, 300);
-            });
-            
-            // 从localStorage中删除选中项
-            const basketItems = JSON.parse(localStorage.getItem('basketItems') || '[]');
-            // 从大到小排序，这样删除时不会影响其他索引
-            indexesToRemove.sort((a, b) => b - a);
-            
-            indexesToRemove.forEach(index => {
-                if (index >= 0 && index < basketItems.length) {
-                    basketItems.splice(index, 1);
+            // 筛选显示物品
+            shoppingItems.forEach(item => {
+                if (selectedCategory === 'all' || item.dataset.category === selectedCategory) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
                 }
             });
             
-            localStorage.setItem('basketItems', JSON.stringify(basketItems));
-        }
+            // 平滑滚动到列表顶部
+            const listContainer = document.querySelector('.shopping-list-container');
+            listContainer.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
     });
-    
-    // 分享清单按钮
-    const shareButton = document.querySelector('.share-btn');
-    shareButton.addEventListener('click', function() {
-        // 这里可以添加分享功能
-        alert('分享功能即将上线，敬请期待！');
+
+    // 数量控制功能
+    quantityBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const quantitySpan = this.parentNode.querySelector('.quantity');
+            let currentQuantity = parseInt(quantitySpan.textContent);
+            
+            if (this.classList.contains('plus')) {
+                currentQuantity++;
+            } else if (this.classList.contains('minus') && currentQuantity > 0) {
+                currentQuantity--;
+            }
+            
+            quantitySpan.textContent = currentQuantity;
+            
+            // 如果数量为0，自动取消选中
+            if (currentQuantity === 0) {
+                const checkbox = this.closest('.shopping-item').querySelector('input[type="checkbox"]');
+                checkbox.checked = false;
+            }
+        });
     });
-    
-    // 添加食材按钮
-    const addButton = document.querySelector('.add-item-button');
-    addButton.addEventListener('click', function() {
-        // 这里可以添加新建食材的功能
-        alert('添加食材功能即将上线，敬请期待！');
-    });
-    
-    // 复选框功能
+
+    // 复选框状态变化
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const item = this.closest('.shopping-item');
             if (this.checked) {
-                item.style.opacity = '0.6';
+                item.style.backgroundColor = '#f0f8ff';
             } else {
-                item.style.opacity = '1';
+                item.style.backgroundColor = 'white';
             }
         });
     });
-    
-    // 添加滑动手势以删除项目
-    let touchStartX = 0;
-    const items = document.querySelectorAll('.shopping-item');
-    
-    items.forEach(item => {
-        item.addEventListener('touchstart', function(e) {
-            touchStartX = e.touches[0].clientX;
-        });
+
+    // 清空已选功能
+    clearBtn.addEventListener('click', function() {
+        const checkedItems = document.querySelectorAll('input[type="checkbox"]:checked');
         
-        item.addEventListener('touchmove', function(e) {
-            const touchEndX = e.touches[0].clientX;
-            const diff = touchStartX - touchEndX;
+        if (checkedItems.length === 0) {
+            showMessage('没有选中的物品');
+            return;
+        }
+        
+        if (confirm(`确定要清空 ${checkedItems.length} 个已选物品吗？`)) {
+            checkedItems.forEach(checkbox => {
+                checkbox.checked = false;
+                const item = checkbox.closest('.shopping-item');
+                item.style.backgroundColor = 'white';
+                
+                // 重置数量为1
+                const quantitySpan = item.querySelector('.quantity');
+                quantitySpan.textContent = '1';
+            });
             
-            // 向左滑动超过100px时，添加删除提示
-            if (diff > 100) {
-                this.classList.add('slide-left');
-            } else {
-                this.classList.remove('slide-left');
-            }
+            showMessage('已清空选中物品');
+        }
+    });
+
+    // 分享清单功能
+    shareBtn.addEventListener('click', function() {
+        const allItems = [];
+        shoppingItems.forEach(item => {
+            const name = item.querySelector('h3').textContent;
+            const desc = item.querySelector('p').textContent;
+            const quantity = item.querySelector('.quantity').textContent;
+            const checked = item.querySelector('input[type="checkbox"]').checked;
+            
+            allItems.push({
+                name,
+                desc,
+                quantity,
+                checked
+            });
         });
         
-        item.addEventListener('touchend', function(e) {
-            if (this.classList.contains('slide-left')) {
-                if (confirm('确定要删除此项吗？')) {
-                    this.style.opacity = '0';
-                    setTimeout(() => {
-                        this.remove();
-                    }, 300);
-                } else {
-                    this.classList.remove('slide-left');
+        const checkedItems = allItems.filter(item => item.checked);
+        
+        if (checkedItems.length === 0) {
+            showMessage('请先选择要分享的物品');
+            return;
+        }
+        
+        // 生成分享文本
+        let shareText = '📝 我的购菜清单：\n\n';
+        checkedItems.forEach((item, index) => {
+            shareText += `${index + 1}. ${item.name} - ${item.desc} × ${item.quantity}\n`;
+        });
+        shareText += '\n🍳 来自 ChefMate 应用';
+        
+        // 尝试使用Web Share API
+        if (navigator.share) {
+            navigator.share({
+                title: '购菜清单',
+                text: shareText
+            }).catch(err => {
+                console.log('分享失败:', err);
+                copyToClipboard(shareText);
+            });
+        } else {
+            // 备用方案：复制到剪贴板
+            copyToClipboard(shareText);
+        }
+    });
+
+    // 添加食材功能
+    addItemBtn.addEventListener('click', function() {
+        const itemName = prompt('请输入食材名称：');
+        if (itemName && itemName.trim()) {
+            addNewItem(itemName.trim());
+        }
+    });
+
+    // 添加新物品到列表
+    function addNewItem(name) {
+        const shoppingList = document.querySelector('.shopping-list');
+        const newItemId = 'item' + Date.now();
+        
+        const newItemHTML = `
+            <div class="shopping-item" data-category="all">
+                <div class="item-check">
+                    <input type="checkbox" id="${newItemId}">
+                    <label for="${newItemId}"></label>
+                </div>
+                <div class="item-info">
+                    <h3>${name}</h3>
+                    <p>自定义添加</p>
+                </div>
+                <div class="item-quantity">
+                    <button class="quantity-btn minus">-</button>
+                    <span class="quantity">1</span>
+                    <button class="quantity-btn plus">+</button>
+                </div>
+            </div>
+        `;
+        
+        // 在添加按钮前插入新物品
+        addItemBtn.insertAdjacentHTML('beforebegin', newItemHTML);
+        
+        // 为新物品绑定事件
+        const newItem = addItemBtn.previousElementSibling;
+        bindItemEvents(newItem);
+        
+        showMessage(`已添加 "${name}" 到购菜篮`);
+        
+        // 滚动到新添加的物品
+        newItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 为物品绑定事件
+    function bindItemEvents(item) {
+        // 数量控制
+        const quantityBtns = item.querySelectorAll('.quantity-btn');
+        quantityBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const quantitySpan = this.parentNode.querySelector('.quantity');
+                let currentQuantity = parseInt(quantitySpan.textContent);
+                
+                if (this.classList.contains('plus')) {
+                    currentQuantity++;
+                } else if (this.classList.contains('minus') && currentQuantity > 0) {
+                    currentQuantity--;
                 }
+                
+                quantitySpan.textContent = currentQuantity;
+                
+                if (currentQuantity === 0) {
+                    const checkbox = this.closest('.shopping-item').querySelector('input[type="checkbox"]');
+                    checkbox.checked = false;
+                    item.style.backgroundColor = 'white';
+                }
+            });
+        });
+        
+        // 复选框
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                item.style.backgroundColor = '#f0f8ff';
+            } else {
+                item.style.backgroundColor = 'white';
             }
         });
-    });
-}); 
+    }
+
+    // 复制到剪贴板
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('清单已复制到剪贴板');
+            }).catch(() => {
+                showMessage('复制失败，请手动复制');
+            });
+        } else {
+            // 备用方案
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showMessage('清单已复制到剪贴板');
+            } catch (err) {
+                showMessage('复制失败，请手动复制');
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+
+    // 显示消息提示
+    function showMessage(message) {
+        // 移除已存在的消息
+        const existingMessage = document.querySelector('.toast-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        const messageEl = document.createElement('div');
+        messageEl.className = 'toast-message';
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        
+        document.body.appendChild(messageEl);
+        
+        // 显示消息
+        setTimeout(() => {
+            messageEl.style.opacity = '1';
+        }, 100);
+        
+        // 自动隐藏
+        setTimeout(() => {
+            messageEl.style.opacity = '0';
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.remove();
+                }
+            }, 300);
+        }, 2000);
+    }
+
+    // 初始化：显示所有物品
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+        activeTab.click();
+    }
+});

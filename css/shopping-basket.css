@@ -15,14 +15,25 @@
     }
 }
 
-/* 分类标签 */
+/* 分类标签容器 */
+.category-tabs-container {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* 分类标签 - 可左右滑动 */
 .category-tabs {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
     overflow-x: auto;
     padding-bottom: 10px;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    gap: 10px;
+}
+
+.category-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
 }
 
 .tab {
@@ -31,9 +42,11 @@
     border-radius: 20px;
     font-size: 14px;
     white-space: nowrap;
-    margin-right: 10px;
     color: #666;
     transition: all 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+    min-width: fit-content;
 }
 
 .tab.active {
@@ -48,6 +61,32 @@
     border-radius: 25px;
     padding: 20px;
     /* margin-bottom由统一样式控制 */
+}
+
+/* 购物清单滚动容器 */
+.shopping-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+}
+
+.shopping-list-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.shopping-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.shopping-list-container::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 2px;
+}
+
+.shopping-list-container::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
 }
 
 /* 购物项目 */
