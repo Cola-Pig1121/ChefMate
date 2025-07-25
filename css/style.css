@@ -63,6 +63,7 @@ body {
     padding: 25px;
     display: flex;
     align-items: center;
+    justify-content: space-between; /* 将元素分布在两端 */
     gap: 10px;
     z-index: 100;
     background: linear-gradient(180deg,
@@ -73,6 +74,20 @@ body {
         rgba(255, 255, 255, 0.2) 80%,
         rgba(255, 255, 255, 0) 100%
     );
+}
+
+/* 顶部页面标题 */
+.page-title {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* 右对齐 */
+}
+
+.page-title h2 {
+    font-size: 20px;
+    color: #333;
+    font-weight: 500;
+    margin: 0;
 }
 
 .user-avatar {
