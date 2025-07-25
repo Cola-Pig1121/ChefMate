@@ -1,19 +1,8 @@
 /* 个人中心专用样式 */
-body {
-    background-color: #f2f2f2;
-}
-
-.app-container {
-    background-color: #f2f2f2;
-}
-
-.main-frame {
-    background-color: #f2f2f2;
-}
 
 /* 个人信息区域 */
 .profile-container {
-    background-color: #fff;
+    background-color: #fafafa;
     border-radius: 25px;
     padding: 20px;
     /* margin-bottom由统一样式控制 */
@@ -80,7 +69,7 @@ body {
 
 /* 功能菜单列表样式 */
 .menu-list {
-    background-color: #fff;
+    background-color: #fafafa;
     border-radius: 15px;
     margin: 15px 0;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
