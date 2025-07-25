@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 获取DOM元素
     const backBtn = document.querySelector('.back-btn');
     const shareBtn = document.querySelector('.share-btn');
+    const favoriteBtn = document.getElementById('favoriteBtn');
     const addToCartBtn = document.querySelector('.add-to-cart-btn');
     const decreaseBtn = document.querySelector('.portion-btn.decrease');
     const increaseBtn = document.querySelector('.portion-btn.increase');
@@ -86,6 +87,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const likesEl = document.querySelector('.stat-item img[alt="点赞"]')?.nextElementSibling;
     if (likesEl) likesEl.textContent = recipe.likes;
 
+    // 初始化收藏状态
+    initializeFavoriteButton();
+
     // 设置食材
     const ingredientsGroups = document.querySelectorAll('.ingredients-group');
     if (ingredientsGroups[0]) {
@@ -157,9 +161,158 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 分享按钮
     shareBtn.addEventListener('click', function() {
-        // 这里可以添加分享功能
-        alert('分享功能即将推出！');
+        const shareText = `📖 推荐一个${recipe.category}食谱：${recipe.title}\n⏰ 制作时间：${recipe.time}\n👍 ${recipe.likes}人喜欢\n\n🍳 来自 ChefMate 应用`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: recipe.title,
+                text: shareText
+            }).catch(err => {
+                console.log('分享失败:', err);
+                copyToClipboard(shareText);
+            });
+        } else {
+            copyToClipboard(shareText);
+        }
     });
+
+    // 收藏按钮功能
+    function initializeFavoriteButton() {
+        if (!favoriteBtn) return;
+        
+        const recipeId = getRecipeId();
+        updateFavoriteButton(recipeId);
+        
+        favoriteBtn.addEventListener('click', function() {
+            toggleFavorite(recipeId);
+        });
+    }
+
+    function getRecipeId() {
+        const recipeParam = getQueryParam('recipe');
+        if (recipeParam === 'salad' || recipe.title === '牛油果番茄沙拉') {
+            return 'recipe_1';
+        } else if (recipeParam === 'ribs' || recipe.title === '糖醋排骨') {
+            return 'recipe_2';
+        }
+        return 'recipe_1';
+    }
+
+    function updateFavoriteButton(recipeId) {
+        const isFavorited = checkIfFavorited(recipeId);
+        const img = favoriteBtn.querySelector('img');
+        
+        if (isFavorited) {
+            favoriteBtn.classList.add('favorited');
+            img.src = 'images/heart-filled.svg';
+        } else {
+            favoriteBtn.classList.remove('favorited');
+            img.src = 'images/heart.svg';
+        }
+    }
+
+    function toggleFavorite(recipeId) {
+        const isFavorited = checkIfFavorited(recipeId);
+        
+        if (isFavorited) {
+            removeFromFavorites(recipeId);
+            showMessage('已取消收藏');
+        } else {
+            const favoriteItem = {
+                id: recipeId,
+                type: 'recipes',
+                title: recipe.title,
+                image: recipe.image,
+                time: recipe.time,
+                likes: recipe.likes,
+                category: recipe.category
+            };
+            addToFavorites(favoriteItem);
+            showMessage('已添加到收藏');
+        }
+        
+        updateFavoriteButton(recipeId);
+    }
+
+    function checkIfFavorited(recipeId) {
+        const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
+        return favorites.some(fav => fav.id === recipeId);
+    }
+
+    function addToFavorites(item) {
+        const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
+        item.addedTime = Date.now();
+        favorites.unshift(item);
+        localStorage.setItem('chefmate_favorites', JSON.stringify(favorites));
+    }
+
+    function removeFromFavorites(recipeId) {
+        const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
+        const updatedFavorites = favorites.filter(fav => fav.id !== recipeId);
+        localStorage.setItem('chefmate_favorites', JSON.stringify(updatedFavorites));
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('已复制到剪贴板');
+            }).catch(() => {
+                showMessage('复制失败');
+            });
+        } else {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showMessage('已复制到剪贴板');
+            } catch (err) {
+                showMessage('复制失败');
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+
+    function showMessage(message) {
+        const existingMessage = document.querySelector('.toast-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        const messageEl = document.createElement('div');
+        messageEl.className = 'toast-message';
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        
+        document.body.appendChild(messageEl);
+        
+        setTimeout(() => {
+            messageEl.style.opacity = '1';
+        }, 100);
+        
+        setTimeout(() => {
+            messageEl.style.opacity = '0';
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.remove();
+                }
+            }, 300);
+        }, 2000);
+    }
 
     // 份数控制
     let portion = 1;

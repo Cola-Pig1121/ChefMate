@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearBtn = document.querySelector('.clear-btn');
     const shareBtn = document.querySelector('.share-btn');
     const addItemBtn = document.querySelector('.add-item-button');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    
+    let isAllSelected = false;
 
     // 分类筛选功能
     categoryTabs.forEach(tab => {
@@ -25,6 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     item.style.display = 'none';
                 }
             });
+            
+            // 更新全选按钮状态
+            updateSelectAllButton();
             
             // 平滑滚动到列表顶部
             const listContainer = document.querySelector('.shopping-list-container');
@@ -67,8 +73,73 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 item.style.backgroundColor = 'white';
             }
+            updateSelectAllButton();
         });
     });
+
+    // 全选/全不选功能
+    selectAllBtn.addEventListener('click', function() {
+        const visibleCheckboxes = getVisibleCheckboxes();
+        
+        if (isAllSelected) {
+            // 全不选
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                const item = checkbox.closest('.shopping-item');
+                item.style.backgroundColor = 'white';
+            });
+            isAllSelected = false;
+            updateSelectAllButtonText();
+            showMessage('已取消全选');
+        } else {
+            // 全选
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                const item = checkbox.closest('.shopping-item');
+                item.style.backgroundColor = '#f0f8ff';
+            });
+            isAllSelected = true;
+            updateSelectAllButtonText();
+            showMessage(`已选中 ${visibleCheckboxes.length} 个物品`);
+        }
+    });
+
+    // 获取当前可见的复选框
+    function getVisibleCheckboxes() {
+        const visibleItems = Array.from(shoppingItems).filter(item => 
+            item.style.display !== 'none'
+        );
+        return visibleItems.map(item => item.querySelector('input[type="checkbox"]'));
+    }
+
+    // 更新全选按钮状态
+    function updateSelectAllButton() {
+        const visibleCheckboxes = getVisibleCheckboxes();
+        const checkedCount = visibleCheckboxes.filter(cb => cb.checked).length;
+        
+        if (checkedCount === 0) {
+            isAllSelected = false;
+        } else if (checkedCount === visibleCheckboxes.length) {
+            isAllSelected = true;
+        } else {
+            isAllSelected = false;
+        }
+        
+        updateSelectAllButtonText();
+    }
+
+    // 更新全选按钮文字和样式
+    function updateSelectAllButtonText() {
+        const selectAllText = selectAllBtn.querySelector('.select-all-text');
+        
+        if (isAllSelected) {
+            selectAllText.textContent = '全不选';
+            selectAllBtn.classList.add('deselect');
+        } else {
+            selectAllText.textContent = '全选';
+            selectAllBtn.classList.remove('deselect');
+        }
+    }
 
     // 清空已选功能
     clearBtn.addEventListener('click', function() {
@@ -217,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 item.style.backgroundColor = 'white';
             }
+            updateSelectAllButton();
         });
     }
 
@@ -293,4 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (activeTab) {
         activeTab.click();
     }
+    
+    // 初始化全选按钮状态
+    updateSelectAllButton();
 });

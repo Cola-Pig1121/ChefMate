@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/favorites.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部导航栏 -->
+            <div class="top-bar">
+                <div class="action-btn back-btn" onclick="window.location.href='profile.html'">
+                    <img src="images/back.svg" alt="返回">
+                </div>
+                <div class="page-title">我的收藏</div>
+                <div class="action-btn search-btn" onclick="window.location.href='search.html'">
+                    <img src="images/search.svg" alt="搜索">
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <!-- 分类标签 -->
+                <div class="category-tabs-container">
+                    <div class="category-tabs">
+                        <div class="tab active" data-category="all">全部</div>
+                        <div class="tab" data-category="recipes">食谱</div>
+                        <div class="tab" data-category="ingredients">食材</div>
+                        <div class="tab" data-category="tips">小贴士</div>
+                    </div>
+                </div>
+
+                <!-- 收藏列表 -->
+                <div class="favorites-container">
+                    <div class="favorites-list" id="favoritesList">
+                        <!-- 收藏项目将通过JavaScript动态添加 -->
+                    </div>
+                    
+                    <!-- 空状态 -->
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <div class="empty-icon">
+                            <img src="images/heart-empty.svg" alt="暂无收藏">
+                        </div>
+                        <div class="empty-text">
+                            <h3>还没有收藏任何内容</h3>
+                            <p>去发现一些喜欢的食谱吧</p>
+                        </div>
+                        <button class="browse-btn" onclick="window.location.href='home.html'">浏览食谱</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='home.html'">
+                    <img src="images/首页_home-two (1).svg" alt="主页">
+                </div>
+                <div class="nav-item" onclick="window.location.href='shopping-basket.html'">
+                    <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
+                </div>
+                <div class="nav-item active" onclick="window.location.href='profile.html'">
+                    <img src="images/人员_people.svg" alt="个人">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/favorites.js"></script>
+</body>
+</html>
