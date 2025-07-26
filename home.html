@@ -6,7 +6,6 @@
     <title>ChefMate - 你的私人厨师</title>
     <link rel="stylesheet" href="css/font.css" />
     <link rel="stylesheet" href="css/style.css" />
-    <link rel="x/icon" alg="icon" href="images/favicon.ico">
   </head>
   <body>
     <div class="app-container">
@@ -37,50 +36,14 @@
           <!-- 推荐菜品 -->
           <div class="recommendations">
             <h2>推荐</h2>
-            <div class="recipe-cards">
-              <!-- 牛油果番茄沙拉 -->
-              <div
-                class="recipe-card"
-                onclick="window.location.href='recipe-detail.html?recipe=salad'"
-              >
-                <div
-                  class="recipe-image"
-                  style="background-image: url('images/沙拉.jpeg')"
-                ></div>
-                <h3>牛油果番茄沙拉</h3>
-                <div class="recipe-info">
-                  <div class="info-item">
-                    <img src="images/time.svg" alt="时间" />
-                    <span>40min</span>
-                  </div>
-                  <div class="info-item">
-                    <img src="images/likes.svg" alt="点赞" />
-                    <span>500+</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 糖醋排骨 -->
-              <div
-                class="recipe-card"
-                onclick="window.location.href='recipe-detail.html?recipe=ribs'"
-              >
-                <div
-                  class="recipe-image"
-                  style="background-image: url('images/排骨.jpg')"
-                ></div>
-                <h3>糖醋排骨</h3>
-                <div class="recipe-info">
-                  <div class="info-item">
-                    <img src="images/time.svg" alt="时间" />
-                    <span>40min</span>
-                  </div>
-                  <div class="info-item">
-                    <img src="images/likes.svg" alt="点赞" />
-                    <span>500+</span>
-                  </div>
-                </div>
-              </div>
+            <div class="recipe-cards" id="recipeContainer">
+              <!-- 初始加载的食谱卡片 -->
+            </div>
+            <div id="loadingIndicator" class="loading-indicator" style="display: none; text-align: center; padding: 20px;">
+              <p>加载中...</p>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+              <button id="loadMoreBtn" class="load-more-btn">加载更多</button>
             </div>
           </div>
         </div>

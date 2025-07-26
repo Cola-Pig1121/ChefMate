@@ -124,9 +124,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 加载用户资料函数
     function loadUserProfile() {
         const defaultUserData = {
-            username: 'Aion',
-            phone: '186****3779',
-            avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+            username: 'Chef',
+            phone: '00000000000',
+            avatar: '../images/user_default.jpg'
         };
         
         const savedData = localStorage.getItem('chefmate_user_profile');

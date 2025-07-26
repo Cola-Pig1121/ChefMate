@@ -10,13 +10,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 默认用户数据
     const defaultUserData = {
-        username: 'Aion',
-        phone: '186****3779',
+        username: 'Chef',
+        phone: '00000000000',
         email: '',
         gender: '',
         birthday: '',
         bio: '',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        avatar: '../images/user_default.jpg',
         dietary: [],
         cookingLevel: '',
         favoritesCuisine: ''
