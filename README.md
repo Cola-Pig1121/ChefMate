@@ -120,7 +120,7 @@ chefmateweb/
 
 运行后端服务：
 ```bash
-python backend/api.py
+python backend/app.py
 ```
 
 ## 注意事项
