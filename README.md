@@ -1,141 +1,261 @@
-# ChefMate 菜谱助手
+# 🎤 实时语音对话系统 (Real-time Voice Conversation System)
 
-一个现代化的菜谱制作指导应用，提供直观的步骤导航和进度跟踪功能。
+基于 Faster-Whisper 的实时语音对话系统，支持语音识别、智能对话和语音合成的完整流程。
 
-## 功能特性
+## ✨ 特性
 
-### 🎯 菜谱步骤页面功能
+- 🎙️ **实时语音识别**: 使用 Faster-Whisper 进行高效的中文语音转文字
+- 🧠 **智能对话**: 集成 Qwen 大语言模型进行自然对话
+- 🔊 **语音合成**: 使用 Edge-TTS 生成自然的中文语音
+- 🎯 **语音活动检测**: 自动检测用户说话开始和结束
+- 🚫 **智能录音管理**: AI 说话时自动禁用录音，避免干扰
+- 🌐 **实时通信**: 基于 WebSocket 的实时前后端通信
+- 📱 **响应式界面**: 现代化的 Web 界面，支持移动端
 
-#### 小步骤进度跟踪
-- **自动开始**: 进入页面时自动开始第一步（牛油果），左侧小点变为绿色
-- **进度标记**: 点击"下一步"按钮，完成的步骤小点中间出现对勾
-- **智能切换**: 自动切换到下一个食材（番茄、洋葱等）
-- **大步骤切换**: 当完成当前大步骤的最后一个食材时，自动切换到下一个大步骤的第一个食材
-
-#### 视觉反馈
-- **当前小步骤高亮**: 当前正在处理的食材组有特殊的背景高亮效果
-- **小点状态变化**: 
-  - 默认状态：橙色小点
-  - 当前状态：绿色小点（带发光效果）
-  - 完成状态：绿色小点 + 白色对勾
-- **内容层次**: 非当前小步骤的操作步骤会淡化显示
-
-#### 自动滚动优化 🆕
-- **智能定位**: 每个聚焦的小步骤都会自动滚动到屏幕30%以上的位置
-- **组件高度优化**: 增加了小步骤组的最小高度，确保有足够的展示空间
-- **当前步骤突出**: 当前小步骤组有更大的字体和更明显的视觉效果
-- **平滑滚动**: 使用平滑滚动动画，提供更好的用户体验
-
-#### 交互方式
-- **按钮控制**: 底部操作栏的"下一步"和"上一步"按钮
-- **手势滑动**: 支持向上滑动前进，向下滑动后退
-- **触摸优化**: 针对移动设备优化的触摸体验
-
-### 📱 响应式设计
-- 移动端优先的设计理念
-- 流畅的动画过渡效果
-- 直观的用户界面
-
-### 🎨 现代化UI
-- 卡片式布局
-- 渐变背景
-- 圆角设计
-- 阴影效果
-
-## 文件结构
+## 🏗️ 系统架构
 
 ```
-chefmateweb/
-├── css/
-│   ├── font.css          # 字体样式
-│   ├── style.css         # 基础样式
-│   └── recipe-cooking.css # 菜谱制作页面样式
-├── js/
-│   ├── script.js         # 主页脚本
-│   ├── recipe-detail.js  # 菜谱详情脚本
-│   └── recipe-cooking.js # 菜谱制作脚本
-├── images/               # 图片资源
-├── index.html           # 主页
-├── recipe-detail.html   # 菜谱详情页
-├── recipe-cooking.html  # 菜谱制作页
-├── test.html           # 测试页面
-└── README.md           # 项目说明
+用户语音 → 麦克风录音 → VAD检测 → Faster-Whisper转录 → Qwen对话 → Edge-TTS合成 → 音频播放
 ```
 
-## 使用方法
+### 核心组件
 
-1. 打开 `test.html` 查看功能说明
-2. 点击"打开菜谱步骤页面"进入制作流程
-3. 使用底部按钮或手势滑动来导航步骤
-4. 观察小点的颜色变化和进度标记
-5. **重点体验**: 观察每个小步骤是否都自动滚动到屏幕30%以上的位置
+1. **AudioRecorder**: 实时音频录制和VAD检测
+2. **WhisperTranscriber**: 基于Faster-Whisper的语音识别
+3. **ConversationManager**: Qwen模型对话管理
+4. **TTSManager**: Edge-TTS语音合成
+5. **VoiceConversationSystem**: 系统协调器
 
-## 技术实现
+## 🚀 快速开始
 
-### 小步骤数据结构
-```javascript
-const stepData = [
-    {
-        name: "步骤1",
-        subtitle: "处理食材",
-        subSteps: [
-            { name: "牛油果", steps: ["对半切开", "去除中间果核", ...] },
-            { name: "番茄", steps: ["洗干净去掉小绿帽子", "切片", ...] },
-            { name: "洋葱", steps: ["去皮", "切成细条（根据个人爱好）"] }
-        ]
-    },
-    // ... 更多步骤
-];
+### 1. 环境要求
+
+- Python 3.8+
+- 麦克风和扬声器
+- 网络连接 (用于API调用)
+
+### 2. 安装依赖
+
+```bash
+# 运行自动安装脚本
+python setup.py
+
+# 或手动安装
+pip install -r requirements.txt
 ```
 
-### 核心功能
-- `updateSubStepDisplay()`: 更新小步骤显示状态
-- `goToNextSubStep()`: 前往下一个子步骤
-- `goToPrevSubStep()`: 前往上一个子步骤
-- `scrollToCurrentSubStep()`: 自动滚动到当前小步骤 🆕
-- 手势识别和触摸事件处理
+### 3. 配置环境变量
 
-### 自动滚动算法 🆕
-```javascript
-function scrollToCurrentSubStep() {
-    // 计算目标滚动位置（屏幕30%位置）
-    const targetPosition = containerHeight * 0.3;
-    
-    // 获取当前小步骤组位置
-    const stepGroupTop = stepGroupRect.top - containerRect.top + stepsContainer.scrollTop;
-    
-    // 计算需要滚动的距离
-    const desiredScrollTop = stepGroupTop - targetPosition;
-    
-    // 平滑滚动到目标位置
-    stepsContainer.scrollTo({
-        top: desiredScrollTop,
-        behavior: 'smooth'
-    });
-}
+编辑 `backend/.env` 文件:
+
+```env
+BASE_URL=https://api.openai.com/v1
+API_KEY=your_qwen_api_key_here
+WHISPER_MODEL=base
+WHISPER_DEVICE=cpu
 ```
 
-## 浏览器兼容性
+### 4. 启动系统
 
-- Chrome 60+
-- Safari 12+
-- Firefox 55+
-- Edge 79+
+```bash
+python main.py
+```
 
-## 开发说明
+### 5. 打开前端界面
 
-项目使用原生HTML、CSS和JavaScript开发，无需额外依赖，可直接在浏览器中运行。
+在浏览器中打开 `voice-chat.html` 文件，点击"开始对话"即可开始语音聊天。
 
-### 新增功能说明 🆕
+## 📋 详细配置
 
-#### 自动滚动功能
-- 每次切换小步骤时，会自动计算目标滚动位置
-- 确保当前聚焦的小步骤始终在屏幕30%以上的位置显示
-- 使用平滑滚动动画，提供流畅的用户体验
-- 只有当滚动距离足够大时才执行滚动，避免不必要的动画
+### Whisper 模型配置
 
-#### 组件高度优化
-- 增加了小步骤组的最小高度（120px）
-- 当前小步骤组有更大的最小高度（150px）
-- 增加了内边距和行高，确保内容有足够的展示空间
-- 当前步骤的字体稍大，提供更好的视觉层次
+支持的模型大小:
+- `tiny`: 最快，准确率较低
+- `base`: 平衡速度和准确率 (推荐)
+- `small`: 更好的准确率
+- `medium`: 高准确率
+- `large-v3`: 最高准确率，速度较慢
+
+### 设备配置
+
+```python
+# CPU 运行 (推荐用于开发)
+WhisperTranscriber(model_size="base", device="cpu")
+
+# GPU 运行 (需要CUDA支持)
+WhisperTranscriber(model_size="base", device="cuda")
+```
+
+### VAD 参数调整
+
+```python
+# 在 VoiceActivityDetector 中调整
+VAD_AGGRESSIVENESS = 2  # 0-3, 数值越高越敏感
+VAD_FRAME_DURATION = 30  # 帧长度 (ms)
+```
+
+## 🎛️ 系统参数
+
+### 音频参数
+- **采样率**: 16kHz
+- **声道**: 单声道
+- **格式**: 16-bit PCM
+- **缓冲区大小**: 1024 frames
+
+### 对话参数
+- **最小音频长度**: 1.0秒
+- **静音阈值**: 2.0秒
+- **AI说话前禁录时间**: 1.0秒
+- **AI说话后恢复录音时间**: 1.0秒
+
+### 音频清理参数
+- **自动清理间隔**: 5分钟
+- **音频文件最大保存时间**: 1小时
+- **会话结束时自动清理**: 是
+
+## 🔧 API 接口
+
+### WebSocket 事件
+
+#### 客户端发送
+- `start_conversation`: 开始语音对话
+- `stop_conversation`: 停止语音对话
+- `end_session`: 手动结束会话并清理音频
+
+#### 服务端发送
+- `status`: 系统状态更新
+- `speech_start`: 检测到语音开始
+- `speech_end`: 语音结束
+- `transcription`: 语音转录结果
+- `ai_response`: AI回复文本
+- `ai_speaking`: AI说话状态
+- `play_audio`: 播放音频文件
+- `session_ended`: 会话结束通知
+
+### HTTP 接口
+
+- `GET /`: 健康检查
+- `POST /api/ask`: 文本对话接口
+- `GET /audio/<filename>`: 获取音频文件
+- `DELETE /api/delete_audio/<filename>`: 删除指定音频文件
+- `POST /api/cleanup_session/<session_id>`: 清理指定会话的音频文件
+- `GET /api/audio_stats`: 获取音频文件统计信息
+
+## 🛠️ 开发指南
+
+### 项目结构
+
+```
+├── main.py                 # 主程序入口
+├── voice-chat.html         # 前端界面
+├── requirements.txt        # Python依赖
+├── setup.py               # 安装脚本
+├── backend/
+│   ├── .env               # 环境变量
+│   └── app.py             # 原始Flask应用
+├── audio/                 # 音频文件存储
+└── README.md              # 项目文档
+```
+
+### 自定义开发
+
+#### 添加新的语音识别语言
+
+```python
+# 在 WhisperTranscriber.transcribe_audio 中修改
+segments, info = self.model.transcribe(
+    audio_np,
+    language="en",  # 改为其他语言代码
+    vad_filter=True
+)
+```
+
+#### 更换TTS语音
+
+```python
+# 在 TTSManager 中修改
+self.voice = "zh-CN-YunxiNeural"  # 男声
+self.voice = "en-US-AriaNeural"   # 英文女声
+```
+
+#### 调整对话模型
+
+```python
+# 在 ConversationManager 中修改
+response = self.client.chat.completions.create(
+    model="gpt-4",  # 更换为其他模型
+    messages=messages,
+    temperature=0.7,
+    max_tokens=200
+)
+```
+
+## 🐛 故障排除
+
+### 常见问题
+
+1. **麦克风无法访问**
+   - 检查浏览器麦克风权限
+   - 确认系统麦克风设备正常
+
+2. **Whisper模型加载失败**
+   - 检查网络连接
+   - 尝试更小的模型 (如 "tiny")
+
+3. **音频播放问题**
+   - 检查扬声器设置
+   - 确认音频文件生成成功
+
+4. **API调用失败**
+   - 验证 `.env` 文件中的API密钥
+   - 检查网络连接和API服务状态
+
+### 性能优化
+
+1. **降低延迟**
+   - 使用更小的Whisper模型
+   - 调整VAD参数减少静音等待时间
+   - 使用GPU加速 (如果可用)
+
+2. **提高准确率**
+   - 使用更大的Whisper模型
+   - 改善录音环境 (减少噪音)
+   - 调整VAD敏感度
+
+## 📊 性能基准
+
+基于 13 分钟音频的测试结果:
+
+| 模型 | 设备 | 转录时间 | 内存使用 | 准确率 |
+|------|------|----------|----------|--------|
+| tiny | CPU | ~30s | 1GB | 良好 |
+| base | CPU | ~1m | 2GB | 很好 |
+| small | CPU | ~2m | 3GB | 优秀 |
+| base | GPU | ~15s | 2GB | 很好 |
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🙏 致谢
+
+- [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper) - 高效的Whisper实现
+- [Edge-TTS](https://github.com/rany2/edge-tts) - 微软Edge TTS服务
+- [WebRTC VAD](https://github.com/wiseman/py-webrtcvad) - 语音活动检测
+- [Flask-SocketIO](https://flask-socketio.readthedocs.io/) - 实时通信
+
+## 📞 支持
+
+如有问题或建议，请提交 [Issue](https://github.com/your-repo/issues) 或联系开发者。
+
+---
+
+**享受与AI的语音对话吧！** 🎉

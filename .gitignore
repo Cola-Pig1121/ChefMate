@@ -1,0 +1,4 @@
+backend\.env
+backend\audio
+backend\__pycache__
+.vscode

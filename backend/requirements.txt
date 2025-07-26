@@ -1,0 +1,18 @@
+# Core dependencies
+faster-whisper>=1.0.0
+openai>=1.0.0
+flask>=2.3.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
+python-dotenv>=1.0.0
+
+# Audio processing
+pyaudio>=0.2.11
+numpy>=1.24.0
+
+# Text-to-speech
+edge-tts>=6.1.0
+
+# WebSocket support
+python-socketio>=5.8.0
+eventlet>=0.33.0
