@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // 获取URL参数
     function getQueryParam(name) {
         const url = new URL(window.location.href);
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return localData;
             }
         }
-        
+
         // 如果本地获取失败，尝试从API获取
         try {
             const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
@@ -156,14 +156,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const recipeType = getQueryParam('recipe');
         const recipeName = getQueryParam('name');
         const fromPage = getQueryParam('from');
-        
+
         // 根据参数获取食谱数据
         let recipe;
-        
+
         // 如果有recipeId，根据ID获取食谱数据
         if (recipeId) {
             recipe = await fetchRecipeData(recipeId);
-            
+
             // 如果API失败，尝试根据name参数查找示例数据
             if (!recipe && recipeName) {
                 // 查找示例数据中匹配的食谱
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
-            
+
             // 如果还是没找到，尝试根据from参数查找
             if (!recipe && fromPage) {
                 const decodedFrom = decodeURIComponent(fromPage);
@@ -183,16 +183,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     recipe = sampleRecipes[decodedFrom];
                 }
             }
-            
+
             // 如果还是没找到，使用默认数据
             if (!recipe) {
                 recipe = sampleRecipes['沙拉'];
             }
-        } 
+        }
         // 向后兼容：如果没有ID但有type参数
         else if (recipeType) {
             recipe = sampleRecipes[recipeType] || sampleRecipes['沙拉'];
-        } 
+        }
         // 默认情况
         else {
             recipe = sampleRecipes['沙拉'];
@@ -212,22 +212,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const stepPage = document.createElement('div');
                 stepPage.className = 'step-page';
                 stepPage.dataset.stepIndex = index;
-                
+
                 // 主步骤描述
                 const stepHeader = document.createElement('div');
                 stepHeader.className = 'step-header';
-                
+
                 // 检查step是字符串还是对象
                 const stepDescription = typeof step === 'string' ? step : step.description;
                 stepHeader.innerHTML = `
                     <div class="step-number">步骤 ${index + 1}</div>
                     <div class="step-description">${stepDescription}</div>
                 `;
-                
+
                 // 子步骤容器
                 const subStepsContainer = document.createElement('div');
                 subStepsContainer.className = 'sub-steps';
-                
+
                 // 生成子步骤
                 // 如果step是对象且有subSteps属性
                 if (typeof step === 'object' && step.subSteps) {
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     subStepsContainer.appendChild(subStepElement);
                 }
-                
+
                 stepPage.appendChild(stepHeader);
                 stepPage.appendChild(subStepsContainer);
                 stepsContainer.appendChild(stepPage);
@@ -278,10 +278,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 初始化当前步骤
         let currentStep = 0;
         let currentSubStep = 0;
-        
+
         // 获取所有步骤页面
         const stepPages = document.querySelectorAll('.step-page');
-        
+
         // 更新步骤显示
         function updateStepDisplay() {
             if (!stepPages || !stepPages.length) return;
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     page.style.zIndex = '0';
                 }
             });
-            
+
             // 更新指示器
             const indicators = document.querySelectorAll('.indicator-dot');
             indicators.forEach((indicator, index) => {
@@ -312,16 +312,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     indicator.classList.remove('active');
                 }
             });
-            
+
             // 更新子步骤显示
             updateSubStepDisplay();
         }
-        
+
         // 更新子步骤显示
         function updateSubStepDisplay() {
             const currentPage = stepPages[currentStep];
             if (!currentPage) return;
-            
+
             const subSteps = currentPage.querySelectorAll('.sub-step');
             subSteps.forEach((subStep, index) => {
                 if (index === currentSubStep) {
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     subStep.classList.remove('active');
                 }
-            }
+            });
         }
     }
     function setupScrollLimiter() {
@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = 'trophy.html';
             }
         }
-        
+
         // 跳转到上一步骤
         function goToPrevSubStep() {
             if (currentSubStep > 0) {
@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-        
+
         // 跳转到指定步骤
         function goToStep(stepIndex) {
             if (stepIndex >= 0 && stepIndex < stepPages.length) {
@@ -495,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showStepToast(`步骤 ${currentStep + 1}`);
             }
         }
-        
+
         // 记录烹饪完成情况
         function recordCookingCompletion(recipeData) {
             const completion = {
@@ -503,34 +503,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 recipeType: recipeType || 'unknown',
                 recipeName: recipeData.title || '未知食谱'
             };
-            
+
             // 从localStorage获取现有的完成记录
             const completions = JSON.parse(localStorage.getItem('chefmate_cooking_completions') || '[]');
             completions.push(completion);
             localStorage.setItem('chefmate_cooking_completions', JSON.stringify(completions));
         }
-        
+
         // 按钮事件
         const prevBtn = document.querySelector('.prev-btn');
         const nextBtn = document.querySelector('.next-btn');
         const closeBtn = document.querySelector('.close-btn');
-        
+
         if (prevBtn) {
             prevBtn.addEventListener('click', goToPrevSubStep);
         }
-        
+
         if (nextBtn) {
             nextBtn.addEventListener('click', goToNextSubStep);
         }
-        
+
         // 关闭按钮事件处理程序
         if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
+            closeBtn.addEventListener('click', function () {
                 // 获取来源页面参数
                 const fromPage = getQueryParam('from') || 'recipe-detail.html';
                 const recipeId = getQueryParam('id');
                 const recipeName = getQueryParam('name');
-                
+
                 // 构建返回URL
                 let returnUrl = fromPage;
                 if (recipeId) {
@@ -538,34 +538,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (recipeName) {
                     returnUrl += `?name=${encodeURIComponent(recipeName)}`;
                 }
-                
+
                 // 跳转回食谱详情页
                 window.location.href = returnUrl;
             });
         }
-        
+
         // 指示器点击事件
         const indicators = document.querySelectorAll('.indicator-dot');
         indicators.forEach(indicator => {
-            indicator.addEventListener('click', function() {
+            indicator.addEventListener('click', function () {
                 const stepIndex = parseInt(this.dataset.stepIndex);
                 goToStep(stepIndex);
             });
         });
-        
+
         // 触摸事件
         let touchStartY = 0;
-        
+
         function handleTouchStart(e) {
             touchStartY = e.touches[0].clientY;
         }
-        
+
         function handleTouchEnd(e) {
             if (touchStartY === 0) return;
-            
+
             const touchEndY = e.changedTouches[0].clientY;
             const deltaY = touchStartY - touchEndY;
-            
+
             // 判断滑动方向
             if (Math.abs(deltaY) > 50) { // 最小滑动距离
                 if (deltaY > 0) {
@@ -576,26 +576,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     goToPrevSubStep();
                 }
             }
-            
+
             touchStartY = 0;
         }
-        
+
         // 添加触摸事件监听器
         const touchContainer = document.querySelector('.steps-container');
         if (touchContainer) {
             touchContainer.addEventListener('touchstart', handleTouchStart);
             touchContainer.addEventListener('touchend', handleTouchEnd);
         }
-        
+
         // 滚动限制器
         function limitScroll() {
             const container = document.querySelector('.steps-container');
             if (!container) return;
-            
+
             const scrollTop = container.scrollTop;
             const scrollHeight = container.scrollHeight;
             const clientHeight = container.clientHeight;
-            
+
             // 如果滚动到顶部，阻止继续向下滚动
             if (scrollTop <= 0) {
                 container.scrollTop = 1;
@@ -605,23 +605,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 container.scrollTop = scrollHeight - clientHeight - 1;
             }
         }
-        
+
         // 设置滚动限制器
         function setupScrollLimiter() {
             const container = document.querySelector('.steps-container');
             if (!container) return;
-            
+
             container.addEventListener('scroll', limitScroll);
-            
+
             // 初始调用一次
             setTimeout(limitScroll, 100);
         }
-        
+
         // 调整步骤页面最小高度
         function adjustStepPageMinHeight() {
             const stepsContainer = document.querySelector('.steps-container');
             const stepPages = document.querySelectorAll('.step-page');
-            
+
             if (stepsContainer && stepPages.length > 0) {
                 const containerHeight = stepsContainer.clientHeight;
                 stepPages.forEach(page => {
@@ -629,16 +629,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
-        
+
         // 初始显示第一个步骤
         updateStepDisplay();
-        
+
         // 设置滚动限制器
         setupScrollLimiter();
-        
+
         // 调整步骤页面高度
         adjustStepPageMinHeight();
-        
+
         // 窗口大小改变时重新调整
         window.addEventListener('resize', adjustStepPageMinHeight);
     }
