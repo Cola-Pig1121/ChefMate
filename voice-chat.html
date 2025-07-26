@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +16,7 @@
             min-height: 100vh;
             color: white;
         }
-        
+
         .container {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -23,14 +24,14 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
         }
-        
+
         h1 {
             text-align: center;
             margin-bottom: 30px;
             font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
-        
+
         .status {
             text-align: center;
             margin: 20px 0;
@@ -39,34 +40,42 @@
             font-weight: bold;
             font-size: 1.2em;
         }
-        
+
         .status.connected {
             background: rgba(76, 175, 80, 0.3);
             border: 2px solid #4CAF50;
         }
-        
+
         .status.listening {
             background: rgba(33, 150, 243, 0.3);
             border: 2px solid #2196F3;
             animation: pulse 2s infinite;
         }
-        
+
         .status.speaking {
             background: rgba(255, 152, 0, 0.3);
             border: 2px solid #FF9800;
         }
-        
+
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
-        
+
         .controls {
             text-align: center;
             margin: 30px 0;
         }
-        
+
         button {
             background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
             border: none;
@@ -77,20 +86,20 @@
             cursor: pointer;
             margin: 0 10px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        
+
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
-        
+
         button:disabled {
             background: #666;
             cursor: not-allowed;
             transform: none;
         }
-        
+
         .conversation {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 15px;
@@ -99,7 +108,7 @@
             max-height: 400px;
             overflow-y: auto;
         }
-        
+
         .message {
             margin: 15px 0;
             padding: 12px 18px;
@@ -107,18 +116,40 @@
             max-width: 80%;
             word-wrap: break-word;
         }
-        
+
         .user-message {
             background: linear-gradient(45deg, #667eea, #764ba2);
             margin-left: auto;
             text-align: right;
         }
-        
+
         .ai-message {
             background: linear-gradient(45deg, #4ECDC4, #44A08D);
             margin-right: auto;
+            position: relative;
         }
-        
+
+        .ai-message.current {
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .ai-message.playing {
+            border: 2px solid #FF6B6B;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            }
+
+            to {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            }
+        }
+
         .system-message {
             background: rgba(255, 193, 7, 0.3);
             margin: 0 auto;
@@ -126,22 +157,54 @@
             font-size: 0.9em;
             font-style: italic;
         }
-        
+
+        .message-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #FFD700;
+            animation: pulse-dot 1s infinite;
+        }
+
+        .playing-indicator {
+            background: #FF6B6B;
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
         .transcription {
             background: rgba(255, 255, 255, 0.2);
             font-style: italic;
             border-left: 4px solid #2196F3;
         }
-        
+
         .audio-player {
             margin: 10px 0;
         }
-        
+
         audio {
             width: 100%;
             border-radius: 10px;
         }
-        
+
         .speech-indicator {
             display: none;
             text-align: center;
@@ -151,12 +214,19 @@
             border-radius: 10px;
             animation: fadeInOut 1s infinite;
         }
-        
+
         @keyframes fadeInOut {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
-        
+
         .tips {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
@@ -164,34 +234,41 @@
             margin: 20px 0;
             font-size: 0.9em;
         }
-        
+
         .tips h3 {
             margin-top: 0;
             color: #FFD700;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🎤 实时语音对话系统</h1>
-        
+
         <div id="status" class="status">连接中...</div>
-        
+
         <div class="controls">
             <button id="startBtn" onclick="startConversation()">开始对话</button>
             <button id="stopBtn" onclick="stopConversation()" disabled>停止对话</button>
+            <button id="stopAudioBtn" onclick="stopCurrentAudio()" disabled>⏹️ 停止播放</button>
         </div>
-        
+
         <div id="speechIndicator" class="speech-indicator">
             🎙️ 正在检测语音...
         </div>
-        
+
+        <div id="aiResponseIndicator" class="speech-indicator"
+            style="background: rgba(76, 175, 80, 0.3); display: none;">
+            🤖 AI正在回复...
+        </div>
+
         <div class="conversation" id="conversation">
             <div class="message ai-message">
                 👋 你好！我是你的AI语音助手，点击"开始对话"就可以和我聊天了！
             </div>
         </div>
-        
+
         <div class="tips">
             <h3>💡 使用提示</h3>
             <ul>
@@ -200,16 +277,19 @@
                 <li>AI回答时会自动禁用录音，避免干扰</li>
                 <li>支持中文语音识别和合成</li>
                 <li>保持安静的环境以获得更好的识别效果</li>
+                <li>✨ AI回复会保持高亮显示直到下次对话或音频播放完毕</li>
+                <li>⏹️ 可以随时点击"停止播放"按钮中断音频</li>
                 <li>🗑️ 对话结束时会自动清理音频文件</li>
             </ul>
         </div>
-        
+
         <div class="controls">
             <button onclick="showAudioStats()">📊 音频统计</button>
             <button onclick="cleanupAllAudio()">🗑️ 清理所有音频</button>
         </div>
-        
-        <div id="audioStats" style="display: none; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+
+        <div id="audioStats"
+            style="display: none; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
             <h3>📊 音频文件统计</h3>
             <div id="statsContent">加载中...</div>
         </div>
@@ -219,26 +299,30 @@
         const socket = io();
         let isListening = false;
         let isAISpeaking = false;
-        
+        let currentAIMessage = null;  // 当前活跃的AI消息元素
+        let currentAudio = null;      // 当前播放的音频元素
+
         // DOM elements
         const statusDiv = document.getElementById('status');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const stopAudioBtn = document.getElementById('stopAudioBtn');
         const conversation = document.getElementById('conversation');
         const speechIndicator = document.getElementById('speechIndicator');
-        
+        const aiResponseIndicator = document.getElementById('aiResponseIndicator');
+
         // Socket event handlers
-        socket.on('connect', function() {
+        socket.on('connect', function () {
             updateStatus('已连接到服务器', 'connected');
         });
-        
-        socket.on('disconnect', function() {
+
+        socket.on('disconnect', function () {
             updateStatus('与服务器断开连接', 'disconnected');
             isListening = false;
             updateButtons();
         });
-        
-        socket.on('status', function(data) {
+
+        socket.on('status', function (data) {
             if (data.listening !== undefined) {
                 isListening = data.listening;
                 updateStatus(
@@ -248,95 +332,198 @@
                 updateButtons();
             }
         });
-        
-        socket.on('speech_start', function() {
+
+        socket.on('speech_start', function () {
             speechIndicator.style.display = 'block';
             speechIndicator.innerHTML = '🎙️ 检测到语音，正在录音...';
         });
-        
-        socket.on('speech_end', function() {
+
+        socket.on('speech_end', function () {
             speechIndicator.style.display = 'none';
         });
-        
-        socket.on('transcription', function(data) {
+
+        socket.on('transcription', function (data) {
+            // 用户开始说话时，清除之前的AI消息高亮
+            clearCurrentAIMessage();
+
             addMessage(data.text, 'transcription');
             addMessage(data.text, 'user-message');
         });
-        
-        socket.on('ai_response', function(data) {
-            addMessage(data.text, 'ai-message');
+
+        socket.on('ai_thinking', function (data) {
+            // 显示AI正在思考
+            aiResponseIndicator.style.display = 'block';
+            aiResponseIndicator.innerHTML = '🤖 AI正在思考...';
         });
-        
-        socket.on('ai_speaking', function(data) {
+
+        socket.on('ai_response', function (data) {
+            // 清除之前的AI消息高亮
+            clearCurrentAIMessage();
+
+            // 更新AI指示器
+            aiResponseIndicator.innerHTML = '🎵 正在生成语音...';
+
+            // 添加新的AI消息并设为当前消息
+            currentAIMessage = addMessage(data.text, 'ai-message', true);
+        });
+
+        socket.on('ai_speaking', function (data) {
             isAISpeaking = data.speaking;
             if (isAISpeaking) {
                 updateStatus('🔊 AI正在说话...', 'speaking');
+
+                // 如果有当前AI消息但还没开始播放，显示准备状态
+                if (currentAIMessage && !currentAIMessage.classList.contains('playing')) {
+                    const indicator = currentAIMessage.querySelector('.message-indicator');
+                    if (indicator) {
+                        indicator.style.background = '#FF9800'; // 橙色表示准备播放
+                    }
+                }
             } else if (isListening) {
                 updateStatus('🎙️ 正在监听语音...', 'listening');
             }
         });
-        
-        socket.on('play_audio', function(data) {
+
+        socket.on('play_audio', function (data) {
+            // 隐藏AI响应指示器
+            aiResponseIndicator.style.display = 'none';
+
             playAudio(data.filename);
         });
-        
-        socket.on('session_ended', function(data) {
+
+        socket.on('session_ended', function (data) {
             console.log('会话已结束:', data);
             if (data.session_id) {
                 addMessage(`会话 ${data.session_id} 已结束，音频文件已清理`, 'system-message');
             }
         });
-        
+
         // Functions
         function updateStatus(message, className) {
             statusDiv.textContent = message;
             statusDiv.className = `status ${className}`;
         }
-        
+
         function updateButtons() {
             startBtn.disabled = isListening;
             stopBtn.disabled = !isListening;
+            stopAudioBtn.disabled = !currentAudio;
         }
-        
-        function addMessage(text, className) {
+
+        function addMessage(text, className, isCurrent = false) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${className}`;
             messageDiv.textContent = text;
+
+            // 如果是当前AI消息，添加特殊样式和指示器
+            if (isCurrent && className === 'ai-message') {
+                messageDiv.classList.add('current');
+
+                // 添加指示器
+                const indicator = document.createElement('div');
+                indicator.className = 'message-indicator';
+                messageDiv.appendChild(indicator);
+            }
+
             conversation.appendChild(messageDiv);
             conversation.scrollTop = conversation.scrollHeight;
+
+            return messageDiv;
         }
-        
+
         function playAudio(filename) {
             const audio = document.createElement('audio');
             audio.controls = true;
             audio.autoplay = true;
             audio.src = `/audio/${filename}`;
-            
+
+            // 设置当前播放的音频
+            currentAudio = audio;
+            updateButtons();
+
+            // 如果有当前AI消息，标记为正在播放
+            if (currentAIMessage) {
+                currentAIMessage.classList.remove('current');
+                currentAIMessage.classList.add('playing');
+
+                // 更新指示器
+                const indicator = currentAIMessage.querySelector('.message-indicator');
+                if (indicator) {
+                    indicator.classList.add('playing-indicator');
+                }
+            }
+
             const audioContainer = document.createElement('div');
             audioContainer.className = 'audio-player';
             audioContainer.appendChild(audio);
             conversation.appendChild(audioContainer);
             conversation.scrollTop = conversation.scrollHeight;
-            
-            // Clean up audio file after playing
-            audio.addEventListener('ended', function() {
+
+            // 音频播放完毕时的处理
+            audio.addEventListener('ended', function () {
+                // 清除当前AI消息的高亮
+                clearCurrentAIMessage();
+                currentAudio = null;
+                updateButtons();
+
+                // 延迟删除音频文件
                 setTimeout(() => {
                     fetch(`/api/delete_audio/${filename}`, { method: 'DELETE' })
                         .catch(err => console.log('Audio cleanup error:', err));
                 }, 5000);
             });
+
+            // 音频加载失败时的处理
+            audio.addEventListener('error', function () {
+                console.error('音频播放失败:', filename);
+                clearCurrentAIMessage();
+                currentAudio = null;
+                updateButtons();
+            });
         }
-        
+
         function startConversation() {
             socket.emit('start_conversation');
         }
-        
+
         function stopConversation() {
+            // 清除当前AI消息高亮
+            clearCurrentAIMessage();
+
             socket.emit('stop_conversation');
             // 也可以手动结束会话
             socket.emit('end_session');
         }
-        
+
+        function clearCurrentAIMessage() {
+            if (currentAIMessage) {
+                // 移除所有特殊样式
+                currentAIMessage.classList.remove('current', 'playing');
+
+                // 移除指示器
+                const indicator = currentAIMessage.querySelector('.message-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+
+                currentAIMessage = null;
+            }
+        }
+
+        function stopCurrentAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+
+                // 清除当前AI消息高亮
+                clearCurrentAIMessage();
+                currentAudio = null;
+                updateButtons();
+
+                addMessage('🛑 音频播放已停止', 'system-message');
+            }
+        }
+
         // Additional functions
         function showAudioStats() {
             fetch('/api/audio_stats')
@@ -344,7 +531,7 @@
                 .then(data => {
                     const statsDiv = document.getElementById('audioStats');
                     const contentDiv = document.getElementById('statsContent');
-                    
+
                     contentDiv.innerHTML = `
                         <p>📁 总文件数: ${data.total_files}</p>
                         <p>🔄 活跃会话: ${data.active_sessions}</p>
@@ -352,7 +539,7 @@
                         <p>⏰ 清理间隔: ${data.cleanup_interval / 60} 分钟</p>
                         <p>🕒 文件最大保存时间: ${data.max_age_hours} 小时</p>
                     `;
-                    
+
                     statsDiv.style.display = statsDiv.style.display === 'none' ? 'block' : 'none';
                 })
                 .catch(err => {
@@ -360,16 +547,16 @@
                     addMessage('获取音频统计失败', 'system-message');
                 });
         }
-        
+
         function cleanupAllAudio() {
             if (confirm('确定要清理所有音频文件吗？这将删除所有会话的音频文件。')) {
                 // 这里可以添加清理所有音频的API调用
                 addMessage('音频清理功能开发中...', 'system-message');
             }
         }
-        
+
         // 页面关闭时自动结束会话
-        window.addEventListener('beforeunload', function() {
+        window.addEventListener('beforeunload', function () {
             if (isListening) {
                 socket.emit('end_session');
             }
@@ -379,4 +566,5 @@
         updateButtons();
     </script>
 </body>
+
 </html>

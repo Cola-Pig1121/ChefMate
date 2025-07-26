@@ -480,6 +480,10 @@ class VoiceConversationSystem:
             if self.socketio:
                 self.socketio.emit("transcription", {"text": text})
 
+            # 通知前端AI开始思考
+            if self.socketio:
+                self.socketio.emit("ai_thinking", {"status": "thinking"})
+
             # 获取AI回复
             response = self.conversation.get_response(text)
             if self.socketio:
