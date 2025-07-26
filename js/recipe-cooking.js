@@ -184,6 +184,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     let stepData = null;
+    let recipeTitle = null; // 存储从JSON获取的食谱标题
+
     // 初始化步骤数据
     async function initializeStepData() {
         try {
@@ -191,6 +193,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 如果有UUID，尝试获取动态数据
                 const recipeData = await fetchRecipeData(recipeId);
                 if (recipeData) {
+                    // 保存食谱标题
+                    recipeTitle = recipeData.title;
                     const convertedSteps = convertRecipeDataToSteps(recipeData);
                     if (convertedSteps && convertedSteps.length > 0) {
                         stepData = convertedSteps;
@@ -364,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const currentStepData = stepData[currentStep];
         const currentSubStepData = currentStepData.subSteps[currentSubStep];
-        const recipeDisplayName = recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉');
+        const recipeDisplayName = recipeTitle || recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉');
         const systemContent = `你是一个烹饪助手，正在指导用户完成${recipeDisplayName}的制作。当前是${currentStepData.name}:${currentStepData.subtitle}，具体步骤是${currentSubStepData.name}:${currentSubStepData.steps.join('，')}。请用简短易懂的中文回答用户关于当前步骤的问题。`;
         fetch('http://127.0.0.1:5000/api/ask', {
             method: 'POST',
