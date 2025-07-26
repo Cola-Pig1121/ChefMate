@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 加载用户头像函数
     function loadUserAvatar() {
         const defaultUserData = {
-            avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+            avatar: '/images/user_default.jpg'
         };
 
         const savedData = localStorage.getItem('chefmate_user_profile');

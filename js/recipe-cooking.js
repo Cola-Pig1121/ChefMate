@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const recipeId = getQueryParam('id');
         const recipeType = getQueryParam('recipe');
         const recipeName = getQueryParam('name');
+        const fromPage = getQueryParam('from');
         
         // 根据参数获取食谱数据
         let recipe;
@@ -162,6 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 如果有recipeId，根据ID获取食谱数据
         if (recipeId) {
             recipe = await fetchRecipeData(recipeId);
+            
             // 如果API失败，尝试根据name参数查找示例数据
             if (!recipe && recipeName) {
                 // 查找示例数据中匹配的食谱
@@ -172,13 +174,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         break;
                     }
                 }
-                // 如果还是没找到，使用默认数据
-                if (!recipe) {
-                    recipe = sampleRecipes['沙拉'];
+            }
+            
+            // 如果还是没找到，尝试根据from参数查找
+            if (!recipe && fromPage) {
+                const decodedFrom = decodeURIComponent(fromPage);
+                if (sampleRecipes[decodedFrom]) {
+                    recipe = sampleRecipes[decodedFrom];
                 }
             }
-            // 如果API失败且没有name参数，使用默认数据
-            else if (!recipe) {
+            
+            // 如果还是没找到，使用默认数据
+            if (!recipe) {
                 recipe = sampleRecipes['沙拉'];
             }
         } 
@@ -198,9 +205,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 生成步骤页面
-        const stepPagesContainer = document.querySelector('.step-pages');
-        if (stepPagesContainer && recipe.steps) {
-            stepPagesContainer.innerHTML = '';
+        const stepsContainer = document.querySelector('.steps-container');
+        if (stepsContainer && recipe.steps) {
+            stepsContainer.innerHTML = '';
             recipe.steps.forEach((step, index) => {
                 const stepPage = document.createElement('div');
                 stepPage.className = 'step-page';
@@ -209,9 +216,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 主步骤描述
                 const stepHeader = document.createElement('div');
                 stepHeader.className = 'step-header';
+                
+                // 检查step是字符串还是对象
+                const stepDescription = typeof step === 'string' ? step : step.description;
                 stepHeader.innerHTML = `
                     <div class="step-number">步骤 ${index + 1}</div>
-                    <div class="step-description">${step.description}</div>
+                    <div class="step-description">${stepDescription}</div>
                 `;
                 
                 // 子步骤容器
@@ -219,7 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 subStepsContainer.className = 'sub-steps';
                 
                 // 生成子步骤
-                if (step.subSteps) {
+                // 如果step是对象且有subSteps属性
+                if (typeof step === 'object' && step.subSteps) {
                     step.subSteps.forEach((subStep, subIndex) => {
                         const subStepElement = document.createElement('div');
                         subStepElement.className = 'sub-step';
@@ -231,17 +242,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         subStepsContainer.appendChild(subStepElement);
                     });
                 }
+                // 如果step是字符串，将其作为唯一的子步骤
+                else if (typeof step === 'string') {
+                    const subStepElement = document.createElement('div');
+                    subStepElement.className = 'sub-step';
+                    subStepElement.dataset.subStepIndex = 0;
+                    subStepElement.innerHTML = `
+                        <div class="sub-step-circle">1</div>
+                        <div class="sub-step-content">${step}</div>
+                    `;
+                    subStepsContainer.appendChild(subStepElement);
+                }
                 
                 stepPage.appendChild(stepHeader);
                 stepPage.appendChild(subStepsContainer);
-                stepPagesContainer.appendChild(stepPage);
+                stepsContainer.appendChild(stepPage);
             });
         }
 
         // 生成步骤指示器
-        const stepIndicator = document.querySelector('.step-indicator');
-        if (stepIndicator && recipe.steps) {
-            stepIndicator.innerHTML = '';
+        const stepIndicatorsContainer = document.querySelector('#step-indicators');
+        if (stepIndicatorsContainer && recipe.steps) {
+            stepIndicatorsContainer.innerHTML = '';
             recipe.steps.forEach((_, index) => {
                 const indicator = document.createElement('div');
                 indicator.className = 'indicator-dot';
@@ -249,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (index === 0) {
                     indicator.classList.add('active');
                 }
-                stepIndicator.appendChild(indicator);
+                stepIndicatorsContainer.appendChild(indicator);
             });
         }
 
@@ -262,11 +284,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 更新步骤显示
         function updateStepDisplay() {
+            if (!stepPages || !stepPages.length) return;
             stepPages.forEach((page, index) => {
                 if (index === currentStep) {
-                    page.classList.add('active');
+                    page.style.transform = 'translateY(0)';
+                    page.style.opacity = '1';
+                    page.style.zIndex = '10';
+                } else if (index < currentStep) {
+                    // 已完成的步骤
+                    page.style.transform = 'translateY(-15px)';
+                    page.style.opacity = '0.8';
+                    page.style.zIndex = '1';
                 } else {
-                    page.classList.remove('active');
+                    // 未完成的步骤
+                    page.style.transform = 'translateY(100%)';
+                    page.style.opacity = '0';
+                    page.style.zIndex = '0';
                 }
             });
             
@@ -309,16 +342,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const activeSubStep = currentPage.querySelector('.sub-step.active');
             if (activeSubStep) {
-                const container = document.querySelector('.step-content');
-                const containerRect = container.getBoundingClientRect();
-                const subStepRect = activeSubStep.getBoundingClientRect();
-                
-                // 计算滚动位置，使当前子步骤位于容器中间
-                const scrollTop = subStepRect.top - containerRect.top - containerRect.height / 2 + subStepRect.height / 2;
-                container.scrollBy({
-                    top: scrollTop,
-                    behavior: 'smooth'
-                });
+                const container = document.querySelector('.steps-container');
+                // 添加检查确保container元素存在
+                if (container) {
+                    const containerRect = container.getBoundingClientRect();
+                    const subStepRect = activeSubStep.getBoundingClientRect();
+                    
+                    // 计算滚动位置，使当前子步骤位于容器中间
+                    const scrollTop = subStepRect.top - containerRect.top - containerRect.height / 2 + subStepRect.height / 2;
+                    container.scrollBy({
+                        top: scrollTop,
+                        behavior: 'smooth'
+                    });
+                }
             }
         }
         
@@ -424,6 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 按钮事件
         const prevBtn = document.querySelector('.prev-btn');
         const nextBtn = document.querySelector('.next-btn');
+        const closeBtn = document.querySelector('.close-btn');
         
         if (prevBtn) {
             prevBtn.addEventListener('click', goToPrevSubStep);
@@ -431,6 +468,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (nextBtn) {
             nextBtn.addEventListener('click', goToNextSubStep);
+        }
+        
+        // 关闭按钮事件处理程序
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                // 获取来源页面参数
+                const fromPage = getQueryParam('from') || 'recipe-detail.html';
+                const recipeId = getQueryParam('id');
+                const recipeName = getQueryParam('name');
+                
+                // 构建返回URL
+                let returnUrl = fromPage;
+                if (recipeId) {
+                    returnUrl += `?id=${encodeURIComponent(recipeId)}`;
+                } else if (recipeName) {
+                    returnUrl += `?name=${encodeURIComponent(recipeName)}`;
+                }
+                
+                // 跳转回食谱详情页
+                window.location.href = returnUrl;
+            });
         }
         
         // 指示器点击事件
@@ -470,15 +528,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // 添加触摸事件监听器
-        const stepContent = document.querySelector('.step-content');
-        if (stepContent) {
-            stepContent.addEventListener('touchstart', handleTouchStart);
-            stepContent.addEventListener('touchend', handleTouchEnd);
+        const touchContainer = document.querySelector('.steps-container');
+        if (touchContainer) {
+            touchContainer.addEventListener('touchstart', handleTouchStart);
+            touchContainer.addEventListener('touchend', handleTouchEnd);
         }
         
         // 滚动限制器
         function limitScroll() {
-            const container = document.querySelector('.step-content');
+            const container = document.querySelector('.steps-container');
             if (!container) return;
             
             const scrollTop = container.scrollTop;
@@ -497,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 设置滚动限制器
         function setupScrollLimiter() {
-            const container = document.querySelector('.step-content');
+            const container = document.querySelector('.steps-container');
             if (!container) return;
             
             container.addEventListener('scroll', limitScroll);
@@ -508,11 +566,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 调整步骤页面最小高度
         function adjustStepPageMinHeight() {
-            const stepContent = document.querySelector('.step-content');
+            const stepsContainer = document.querySelector('.steps-container');
             const stepPages = document.querySelectorAll('.step-page');
             
-            if (stepContent && stepPages.length > 0) {
-                const containerHeight = stepContent.clientHeight;
+            if (stepsContainer && stepPages.length > 0) {
+                const containerHeight = stepsContainer.clientHeight;
                 stepPages.forEach(page => {
                     page.style.minHeight = `${containerHeight}px`;
                 });

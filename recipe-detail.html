@@ -109,15 +109,28 @@
     </div>
     <script src="js/recipe-detail.js"></script>
     <script>
-function getRecipeTypeFromUrl() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('recipe') || 'salad';
+// 获取URL参数
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
 }
+
+// 开始烹饪按钮事件处理
 var btn = document.getElementById('startCookingBtn');
 if(btn) {
-    var recipeType = getRecipeTypeFromUrl();
     btn.onclick = function(){
-        window.location.href = 'recipe-cooking.html?recipe=' + recipeType + '&from=' + recipeType;
+        // 获取食谱ID参数
+        const recipeId = getQueryParam('id');
+        const recipeType = getQueryParam('recipe') || 'salad';
+        const recipeName = getQueryParam('name') || '';
+        
+        // 如果有ID参数，优先使用ID
+        if (recipeId) {
+            window.location.href = 'recipe-cooking.html?id=' + encodeURIComponent(recipeId);
+        } else {
+            // 向后兼容：使用原来的参数
+            window.location.href = 'recipe-cooking.html?recipe=' + encodeURIComponent(recipeType) + '&from=' + encodeURIComponent(recipeType) + (recipeName ? '&name=' + encodeURIComponent(recipeName) : '');
+        }
     };
 }
 </script>

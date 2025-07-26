@@ -174,28 +174,85 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 设置图片
-        if (recipeImage) recipeImage.style.backgroundImage = `url('${recipe.image}')`;
+        if (recipeImage) recipeImage.style.backgroundImage = `url('${recipeData.image}')`;
 
         // 设置标题、分类、时间、点赞
         const titleEl = document.querySelector('.recipe-name');
-        if (titleEl) titleEl.textContent = recipe.title;
+        if (titleEl) titleEl.textContent = recipeData.title;
         const categoryEl = document.querySelector('.recipe-category');
-        if (categoryEl) categoryEl.textContent = recipe.category;
+        if (categoryEl) categoryEl.textContent = recipeData.category;
         const timeEl = document.querySelector('.stat-item img[alt="时间"]')?.nextElementSibling;
-        if (timeEl) timeEl.textContent = recipe.time;
+        if (timeEl) timeEl.textContent = recipeData.time;
         const likesEl = document.querySelector('.stat-item img[alt="点赞"]')?.nextElementSibling;
-        if (likesEl) likesEl.textContent = recipe.likes;
+        if (likesEl) likesEl.textContent = recipeData.likes;
 
         // 初始化收藏状态
-        initializeFavoriteButton(recipe);
+        initializeFavoriteButton(recipeData);
 
         // 设置食材
         const ingredientsGroups = document.querySelectorAll('.ingredients-group');
         if (ingredientsGroups[0]) {
-            ingredientsGroups[0].querySelector('ul').innerHTML = recipe.ingredients.map(i => `<li><span class="ingredient-checkbox checked"></span>${i}</li>`).join('');
+            // 清空现有内容
+            ingredientsGroups[0].querySelector('ul').innerHTML = '';
+            
+            // 添加主料
+            if (recipeData.ingredients && Array.isArray(recipeData.ingredients)) {
+                recipeData.ingredients.forEach(ingredient => {
+                    const li = document.createElement('li');
+                    // 检查ingredient是字符串还是对象
+                    if (typeof ingredient === 'string') {
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${ingredient}`;
+                    } else {
+                        // 如果是对象，包含name和quantity属性
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${ingredient.name} ${ingredient.quantity}`;
+                    }
+                    ingredientsGroups[0].querySelector('ul').appendChild(li);
+                });
+            }
         }
+        
         if (ingredientsGroups[1]) {
-            ingredientsGroups[1].querySelector('ul').innerHTML = recipe.condiments.map(i => `<li><span class="ingredient-checkbox checked"></span>${i}</li>`).join('');
+            // 清空现有内容
+            ingredientsGroups[1].querySelector('ul').innerHTML = '';
+            
+            // 添加辅料/调料
+            if (recipeData.condiments && Array.isArray(recipeData.condiments)) {
+                recipeData.condiments.forEach(condiment => {
+                    const li = document.createElement('li');
+                    // 检查condiment是字符串还是对象
+                    if (typeof condiment === 'string') {
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${condiment}`;
+                    } else {
+                        // 如果是对象，包含name和quantity属性
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${condiment.name} ${condiment.quantity}`;
+                    }
+                    ingredientsGroups[1].querySelector('ul').appendChild(li);
+                });
+            }
+        }
+
+        // 设置步骤
+        const stepsSection = document.querySelector('.steps-section');
+        if (stepsSection) {
+            // 清空现有内容
+            stepsSection.innerHTML = '<h2>步骤概览</h2>';
+            
+            // 添加步骤
+            if (recipeData.steps && Array.isArray(recipeData.steps)) {
+                recipeData.steps.forEach((step, index) => {
+                    const stepItem = document.createElement('div');
+                    stepItem.className = 'step-item';
+                    
+                    // 检查step是字符串还是对象
+                    if (typeof step === 'string') {
+                        stepItem.innerHTML = `<span>步骤${index + 1}：${step}</span>`;
+                    } else {
+                        // 如果是对象，包含description属性
+                        stepItem.innerHTML = `<span>步骤${index + 1}：${step.description}</span>`;
+                    }
+                    stepsSection.appendChild(stepItem);
+                });
+            }
         }
 
         // 食材勾选交互
@@ -373,9 +430,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // 设置步骤概览
-        const stepsSection = document.querySelector('.steps-section');
-        if (stepsSection && recipe.steps) {
-            stepsSection.innerHTML = '<h2>步骤概览</h2>' + recipe.steps.map((step, idx) => `<div class="step-item">步骤${idx+1}：${step}</div>`).join('');
+        const stepsSection2 = document.querySelector('.steps-section');
+        if (stepsSection2 && recipeData.steps) {
+            stepsSection2.innerHTML = '<h2>步骤概览</h2>' + recipeData.steps.map((step, idx) => `<div class="step-item">步骤${idx+1}：${step}</div>`).join('');
         }
 
         // 返回按钮
@@ -385,11 +442,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 分享按钮
         shareBtn.addEventListener('click', function() {
-            const shareText = `📖 推荐一个${recipe.category}食谱：${recipe.title}\n⏰ 制作时间：${recipe.time}\n👍 ${recipe.likes}人喜欢\n\n🍳 来自 ChefMate 应用`;
+            const shareText = `📖 推荐一个${recipeData.category}食谱：${recipeData.title}\n⏰ 制作时间：${recipeData.time}\n👍 ${recipeData.likes}人喜欢\n\n🍳 来自 ChefMate 应用`;
             
             if (navigator.share) {
                 navigator.share({
-                    title: recipe.title,
+                    title: recipeData.title,
                     text: shareText
                 }).catch(err => {
                     console.log('分享失败:', err);
