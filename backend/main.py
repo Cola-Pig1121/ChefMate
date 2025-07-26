@@ -270,7 +270,8 @@ class ConversationManager:
 
     def __init__(self):
         self.client = OpenAI(
-            base_url=os.getenv("BASE_URL"), api_key=os.getenv("API_KEY")
+            base_url=os.getenv("BASE_URL"), 
+            api_key=os.getenv("API_KEY")
         )
         self.conversation_history = []
         self.system_prompt = """你是一个友好的AI助手。
@@ -537,7 +538,7 @@ def ask():
         import re
 
         answer = re.sub(
-            r"[^\u4e00-\u9fa5a-zA-Z0-9\s，。！？、；：" "''（）【】《》\-]", "", answer
+            r"[^\u4e00-\u9fa5a-zA-Z0-9\s，。！？、；：""''（）【】《》\-]", "", answer
         )
 
         # 生成语音文件
