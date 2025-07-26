@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 加载用户头像
     loadUserAvatar();
     
+    // 初始化食谱加载
+    initRecipeLoading();
+    
     // 标签切换功能
     window.showTab = function (tabId) {
         // 隐藏所有内容
@@ -187,6 +190,191 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 食谱懒加载功能
+    let allRecipes = [];
+    let loadedRecipes = 0;
+    const recipesPerPage = 3;
+    let isLoading = false;
+    
+    function initRecipeLoading() {
+        // 获取所有食谱数据
+        fetchAllRecipes().then(recipes => {
+            allRecipes = recipes;
+            // 初始加载
+        loadMoreRecipes();
+        });
+    }
+    
+    async function fetchAllRecipes() {
+    try {
+        const response = await fetch('http://localhost:3000/api/recipes');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const recipes = await response.json();
+        return recipes;
+    } catch (error) {
+        console.error('获取食谱数据失败:', error);
+        // 如果API不可用，返回模拟数据
+        return [
+            {
+                id: "1",
+                title: "鲁菜红烧肉",
+                image: "images/placeholder.jpg",
+                time: "60min",
+                likes: "100+"
+            },
+            {
+                id: "2",
+                title: "川菜麻婆豆腐",
+                image: "images/placeholder.jpg",
+                time: "30min",
+                likes: "200+"
+            },
+            {
+                id: "3",
+                title: "粤菜白切鸡",
+                image: "images/placeholder.jpg",
+                time: "45min",
+                likes: "150+"
+            },
+            {
+                id: "4",
+                title: "苏菜松鼠桂鱼",
+                image: "images/placeholder.jpg",
+                time: "50min",
+                likes: "180+"
+            },
+            {
+                id: "5",
+                title: "浙菜西湖醋鱼",
+                image: "images/placeholder.jpg",
+                time: "40min",
+                likes: "120+"
+            },
+            {
+                id: "6",
+                title: "湘菜剁椒鱼头",
+                image: "images/placeholder.jpg",
+                time: "35min",
+                likes: "160+"
+            }
+        ];
+    }
+}
+    
+    function loadMoreRecipes() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        showLoadingIndicator();
+        
+        // 模拟网络请求延迟
+        setTimeout(() => {
+            const recipesToLoad = allRecipes.slice(loadedRecipes, loadedRecipes + recipesPerPage);
+            
+            if (recipesToLoad.length === 0) {
+                // 所有食谱已加载完毕
+                hideLoadingIndicator();
+                isLoading = false;
+                return;
+            }
+            
+            const recipeContainer = document.getElementById('recipeContainer');
+            
+            // 检查recipeContainer是否存在
+            if (recipeContainer) {
+                recipesToLoad.forEach(recipe => {
+                    const recipeCard = createRecipeCard(recipe);
+                    recipeContainer.appendChild(recipeCard);
+                });
+                
+                loadedRecipes += recipesToLoad.length;
+            }
+            
+            hideLoadingIndicator();
+            isLoading = false;
+        }, 500);
+    }
+    
+    function createRecipeCard(recipe) {
+        const card = document.createElement('div');
+        card.className = 'recipe-card';
+        card.innerHTML = `
+            <div class="recipe-image" style="background-image: url('${recipe.image}')"></div>
+            <h3>${recipe.title}</h3>
+            <div class="recipe-info">
+                <div class="info-item">
+                    <img src="images/time.svg" alt="时间" />
+                    <span>${recipe.time}</span>
+                </div>
+                <div class="info-item">
+                    <img src="images/likes.svg" alt="点赞" />
+                    <span>${recipe.likes}</span>
+                </div>
+            </div>
+        `;
+        
+        // 添加点击事件
+        card.addEventListener('click', () => {
+            // 使用recipe.id作为参数传递
+            window.location.href = `recipe-detail.html?id=${recipe.id}`;
+        });
+        
+        return card;
+    }
+    
+    function handleScroll() {
+        const recipeContainer = document.getElementById('recipeContainer');
+        if (!recipeContainer) return;
+        
+        // 获取食谱卡片
+        const recipeCards = recipeContainer.querySelectorAll('.recipe-card');
+        
+        // 如果还没有食谱卡片，直接返回
+        if (recipeCards.length === 0) return;
+        
+        // 计算第三个食谱卡片的位置
+        if (recipeCards.length >= 3) {
+            const thirdCard = recipeCards[2];
+            const rect = thirdCard.getBoundingClientRect();
+            const isVisible = rect.top <= window.innerHeight;
+            
+            // 当第三个食谱卡片进入视窗时加载更多食谱
+            if (isVisible) {
+                // 检查是否还有更多食谱可以加载
+                if (loadedRecipes < allRecipes.length) {
+                    loadMoreRecipes();
+                }
+            }
+        } else {
+            // 如果少于3个食谱卡片，使用原来的底部触发方式
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const pageHeight = document.body.offsetHeight;
+            
+            if (scrollPosition >= pageHeight - 100) {
+                // 检查是否还有更多食谱可以加载
+                if (loadedRecipes < allRecipes.length) {
+                    loadMoreRecipes();
+                }
+            }
+        }
+    }
+    
+    function showLoadingIndicator() {
+        const indicator = document.getElementById('loadingIndicator');
+        if (indicator) {
+            indicator.style.display = 'block';
+        }
+    }
+    
+    function hideLoadingIndicator() {
+        const indicator = document.getElementById('loadingIndicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+    
     // 食谱卡片点击跳转
     const recipeCards = document.querySelectorAll('.recipe-card');
     recipeCards.forEach(card => {
@@ -224,6 +412,12 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('scroll', updateBlur);
     // 初始化效果
     updateBlur();
+    
+    // 为加载更多按钮添加点击事件
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMoreRecipes);
+    }
 
     // 初始化底部导航栏功能
     function initBottomNavigation() {
@@ -329,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 加载用户头像函数
     function loadUserAvatar() {
         const defaultUserData = {
-            avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+            avatar: '/images/user_default.jpg'
         };
 
         const savedData = localStorage.getItem('chefmate_user_profile');

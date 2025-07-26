@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
             time: '40min',
             likes: '500+',
             category: '健康轻食',
-            addedTime: Date.now() - 86400000 // 1天前
+            addedTime: Date.now() - 86400000 
         },
         {
             id: 'recipe_2',
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
             time: '60min',
             likes: '800+',
             category: '家常菜',
-            addedTime: Date.now() - 172800000 // 2天前
+            addedTime: Date.now() - 172800000
         }
     ];
 

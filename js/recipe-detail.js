@@ -12,12 +12,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 获取URL参数
     function getQueryParam(name) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(name);
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
     }
 
-    // 菜品数据
-    const recipes = {
+    // 根据UUID获取本地食谱数据
+    async function fetchLocalRecipeData(uuid) {
+        try {
+            const response = await fetch(`recipes/${uuid}.json`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            // 返回食谱对象（JSON文件中的第一个键）
+            const recipeKey = Object.keys(data)[0];
+            return data[recipeKey];
+        } catch (error) {
+            console.error('获取本地食谱数据失败:', error);
+            // 如果本地文件不可用，返回null
+            return null;
+        }
+    }
+
+    // 根据UUID获取食谱数据
+    async function fetchRecipeData(recipeId) {
+        // 首先尝试从本地UUID文件获取数据
+        if (recipeId && recipeId.includes('-')) {
+            const localData = await fetchLocalRecipeData(recipeId);
+            if (localData) {
+                return localData;
+            }
+        }
+        
+        // 如果本地获取失败，尝试从API获取
+        try {
+            const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            // 返回食谱对象（JSON文件中的第一个键）
+            const recipeKey = Object.keys(data)[0];
+            return data[recipeKey];
+        } catch (error) {
+            console.error('获取食谱数据失败:', error);
+            // 如果API不可用，返回null
+            return null;
+        }
+    }
+
+    // 默认的菜品数据（当无法获取动态数据时使用）
+    const defaultRecipes = {
         '牛油果番茄沙拉': {
             image: 'images/沙拉.jpeg',
             title: '牛油果番茄沙拉',
@@ -70,407 +115,536 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // 获取参数
-    const recipeName = getQueryParam('name') || '牛油果番茄沙拉';
-    const recipe = recipes[recipeName] || recipes['牛油果番茄沙拉'];
-
-    // 设置图片
-    if (recipeImage) recipeImage.style.backgroundImage = `url('${recipe.image}')`;
-
-    // 设置标题、分类、时间、点赞
-    const titleEl = document.querySelector('.recipe-name');
-    if (titleEl) titleEl.textContent = recipe.title;
-    const categoryEl = document.querySelector('.recipe-category');
-    if (categoryEl) categoryEl.textContent = recipe.category;
-    const timeEl = document.querySelector('.stat-item img[alt="时间"]')?.nextElementSibling;
-    if (timeEl) timeEl.textContent = recipe.time;
-    const likesEl = document.querySelector('.stat-item img[alt="点赞"]')?.nextElementSibling;
-    if (likesEl) likesEl.textContent = recipe.likes;
-
-    // 初始化收藏状态
-    initializeFavoriteButton();
-
-    // 设置食材
-    const ingredientsGroups = document.querySelectorAll('.ingredients-group');
-    if (ingredientsGroups[0]) {
-        ingredientsGroups[0].querySelector('ul').innerHTML = recipe.ingredients.map(i => `<li><span class="ingredient-checkbox checked"></span>${i}</li>`).join('');
-    }
-    if (ingredientsGroups[1]) {
-        ingredientsGroups[1].querySelector('ul').innerHTML = recipe.condiments.map(i => `<li><span class="ingredient-checkbox checked"></span>${i}</li>`).join('');
-    }
-
-    // 食材勾选交互
-    function bindIngredientCheckbox() {
-        document.querySelectorAll('.ingredient-checkbox').forEach(function(box) {
-            box.addEventListener('click', function() {
-                box.classList.toggle('checked');
-            });
-        });
-    }
-    bindIngredientCheckbox();
-
-    // 添加到购菜篮按钮点击事件
-    var addBtn = document.querySelector('.add-to-cart-btn');
-    if (addBtn) {
-        addBtn.addEventListener('click', function() {
-            // 获取选中的食材
-            var checkedIngredients = document.querySelectorAll('.ingredient-checkbox.checked');
-            // 获取份数
-            var portionText = document.querySelector('.portion-count')?.textContent || '1份';
-            var portion = parseInt(portionText) || 1;
-            
-            // 获取现有的购物数据
-            var existingMarketData = JSON.parse(localStorage.getItem('chefmate_market_data') || '[]');
-            
-            // 收集选中的食材数据并转换为购物篮格式
-            var addedCount = 0;
-            checkedIngredients.forEach(function(item) {
-                var itemText = item.parentElement.textContent.trim();
-                var parts = itemText.split(' ');
-                var itemName = parts[0]; // 提取食材名称
-                
-                // 智能解析数量和单位
-                var parseResult = parseIngredientQuantity(itemText, portion);
-                var actualQuantity = parseResult.actualQuantity; // 实际需要的数量
-                var unitDescription = parseResult.unitDescription; // 单位描述
-                var additionalInfo = parseResult.additionalInfo; // 额外信息
-                
-                // 确定分类
-                var category = 'vegetables'; // 默认分类
-                if (itemName.includes('排骨') || itemName.includes('肉')) {
-                    category = 'meat';
-                } else if (itemName.includes('醋') || itemName.includes('糖') || itemName.includes('酱') || itemName.includes('料酒') || itemName.includes('生抽') || itemName.includes('老抽')) {
-                    category = 'seasoning';
-                } else if (itemName.includes('牛油果')) {
-                    category = 'fruits';
-                }
-                
-                // 构建描述
-                var description = unitDescription;
-                if (additionalInfo) {
-                    description += '，' + additionalInfo;
-                }
-                
-                // 检查是否已存在相同物品
-                var existingItem = existingMarketData.find(data => data.name === itemName && data.description === description);
-                if (existingItem) {
-                    // 如果已存在相同描述的物品，增加数量
-                    existingItem.quantity += actualQuantity;
+    // 初始化页面
+    async function initPage() {
+        const recipeType = getQueryParam('recipe');
+        const recipeId = getQueryParam('id');
+        
+        if (!recipeType && !recipeId) {
+            console.error('未提供菜谱类型或ID');
+            return;
+        }
+        
+        let recipeData;
+        
+        if (recipeId) {
+            // 如果提供了ID，尝试从API获取数据
+            try {
+                const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const recipeKey = Object.keys(data)[0];
+                    recipeData = data[recipeKey];
                 } else {
-                    // 如果不存在，添加新物品
-                    var newItem = {
-                        id: 'recipe_item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                        name: itemName,
-                        description: description,
-                        category: category,
-                        quantity: actualQuantity, // 实际需要的数量
-                        checked: false
-                    };
-                    existingMarketData.push(newItem);
+                    console.error('API请求失败:', response.status);
+                    // 如果API请求失败，尝试从本地JSON文件获取
+                    try {
+                        const localResponse = await fetch(`recipes/${recipeId}.json`);
+                        if (localResponse.ok) {
+                            const data = await localResponse.json();
+                            const recipeKey = Object.keys(data)[0];
+                            recipeData = data[recipeKey];
+                        }
+                    } catch (localError) {
+                        console.error('获取本地菜谱数据时出错:', localError);
+                    }
                 }
-                addedCount++;
-            });
+            } catch (error) {
+                console.error('获取菜谱数据时出错:', error);
+                // 如果API请求出错，尝试从本地JSON文件获取
+                try {
+                    const localResponse = await fetch(`recipes/${recipeId}.json`);
+                    if (localResponse.ok) {
+                        const data = await localResponse.json();
+                        const recipeKey = Object.keys(data)[0];
+                        recipeData = data[recipeKey];
+                    }
+                } catch (localError) {
+                    console.error('获取本地菜谱数据时出错:', localError);
+                }
+            }
+        } else if (recipeType) {
+            // 如果提供了菜谱类型，使用本地默认数据
+            recipeData = defaultRecipes[recipeType] || defaultRecipes['牛油果番茄沙拉'];
+        }
+        
+        if (!recipeData) {
+            console.error('未找到菜谱数据');
+            recipeData = defaultRecipes['牛油果番茄沙拉'];
+        }
+
+        // 设置图片
+        if (recipeImage) recipeImage.style.backgroundImage = `url('${recipeData.image}')`;
+
+        // 设置标题、分类、时间、点赞
+        const titleEl = document.querySelector('.recipe-name');
+        if (titleEl) titleEl.textContent = recipeData.title;
+        const categoryEl = document.querySelector('.recipe-category');
+        if (categoryEl) categoryEl.textContent = recipeData.category;
+        const timeEl = document.querySelector('.stat-item img[alt="时间"]')?.nextElementSibling;
+        if (timeEl) timeEl.textContent = recipeData.time;
+        const likesEl = document.querySelector('.stat-item img[alt="点赞"]')?.nextElementSibling;
+        if (likesEl) likesEl.textContent = recipeData.likes;
+
+        // 初始化收藏状态
+        initializeFavoriteButton(recipeData);
+
+        // 设置食材
+        const ingredientsGroups = document.querySelectorAll('.ingredients-group');
+        if (ingredientsGroups[0]) {
+            // 清空现有内容
+            ingredientsGroups[0].querySelector('ul').innerHTML = '';
             
-            // 智能解析食材数量的函数
-            function parseIngredientQuantity(itemText, portion) {
-                // 定义可数单位（这些单位的数量会随份数变化）
-                var countableUnits = ['颗', '根', '片', '勺', '包', '个', '只', '条', '块', '瓣'];
-                // 定义重量/体积单位（这些单位的数量会按比例调整）
-                var weightVolumeUnits = ['g', '克', 'kg', '公斤', 'ml', '毫升', 'l', '升'];
-                
-                // 中文数字转换映射
-                var chineseNumbers = {
-                    '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-                    '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
-                    '零': 0, '两': 2, '半': 0.5
-                };
-                
-                // 提取食材名称（第一个空格前的部分）
-                var itemName = itemText.split(' ')[0];
-                
-                // 更强的正则表达式，支持中文数字和阿拉伯数字
-                var quantityMatch = itemText.match(/([一二三四五六七八九十零两半\d]+(?:\.\d+)?)\s*([颗根片勺包个只条块瓣gml克公斤毫升升]+)/);
-                
-                if (quantityMatch) {
-                    var quantityStr = quantityMatch[1];
-                    var unit = quantityMatch[2];
-                    
-                    // 转换中文数字为阿拉伯数字
-                    var originalQuantity;
-                    if (/^[\d.]+$/.test(quantityStr)) {
-                        // 阿拉伯数字
-                        originalQuantity = parseFloat(quantityStr);
+            // 添加主料
+            if (recipeData.ingredients && Array.isArray(recipeData.ingredients)) {
+                recipeData.ingredients.forEach(ingredient => {
+                    const li = document.createElement('li');
+                    // 检查ingredient是字符串还是对象
+                    if (typeof ingredient === 'string') {
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${ingredient}`;
                     } else {
-                        // 中文数字
-                        originalQuantity = chineseNumbers[quantityStr] || 1;
+                        // 如果是对象，包含name和quantity属性
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${ingredient.name} ${ingredient.quantity}`;
+                    }
+                    ingredientsGroups[0].querySelector('ul').appendChild(li);
+                });
+            }
+        }
+        
+        if (ingredientsGroups[1]) {
+            // 清空现有内容
+            ingredientsGroups[1].querySelector('ul').innerHTML = '';
+            
+            // 添加辅料/调料
+            if (recipeData.condiments && Array.isArray(recipeData.condiments)) {
+                recipeData.condiments.forEach(condiment => {
+                    const li = document.createElement('li');
+                    // 检查condiment是字符串还是对象
+                    if (typeof condiment === 'string') {
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${condiment}`;
+                    } else {
+                        // 如果是对象，包含name和quantity属性
+                        li.innerHTML = `<span class="ingredient-checkbox checked"></span>${condiment.name} ${condiment.quantity}`;
+                    }
+                    ingredientsGroups[1].querySelector('ul').appendChild(li);
+                });
+            }
+        }
+
+        // 设置步骤
+        const stepsSection = document.querySelector('.steps-section');
+        if (stepsSection) {
+            // 清空现有内容
+            stepsSection.innerHTML = '<h2>步骤概览</h2>';
+            
+            // 添加步骤
+            if (recipeData.steps && Array.isArray(recipeData.steps)) {
+                recipeData.steps.forEach((step, index) => {
+                    const stepItem = document.createElement('div');
+                    stepItem.className = 'step-item';
+                    
+                    // 检查step是字符串还是对象
+                    if (typeof step === 'string') {
+                        stepItem.innerHTML = `<span>步骤${index + 1}：${step}</span>`;
+                    } else {
+                        // 如果是对象，包含description属性
+                        stepItem.innerHTML = `<span>步骤${index + 1}：${step.description}</span>`;
+                    }
+                    stepsSection.appendChild(stepItem);
+                });
+            }
+        }
+
+        // 食材勾选交互
+        function bindIngredientCheckbox() {
+            document.querySelectorAll('.ingredient-checkbox').forEach(function(box) {
+                box.addEventListener('click', function() {
+                    box.classList.toggle('checked');
+                });
+            });
+        }
+        bindIngredientCheckbox();
+
+        // 添加到购菜篮按钮点击事件
+        var addBtn = document.querySelector('.add-to-cart-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                // 获取选中的食材
+                var checkedIngredients = document.querySelectorAll('.ingredient-checkbox.checked');
+                // 获取份数
+                var portionText = document.querySelector('.portion-count')?.textContent || '1份';
+                var portion = parseInt(portionText) || 1;
+                
+                // 获取现有的购物数据
+                var existingMarketData = JSON.parse(localStorage.getItem('chefmate_market_data') || '[]');
+                
+                // 收集选中的食材数据并转换为购物篮格式
+                var addedCount = 0;
+                checkedIngredients.forEach(function(item) {
+                    var itemText = item.parentElement.textContent.trim();
+                    var parts = itemText.split(' ');
+                    var itemName = parts[0]; // 提取食材名称
+                    
+                    // 智能解析数量和单位
+                    var parseResult = parseIngredientQuantity(itemText, portion);
+                    var actualQuantity = parseResult.actualQuantity; // 实际需要的数量
+                    var unitDescription = parseResult.unitDescription; // 单位描述
+                    var additionalInfo = parseResult.additionalInfo; // 额外信息
+                    
+                    // 确定分类
+                    var category = 'vegetables'; // 默认分类
+                    if (itemName.includes('排骨') || itemName.includes('肉')) {
+                        category = 'meat';
+                    } else if (itemName.includes('醋') || itemName.includes('糖') || itemName.includes('酱') || itemName.includes('料酒') || itemName.includes('生抽') || itemName.includes('老抽')) {
+                        category = 'seasoning';
+                    } else if (itemName.includes('牛油果')) {
+                        category = 'fruits';
                     }
                     
-                    // 判断是否为可数单位
-                    var isCountable = countableUnits.some(countUnit => unit.includes(countUnit));
-                    var isWeightVolume = weightVolumeUnits.some(weightUnit => unit.includes(weightUnit));
-                    
-                    // 提取额外信息（逗号后的描述）
-                    var additionalInfo = '';
-                    if (itemText.includes('，')) {
-                        additionalInfo = itemText.split('，').slice(1).join('，');
-                    } else if (itemText.includes(',')) {
-                        additionalInfo = itemText.split(',').slice(1).join(',');
+                    // 构建描述
+                    var description = unitDescription;
+                    if (additionalInfo) {
+                        description += '，' + additionalInfo;
                     }
                     
-                    if (isCountable) {
-                        // 可数物品：实际数量 = 原始数量 × 份数
-                        var totalQuantity = originalQuantity * portion;
-                        return {
-                            actualQuantity: totalQuantity,
-                            unitDescription: unit,
-                            additionalInfo: additionalInfo
-                        };
-                    } else if (isWeightVolume) {
-                        // 重量/体积物品：购物时应该买多份相同重量的物品，而不是一份更重的物品
-                        // 例如：4份500g排骨 = 4个500g的排骨包装，而不是1个2000g的排骨
-                        return {
-                            actualQuantity: portion,
-                            unitDescription: originalQuantity + unit,
-                            additionalInfo: additionalInfo
-                        };
+                    // 检查是否已存在相同物品
+                    var existingItem = existingMarketData.find(data => data.name === itemName && data.description === description);
+                    if (existingItem) {
+                        // 如果已存在相同描述的物品，增加数量
+                        existingItem.quantity += actualQuantity;
                     } else {
-                        // 其他单位：保持原样但标注份数
-                        var unitDesc = originalQuantity + unit;
+                        // 如果不存在，添加新物品
+                        var newItem = {
+                            id: 'recipe_item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                            name: itemName,
+                            description: description,
+                            category: category,
+                            quantity: actualQuantity, // 实际需要的数量
+                            checked: false
+                        };
+                        existingMarketData.push(newItem);
+                    }
+                    addedCount++;
+                });
+                
+                // 智能解析食材数量的函数
+                function parseIngredientQuantity(itemText, portion) {
+                    // 定义可数单位（这些单位的数量会随份数变化）
+                    var countableUnits = ['颗', '根', '片', '勺', '包', '个', '只', '条', '块', '瓣'];
+                    // 定义重量/体积单位（这些单位的数量会按比例调整）
+                    var weightVolumeUnits = ['g', '克', 'kg', '公斤', 'ml', '毫升', 'l', '升'];
+                    
+                    // 中文数字转换映射
+                    var chineseNumbers = {
+                        '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+                        '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+                        '零': 0, '两': 2, '半': 0.5
+                    };
+                    
+                    // 提取食材名称（第一个空格前的部分）
+                    var itemName = itemText.split(' ')[0];
+                    
+                    // 更强的正则表达式，支持中文数字和阿拉伯数字
+                    var quantityMatch = itemText.match(/([一二三四五六七八九十零两半\d]+(?:\.\d+)?)\s*([颗根片勺包个只条块瓣gml克公斤毫升升]+)/);
+                    
+                    if (quantityMatch) {
+                        var quantityStr = quantityMatch[1];
+                        var unit = quantityMatch[2];
+                        
+                        // 转换中文数字为阿拉伯数字
+                        var originalQuantity;
+                        if (/^[\d.]+$/.test(quantityStr)) {
+                            // 阿拉伯数字
+                            originalQuantity = parseFloat(quantityStr);
+                        } else {
+                            // 中文数字
+                            originalQuantity = chineseNumbers[quantityStr] || 1;
+                        }
+                        
+                        // 判断是否为可数单位
+                        var isCountable = countableUnits.some(countUnit => unit.includes(countUnit));
+                        var isWeightVolume = weightVolumeUnits.some(weightUnit => unit.includes(weightUnit));
+                        
+                        // 提取额外信息（逗号后的描述）
+                        var additionalInfo = '';
+                        if (itemText.includes('，')) {
+                            additionalInfo = itemText.split('，').slice(1).join('，');
+                        } else if (itemText.includes(',')) {
+                            additionalInfo = itemText.split(',').slice(1).join(',');
+                        }
+                        
+                        if (isCountable) {
+                            // 可数物品：实际数量 = 原始数量 × 份数
+                            var totalQuantity = originalQuantity * portion;
+                            return {
+                                actualQuantity: totalQuantity,
+                                unitDescription: unit,
+                                additionalInfo: additionalInfo
+                            };
+                        } else if (isWeightVolume) {
+                            // 重量/体积物品：购物时应该买多份相同重量的物品，而不是一份更重的物品
+                            // 例如：4份500g排骨 = 4个500g的排骨包装，而不是1个2000g的排骨
+                            return {
+                                actualQuantity: portion,
+                                unitDescription: originalQuantity + unit,
+                                additionalInfo: additionalInfo
+                            };
+                        } else {
+                            // 其他单位：保持原样但标注份数
+                            var unitDesc = originalQuantity + unit;
+                            if (portion > 1) {
+                                unitDesc += '（' + portion + '份用量）';
+                            }
+                            return {
+                                actualQuantity: 1,
+                                unitDescription: unitDesc,
+                                additionalInfo: additionalInfo
+                            };
+                        }
+                    } else {
+                        // 没有匹配到数量单位，按份数处理
+                        var unitDesc = itemText;
                         if (portion > 1) {
-                            unitDesc += '（' + portion + '份用量）';
+                            unitDesc += '（' + portion + '份）';
                         }
                         return {
                             actualQuantity: 1,
                             unitDescription: unitDesc,
-                            additionalInfo: additionalInfo
+                            additionalInfo: ''
                         };
                     }
-                } else {
-                    // 没有匹配到数量单位，按份数处理
-                    var unitDesc = itemText;
-                    if (portion > 1) {
-                        unitDesc += '（' + portion + '份）';
+                }
+                
+                // 保存到localStorage
+                localStorage.setItem('chefmate_market_data', JSON.stringify(existingMarketData));
+                
+                showMessage('已添加 ' + addedCount + ' 种食材到购菜篮！');
+                
+                // 询问是否跳转到购菜篮页面
+                setTimeout(() => {
+                    if (confirm('是否立即前往购菜篮查看？')) {
+                        window.location.href = 'shopping-basket.html';
                     }
-                    return {
-                        actualQuantity: 1,
-                        unitDescription: unitDesc,
-                        additionalInfo: ''
-                    };
-                }
-            }
-            
-            // 保存到localStorage
-            localStorage.setItem('chefmate_market_data', JSON.stringify(existingMarketData));
-            
-            showMessage('已添加 ' + addedCount + ' 种食材到购菜篮！');
-            
-            // 询问是否跳转到购菜篮页面
-            setTimeout(() => {
-                if (confirm('是否立即前往购菜篮查看？')) {
-                    window.location.href = 'shopping-basket.html';
-                }
-            }, 500);
+                }, 500);
+            });
+        }
+
+        // 设置步骤概览
+        const stepsSection2 = document.querySelector('.steps-section');
+        if (stepsSection2 && recipeData.steps) {
+            stepsSection2.innerHTML = '<h2>步骤概览</h2>' + recipeData.steps.map((step, idx) => `<div class="step-item">步骤${idx+1}：${step}</div>`).join('');
+        }
+
+        // 返回按钮
+        backBtn.addEventListener('click', function() {
+            window.location.href = 'home.html';
         });
-    }
 
-    // 设置步骤概览
-    const stepsSection = document.querySelector('.steps-section');
-    if (stepsSection && recipe.steps) {
-        stepsSection.innerHTML = '<h2>步骤概览</h2>' + recipe.steps.map((step, idx) => `<div class="step-item">步骤${idx+1}：${step}</div>`).join('');
-    }
-
-    // 返回按钮
-    backBtn.addEventListener('click', function() {
-        window.location.href = 'home.html';
-    });
-
-    // 分享按钮
-    shareBtn.addEventListener('click', function() {
-        const shareText = `📖 推荐一个${recipe.category}食谱：${recipe.title}\n⏰ 制作时间：${recipe.time}\n👍 ${recipe.likes}人喜欢\n\n🍳 来自 ChefMate 应用`;
-        
-        if (navigator.share) {
-            navigator.share({
-                title: recipe.title,
-                text: shareText
-            }).catch(err => {
-                console.log('分享失败:', err);
+        // 分享按钮
+        shareBtn.addEventListener('click', function() {
+            const shareText = `📖 推荐一个${recipeData.category}食谱：${recipeData.title}\n⏰ 制作时间：${recipeData.time}\n👍 ${recipeData.likes}人喜欢\n\n🍳 来自 ChefMate 应用`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: recipeData.title,
+                    text: shareText
+                }).catch(err => {
+                    console.log('分享失败:', err);
+                    copyToClipboard(shareText);
+                });
+            } else {
                 copyToClipboard(shareText);
-            });
-        } else {
-            copyToClipboard(shareText);
-        }
-    });
+            }
+        });
 
-    // 收藏按钮功能
-    function initializeFavoriteButton() {
-        if (!favoriteBtn) return;
+        // 收藏按钮功能
+        function initializeFavoriteButton(recipeData) {
+            if (!favoriteBtn) return;
+            
+            const recipeId = getRecipeId(recipeData);
+            updateFavoriteButton(recipeId);
+            
+            favoriteBtn.addEventListener('click', function() {
+                toggleFavorite(recipeId, recipeData);
+            });
+        }
+
+        function getRecipeId(recipeData) {
+            // 如果有recipeId参数，直接使用
+            const idParam = getQueryParam('id');
+            if (idParam) {
+                return idParam;
+            }
+            
+            // 否则根据食谱名称确定ID
+            const recipeParam = getQueryParam('recipe');
+            if (recipeParam === 'salad' || recipeData.title === '牛油果番茄沙拉') {
+                return 'recipe_1';
+            } else if (recipeParam === 'ribs' || recipeData.title === '糖醋排骨') {
+                return 'recipe_2';
+            }
+            return 'recipe_1';
+        }
+
+        function updateFavoriteButton(recipeId) {
+            const isFavorited = checkIfFavorited(recipeId);
+            const img = favoriteBtn.querySelector('img');
+            
+            if (isFavorited) {
+                favoriteBtn.classList.add('favorited');
+                img.src = 'images/heart-filled.svg';
+            } else {
+                favoriteBtn.classList.remove('favorited');
+                img.src = 'images/heart.svg';
+            }
+        }
+
+        function toggleFavorite(recipeId, recipeData) {
+            const isFavorited = checkIfFavorited(recipeId);
+            
+            if (isFavorited) {
+                removeFromFavorites(recipeId);
+                showMessage('已取消收藏');
+            } else {
+                const favoriteItem = {
+                    id: recipeId,
+                    type: 'recipes',
+                    title: recipeData.title,
+                    image: recipeData.image,
+                    time: recipeData.time,
+                    likes: recipeData.likes,
+                    category: recipeData.category
+                };
+                addToFavorites(favoriteItem);
+                showMessage('已添加到收藏');
+            }
+            
+            updateFavoriteButton(recipeId);
+        }
+
+        function checkIfFavorited(recipeId) {
+            const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
+            return favorites.some(fav => fav.id === recipeId);
+        }
+
+        function addToFavorites(item) {
+            const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
+            item.addedTime = Date.now();
+            favorites.unshift(item);
+            localStorage.setItem('chefmate_favorites', JSON.stringify(favorites));
+        }
+
+        function removeFromFavorites(recipeId) {
+            const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
+            const updatedFavorites = favorites.filter(fav => fav.id !== recipeId);
+            localStorage.setItem('chefmate_favorites', JSON.stringify(updatedFavorites));
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showMessage('已复制到剪贴板');
+                }).catch(() => {
+                    showMessage('复制失败');
+                });
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('已复制到剪贴板');
+                } catch (err) {
+                    showMessage('复制失败');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showMessage(message) {
+            const existingMessage = document.querySelector('.toast-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = 'toast-message';
+            messageEl.textContent = message;
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 1000;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            
+            document.body.appendChild(messageEl);
+            
+            setTimeout(() => {
+                messageEl.style.opacity = '1';
+            }, 100);
+            
+            setTimeout(() => {
+                messageEl.style.opacity = '0';
+                setTimeout(() => {
+                    if (messageEl.parentNode) {
+                        messageEl.remove();
+                    }
+                }, 300);
+            }, 2000);
+        }
+
+        // 份数控制
+        let portion = 1;
         
-        const recipeId = getRecipeId();
-        updateFavoriteButton(recipeId);
-        
-        favoriteBtn.addEventListener('click', function() {
-            toggleFavorite(recipeId);
+        decreaseBtn.addEventListener('click', function() {
+            if (portion > 1) {
+                portion--;
+                updatePortion();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            if (portion < 10) {
+                portion++;
+                updatePortion();
+            }
+        });
+
+        function updatePortion() {
+            portionCount.textContent = portion + '份';
+        }
+
+        // 开始烹饪
+        startCookingBtn.addEventListener('click', function() {
+            // 跳转到食谱制作过程页面，并传递当前食谱ID或类型和名称
+            const recipeId = getQueryParam('id');
+            if (recipeId) {
+                // 如果有ID，传递ID参数
+                window.location.href = `recipe-cooking.html?id=${recipeId}`;
+            } else {
+                // 向后兼容：如果没有ID，使用原来的逻辑
+                let recipeType = 'salad';
+                if (recipe.title === '糖醋排骨') {
+                    recipeType = 'paigu';
+                }
+                // 传递name参数，以便返回时能回到正确的详情页
+                const recipeName = encodeURIComponent(recipe.title);
+                window.location.href = `recipe-cooking.html?recipe=${recipeType}&from=${recipeType}&name=${recipeName}`;
+            }
         });
     }
 
-    function getRecipeId() {
-        const recipeParam = getQueryParam('recipe');
-        if (recipeParam === 'salad' || recipe.title === '牛油果番茄沙拉') {
-            return 'recipe_1';
-        } else if (recipeParam === 'ribs' || recipe.title === '糖醋排骨') {
-            return 'recipe_2';
-        }
-        return 'recipe_1';
-    }
-
-    function updateFavoriteButton(recipeId) {
-        const isFavorited = checkIfFavorited(recipeId);
-        const img = favoriteBtn.querySelector('img');
-        
-        if (isFavorited) {
-            favoriteBtn.classList.add('favorited');
-            img.src = 'images/heart-filled.svg';
-        } else {
-            favoriteBtn.classList.remove('favorited');
-            img.src = 'images/heart.svg';
-        }
-    }
-
-    function toggleFavorite(recipeId) {
-        const isFavorited = checkIfFavorited(recipeId);
-        
-        if (isFavorited) {
-            removeFromFavorites(recipeId);
-            showMessage('已取消收藏');
-        } else {
-            const favoriteItem = {
-                id: recipeId,
-                type: 'recipes',
-                title: recipe.title,
-                image: recipe.image,
-                time: recipe.time,
-                likes: recipe.likes,
-                category: recipe.category
-            };
-            addToFavorites(favoriteItem);
-            showMessage('已添加到收藏');
-        }
-        
-        updateFavoriteButton(recipeId);
-    }
-
-    function checkIfFavorited(recipeId) {
-        const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
-        return favorites.some(fav => fav.id === recipeId);
-    }
-
-    function addToFavorites(item) {
-        const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
-        item.addedTime = Date.now();
-        favorites.unshift(item);
-        localStorage.setItem('chefmate_favorites', JSON.stringify(favorites));
-    }
-
-    function removeFromFavorites(recipeId) {
-        const favorites = JSON.parse(localStorage.getItem('chefmate_favorites') || '[]');
-        const updatedFavorites = favorites.filter(fav => fav.id !== recipeId);
-        localStorage.setItem('chefmate_favorites', JSON.stringify(updatedFavorites));
-    }
-
-    function copyToClipboard(text) {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => {
-                showMessage('已复制到剪贴板');
-            }).catch(() => {
-                showMessage('复制失败');
-            });
-        } else {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showMessage('已复制到剪贴板');
-            } catch (err) {
-                showMessage('复制失败');
-            }
-            document.body.removeChild(textArea);
-        }
-    }
-
-    function showMessage(message) {
-        const existingMessage = document.querySelector('.toast-message');
-        if (existingMessage) {
-            existingMessage.remove();
-        }
-        
-        const messageEl = document.createElement('div');
-        messageEl.className = 'toast-message';
-        messageEl.textContent = message;
-        messageEl.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        `;
-        
-        document.body.appendChild(messageEl);
-        
-        setTimeout(() => {
-            messageEl.style.opacity = '1';
-        }, 100);
-        
-        setTimeout(() => {
-            messageEl.style.opacity = '0';
-            setTimeout(() => {
-                if (messageEl.parentNode) {
-                    messageEl.remove();
-                }
-            }, 300);
-        }, 2000);
-    }
-
-    // 份数控制
-    let portion = 1;
-    
-    decreaseBtn.addEventListener('click', function() {
-        if (portion > 1) {
-            portion--;
-            updatePortion();
-        }
-    });
-
-    increaseBtn.addEventListener('click', function() {
-        if (portion < 10) {
-            portion++;
-            updatePortion();
-        }
-    });
-
-    function updatePortion() {
-        portionCount.textContent = portion + '份';
-    }
-
-    // 开始烹饪
-    startCookingBtn.addEventListener('click', function() {
-        // 跳转到食谱制作过程页面，并传递当前食谱类型和名称
-        let recipeType = 'salad';
-        if (recipe.title === '糖醋排骨') {
-            recipeType = 'paigu';
-        }
-        // 传递name参数，以便返回时能回到正确的详情页
-        const recipeName = encodeURIComponent(recipe.title);
-        window.location.href = `recipe-cooking.html?recipe=${recipeType}&from=${recipeType}&name=${recipeName}`;
-    });
+    // 启动页面初始化
+    initPage();
 });
 
 // 监听滚动事件实现图片放大效果
