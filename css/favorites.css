@@ -269,6 +269,33 @@
     100% { transform: rotate(360deg); }
 }
 
+/* 食材收藏项样式 */
+.ingredient-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #FFA242, #ff9020);
+    border-radius: 10px;
+}
+
+.ingredient-emoji {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.add-to-basket {
+    background: rgba(255, 162, 66, 0.9);
+}
+
+.add-to-basket img {
+    filter: brightness(0) invert(1);
+}
+
+.add-to-basket:hover {
+    background: rgba(255, 162, 66, 1);
+    transform: scale(1.1);
+}
+
 /* 删除动画 */
 .favorite-item.removing {
     animation: slideOut 0.3s ease-out forwards;

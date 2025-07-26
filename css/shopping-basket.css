@@ -285,6 +285,82 @@
     gap: 10px;
 }
 
+/* 收藏按钮 */
+.item-favorite {
+    margin-left: 10px;
+}
+
+.favorite-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn:hover {
+    background: rgba(255, 162, 66, 0.1);
+}
+
+.favorite-btn:active {
+    transform: scale(0.9);
+}
+
+.favorite-btn img {
+    width: 20px;
+    height: 20px;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn.favorited img {
+    filter: hue-rotate(320deg) saturate(2) brightness(1.2);
+}
+
+.favorite-btn.favorited {
+    animation: heartBeat 0.6s ease-in-out;
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* 空购菜篮状态 */
+.empty-basket-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.empty-basket-state .empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-basket-state .empty-text h3 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.empty-basket-state .empty-text p {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+}
+
 .quantity-btn {
     width: 28px;
     height: 28px;
