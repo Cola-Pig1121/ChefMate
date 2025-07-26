@@ -280,10 +280,8 @@ class ConversationManager:
     def get_response(self, user_text: str) -> str:
         """获取AI回复"""
         try:
-            # 添加用户消息
             self.conversation_history.append({"role": "user", "content": user_text})
 
-            # 保持对话历史在合理范围内
             if len(self.conversation_history) > 10:
                 self.conversation_history = self.conversation_history[-8:]
             messages = [
@@ -291,10 +289,7 @@ class ConversationManager:
             ] + self.conversation_history
 
             extra_body = {
-                # enable thinking, set to False to disable
                 "enable_thinking": False,
-                # use thinking_budget to contorl num of tokens used for thinking
-                # "thinking_budget": 4096
             }
 
             response = self.client.chat.completions.create(
@@ -307,7 +302,6 @@ class ConversationManager:
 
             answer = response.choices[0].message.content.strip()
 
-            # 添加AI回复到历史
             self.conversation_history.append({"role": "assistant", "content": answer})
 
             logger.info(f"AI回复: {answer}")
@@ -333,14 +327,12 @@ class TTSManager:
             audio_filename = f"{uuid.uuid4().hex}.mp3"
             audio_path = os.path.join(AUDIO_FOLDER, audio_filename)
 
-            # 使用edge-tts生成语音
             tts = edge_tts.Communicate(
-                text=text, voice=self.voice, rate="+10%", volume="+0%"  # 稍快一点
+                text=text, voice=self.voice, rate="+10%", volume="+0%"
             )
             await tts.save(audio_path)
 
             if os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
-                # 注册到音频管理器
                 self.audio_manager.register_file(audio_filename, session_id)
                 logger.info(f"语音合成完成: {audio_filename}")
                 return audio_filename
@@ -362,7 +354,6 @@ class VoiceConversationSystem:
         self.audio_manager = audio_manager
         self.socketio = None
 
-        # 状态管理
         self.is_listening = False
         self.is_ai_speaking = False
         self.current_session_id = None
@@ -377,11 +368,9 @@ class VoiceConversationSystem:
             return
 
         self.is_listening = True
-        # 创建新的会话ID
         self.current_session_id = f"voice_session_{uuid.uuid4().hex[:8]}"
         self.recorder.start_recording()
 
-        # 启动音频处理线程
         threading.Thread(target=self._audio_processing_loop, daemon=True).start()
 
         if self.socketio:
@@ -395,7 +384,6 @@ class VoiceConversationSystem:
         self.is_listening = False
         self.recorder.stop_recording()
 
-        # 清理当前会话的音频文件
         if self.current_session_id:
             self.audio_manager.cleanup_session(self.current_session_id)
             session_id = self.current_session_id
@@ -420,7 +408,6 @@ class VoiceConversationSystem:
                 time.sleep(0.01)
                 continue
 
-            # 检测是否有语音
             is_speech = self.recorder.vad.is_speech(audio_data)
 
             if is_speech:
@@ -434,19 +421,16 @@ class VoiceConversationSystem:
             else:
                 silence_count += 1
                 if speech_detected:
-                    speech_frames.append(audio_data)  # 包含一些静音
+                    speech_frames.append(audio_data)
 
             # 处理累积的语音
             if speech_detected and silence_count > max_silence:
                 min_frames = int(MIN_AUDIO_LENGTH * SAMPLE_RATE / CHUNK_SIZE)
                 if len(speech_frames) > min_frames:
                     audio_buffer = b"".join(speech_frames)
-                    # 异步处理语音
                     threading.Thread(
                         target=self._process_speech, args=(audio_buffer,), daemon=True
                     ).start()
-
-                # 重置状态
                 speech_frames = []
                 silence_count = 0
                 speech_detected = False
@@ -456,7 +440,6 @@ class VoiceConversationSystem:
     def _process_speech(self, audio_data: bytes):
         """处理语音数据"""
         try:
-            # 语音转文字
             text = self.transcriber.transcribe_audio(audio_data)
             if not text:
                 return
@@ -464,16 +447,13 @@ class VoiceConversationSystem:
             if self.socketio:
                 self.socketio.emit("transcription", {"text": text})
 
-            # 通知前端AI开始思考
             if self.socketio:
                 self.socketio.emit("ai_thinking", {"status": "thinking"})
 
-            # 获取AI回复
             response = self.conversation.get_response(text)
             if self.socketio:
                 self.socketio.emit("ai_response", {"text": response})
 
-            # 转换为语音并播放
             asyncio.run(self._handle_ai_speech(response))
 
         except Exception as e:
@@ -482,7 +462,6 @@ class VoiceConversationSystem:
     async def _handle_ai_speech(self, text: str):
         """处理AI语音播放"""
         try:
-            # AI说话前1秒禁用录音
             self.recorder.set_recording_allowed(False)
             await asyncio.sleep(1.0)
 
@@ -490,7 +469,6 @@ class VoiceConversationSystem:
             if self.socketio:
                 self.socketio.emit("ai_speaking", {"speaking": True})
 
-            # 生成语音
             audio_filename = await self.tts.text_to_speech(
                 text, self.current_session_id or "default"
             )
@@ -498,15 +476,13 @@ class VoiceConversationSystem:
                 if self.socketio:
                     self.socketio.emit("play_audio", {"filename": audio_filename})
 
-                # 估算播放时间
-                speech_duration = len(text) * 0.08  # 大约每字80ms
+                speech_duration = len(text) * 0.08
                 await asyncio.sleep(max(speech_duration, 2.0))
 
             self.is_ai_speaking = False
             if self.socketio:
                 self.socketio.emit("ai_speaking", {"speaking": False})
 
-            # AI说话后1秒恢复录音
             await asyncio.sleep(1.0)
             self.recorder.set_recording_allowed(True)
 
@@ -521,14 +497,12 @@ class VoiceConversationSystem:
         self.recorder.cleanup()
 
 
-# Flask应用设置
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "voice-chat-secret-key"
 app.config["JSON_AS_ASCII"] = False
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# 全局实例
 audio_manager = AudioFileManager()
 voice_system = VoiceConversationSystem(audio_manager)
 voice_system.set_socketio(socketio)
