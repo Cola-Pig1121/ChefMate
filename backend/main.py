@@ -50,20 +50,20 @@ AUDIO_MAX_AGE = 3600  # 音频文件最大保存1小时
 
 class AudioFileManager:
     """音频文件管理器 - 负责跟踪和清理音频文件"""
-    
+
     def __init__(self):
         self.session_files = {}  # session_id -> set of filenames
         self.file_timestamps = {}  # filename -> creation_time
         self.cleanup_thread = None
         self.running = True
         self.start_cleanup_thread()
-    
+
     def start_cleanup_thread(self):
         """启动清理线程"""
         self.cleanup_thread = threading.Thread(target=self._cleanup_loop, daemon=True)
         self.cleanup_thread.start()
         logger.info("音频清理线程已启动")
-    
+
     def _cleanup_loop(self):
         """清理循环"""
         while self.running:
@@ -73,75 +73,75 @@ class AudioFileManager:
             except Exception as e:
                 logger.error(f"音频清理错误: {e}")
                 time.sleep(60)  # 出错时等待1分钟再试
-    
+
     def register_file(self, filename: str, session_id: str = "default"):
         """注册音频文件"""
         if session_id not in self.session_files:
             self.session_files[session_id] = set()
-        
+
         self.session_files[session_id].add(filename)
         self.file_timestamps[filename] = datetime.now()
         logger.debug(f"注册音频文件: {filename} (会话: {session_id})")
-    
+
     def cleanup_session(self, session_id: str):
         """清理指定会话的所有音频文件"""
         if session_id not in self.session_files:
             return
-        
+
         files_to_delete = self.session_files[session_id].copy()
         deleted_count = 0
-        
+
         for filename in files_to_delete:
             if self.delete_file(filename):
                 deleted_count += 1
-        
+
         # 清理会话记录
         del self.session_files[session_id]
         logger.info(f"会话 {session_id} 结束，删除了 {deleted_count} 个音频文件")
-    
+
     def delete_file(self, filename: str) -> bool:
         """删除单个音频文件"""
         try:
             audio_path = os.path.join(AUDIO_FOLDER, filename)
             if os.path.exists(audio_path):
                 os.remove(audio_path)
-                
+
                 # 从记录中移除
                 if filename in self.file_timestamps:
                     del self.file_timestamps[filename]
-                
+
                 # 从所有会话中移除
                 for session_files in self.session_files.values():
                     session_files.discard(filename)
-                
+
                 logger.debug(f"删除音频文件: {filename}")
                 return True
             return False
         except Exception as e:
             logger.error(f"删除音频文件失败 {filename}: {e}")
             return False
-    
+
     def cleanup_old_files(self):
         """清理过期的音频文件"""
         current_time = datetime.now()
         files_to_delete = []
-        
+
         for filename, timestamp in self.file_timestamps.items():
             if current_time - timestamp > timedelta(seconds=AUDIO_MAX_AGE):
                 files_to_delete.append(filename)
-        
+
         deleted_count = 0
         for filename in files_to_delete:
             if self.delete_file(filename):
                 deleted_count += 1
-        
+
         if deleted_count > 0:
             logger.info(f"清理了 {deleted_count} 个过期音频文件")
-    
+
     def get_session_file_count(self, session_id: str) -> int:
         """获取会话的音频文件数量"""
         return len(self.session_files.get(session_id, set()))
-    
+
     def stop(self):
         """停止管理器"""
         self.running = False
@@ -306,11 +306,19 @@ class ConversationManager:
                 {"role": "system", "content": self.system_prompt}
             ] + self.conversation_history
 
+            extra_body = {
+                # enable thinking, set to False to disable
+                "enable_thinking": False,
+                # use thinking_budget to contorl num of tokens used for thinking
+                # "thinking_budget": 4096
+            }
+
             response = self.client.chat.completions.create(
-                model="Qwen/Qwen3-Coder-480B-A35B-Instruct",
+                model="Qwen/Qwen3-32B",
                 messages=messages,
                 temperature=0.7,
                 max_tokens=150,
+                extra_body=extra_body,
             )
 
             answer = response.choices[0].message.content.strip()
@@ -333,7 +341,9 @@ class TTSManager:
         self.voice = "zh-CN-XiaoxiaoNeural"  # 中文女声
         self.audio_manager = audio_manager
 
-    async def text_to_speech(self, text: str, session_id: str = "default") -> Optional[str]:
+    async def text_to_speech(
+        self, text: str, session_id: str = "default"
+    ) -> Optional[str]:
         """文字转语音"""
         try:
             audio_filename = f"{uuid.uuid4().hex}.mp3"
@@ -391,7 +401,9 @@ class VoiceConversationSystem:
         threading.Thread(target=self._audio_processing_loop, daemon=True).start()
 
         if self.socketio:
-            self.socketio.emit("status", {"listening": True, "session_id": self.current_session_id})
+            self.socketio.emit(
+                "status", {"listening": True, "session_id": self.current_session_id}
+            )
         logger.info(f"开始语音对话 (会话: {self.current_session_id})")
 
     def stop_listening(self):
@@ -491,7 +503,9 @@ class VoiceConversationSystem:
                 self.socketio.emit("ai_speaking", {"speaking": True})
 
             # 生成语音
-            audio_filename = await self.tts.text_to_speech(text, self.current_session_id or "default")
+            audio_filename = await self.tts.text_to_speech(
+                text, self.current_session_id or "default"
+            )
             if audio_filename:
                 if self.socketio:
                     self.socketio.emit("play_audio", {"filename": audio_filename})
@@ -611,6 +625,7 @@ def delete_audio(filename):
         logger.error(f"删除音频错误: {e}")
         return jsonify({"error": "删除失败"}), 500
 
+
 @app.route("/api/cleanup_session/<session_id>", methods=["POST"])
 def cleanup_session(session_id):
     """清理指定会话的所有音频文件"""
@@ -621,27 +636,33 @@ def cleanup_session(session_id):
         logger.error(f"清理会话错误: {e}")
         return jsonify({"error": "清理失败"}), 500
 
+
 @app.route("/api/audio_stats", methods=["GET"])
 def audio_stats():
     """获取音频文件统计信息"""
     try:
         total_files = len(audio_manager.file_timestamps)
         sessions = len(audio_manager.session_files)
-        
+
         # 计算总文件大小
         total_size = 0
         for filename in audio_manager.file_timestamps.keys():
             audio_path = os.path.join(AUDIO_FOLDER, filename)
             if os.path.exists(audio_path):
                 total_size += os.path.getsize(audio_path)
-        
-        return jsonify({
-            "total_files": total_files,
-            "active_sessions": sessions,
-            "total_size_mb": round(total_size / (1024 * 1024), 2),
-            "cleanup_interval": AUDIO_CLEANUP_INTERVAL,
-            "max_age_hours": AUDIO_MAX_AGE / 3600
-        }), 200
+
+        return (
+            jsonify(
+                {
+                    "total_files": total_files,
+                    "active_sessions": sessions,
+                    "total_size_mb": round(total_size / (1024 * 1024), 2),
+                    "cleanup_interval": AUDIO_CLEANUP_INTERVAL,
+                    "max_age_hours": AUDIO_MAX_AGE / 3600,
+                }
+            ),
+            200,
+        )
     except Exception as e:
         logger.error(f"获取音频统计错误: {e}")
         return jsonify({"error": "获取统计失败"}), 500
@@ -675,6 +696,7 @@ def handle_disconnect():
     # 客户端断开时自动停止对话并清理音频
     if voice_system.is_listening:
         voice_system.stop_listening()
+
 
 @socketio.on("end_session")
 def handle_end_session(data):
