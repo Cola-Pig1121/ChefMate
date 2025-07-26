@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -8,26 +7,54 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/recipe-cooking.css">
     <link rel="x/icon" alg="icon" href="images/favicon.ico">
+    <style>
+        .step-item {
+            transition: all 0.3s ease;
+        }
+        .step-item.active {
+            transform: scale(1.05);
+            background-color: #fff8e7;
+        }
+        .step-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #ccc;
+            display: inline-block;
+            margin: 0 6px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .step-indicator.done::after {
+            content: "\2713";
+            color: white;
+            font-size: 12px;
+            position: relative;
+            top: -1px;
+            left: 1px;
+        }
+        .step-indicator.active {
+            background-color: #FFA242;
+            transform: scale(1.2);
+        }
+        .indicators-container {
+            text-align: center;
+            padding: 12px 0;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- 固定背景图片 -->
         <div class="recipe-hero">
             <div class="recipe-image"></div>
         </div>
-        
-        <!-- 步骤容器 -->
-        <div class="steps-container">
-            <!-- 步骤内容将由JavaScript动态生成 -->
-        </div>
-
-        <!-- 底部操作栏 -->
+        <div class="steps-container"></div>
+        <div class="indicators-container" id="step-indicators"></div>
         <div class="bottom-action-bar flex-bar">
-            <button class="bar-btn next-btn" title="下一步">
-                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M8 12l8 8 8-8" stroke="#888" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
             <button class="bar-btn prev-btn" title="上一步">
                 <svg width="32" height="32" viewBox="0 0 32 32"><path d="M8 20l8-8 8 8" stroke="#888" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="bar-btn next-btn" title="下一步">
+                <svg width="32" height="32" viewBox="0 0 32 32"><path d="M8 12l8 8 8-8" stroke="#888" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div class="bar-btn wave-btn" title="沟通状态">
                 <svg width="40" height="32" viewBox="0 0 40 32">

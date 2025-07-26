@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
             name: "步骤1",
             subtitle: "处理食材",
             subSteps: [
-                { name: "牛油果", steps: ["对半切开", "去除中间果核", "用勺子挖3果肉", "把果肉切成一手指盖的长宽大小"] },
+                { name: "牛油果", steps: ["对半切开", "去除中间果核", "用勺子挖果肉", "把果肉切成一手指盖的长宽大小"] },
                 { name: "番茄", steps: ["洗干净去掉小绿帽子", "切片", "然后每片切4块"] },
                 { name: "洋葱", steps: ["去皮", "切成细条（根据个人爱好）"] }
             ]
@@ -30,14 +30,14 @@ document.addEventListener('DOMContentLoaded', function () {
             name: "步骤2",
             subtitle: "处理料汁",
             subSteps: [
-                { name: "料汁", steps: ["去一个柠檬", "围人一点橄榄油（笑似一个瓶盖）", "挤一片柠檬汁", "加入四分之一勺和适量黑胡椒"] }
+                { name: "料汁", steps: ["去一个柠檬", "倒一点橄榄油", "挤一片柠檬汁", "加入四分之一勺和适量黑胡椒"] }
             ]
         },
         {
             name: "步骤3",
             subtitle: "混合食材",
             subSteps: [
-                { name: "混合沙拉", steps: ["将牛油果、番茄、洋葱放入大碗", "倒入一勺橄榄油和黑胡椒油（笑似一个瓶盖）", "加入汁料并次搅拌，确保均匀混合上酱汁"] }
+                { name: "混合沙拉", steps: ["将牛油果、番茄、洋葱放入大碗", "倒入一勺橄榄油和黑胡椒油", "加入汁料并搅拌，确保均匀混合上酱汁"] }
             ]
         }
     ];
@@ -89,16 +89,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (index > 0) {
                 const previewDiv = document.createElement('div');
                 previewDiv.className = 'next-card-preview';
-                previewDiv.innerHTML = `
-                    <div>
-                        <h3>步骤${index + 1} / ${stepData.length}</h3>
-                        <p>${step.subtitle}</p>
-                    </div>
-                `;
+                previewDiv.innerHTML = `<div><h3>步骤${index + 1} / ${stepData.length}</h3><p>${step.subtitle}</p></div>`;
                 stepPage.appendChild(previewDiv);
             }
-            const contentHTML = `
-                <div class="recipe-content">
+            const contentHTML = `<div class="recipe-content">
                     <div class="content-wrapper">
                         <div class="recipe-info-section">
                             <div class="recipe-header">
@@ -120,8 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             stepPage.innerHTML += contentHTML;
             stepsContainer.appendChild(stepPage);
         });
@@ -131,8 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function generateSubSteps(subSteps) {
         let html = '';
         subSteps.forEach(subStep => {
-            html += `
-                <div class="step-group">
+            html += `<div class="step-group">
                     <div class="step-header">
                         <div class="flow-dot"></div>
                         <div class="ingredient-name">${subStep.name}</div>
@@ -140,12 +132,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="ingredient-steps">
                         ${subStep.steps.map(step => `<div>${step}</div>`).join('')}
                     </div>
-                </div>
-            `;
+                </div>`;
         });
         return html;
     }
     generateStepPages();
+    function generateStepIndicators() {
+        const indicatorContainer = document.getElementById('step-indicators');
+        if (!indicatorContainer) return;
+        indicatorContainer.innerHTML = '';
+        for (let i = 0; i < stepData.length; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'step-indicator';
+            indicatorContainer.appendChild(dot);
+        }
+    }
+    function updateStepIndicators() {
+        const indicatorContainer = document.getElementById('step-indicators');
+        if (!indicatorContainer) return;
+        const dots = indicatorContainer.querySelectorAll('.step-indicator');
+        dots.forEach((dot, index) => {
+            dot.className = 'step-indicator';
+            if (index < currentStep) {
+                dot.classList.add('done');
+                dot.innerHTML = '';
+            } else if (index === currentStep) {
+                dot.classList.add('active');
+            }
+        });
+    }
+    generateStepIndicators();
     function setRecipeImage() {
         const recipeHero = document.querySelector('.recipe-hero');
         if (recipeHero) {
@@ -237,8 +253,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => {
                 console.error('Fetch error:', error);
                 console.error('Error details:', error.message);
-
-                // 更详细的错误提示
                 if (error.message.includes('Failed to fetch')) {
                     speakResponse('无法连接到服务器，请检查后端服务是否启动');
                 } else if (error.message.includes('NetworkError')) {
@@ -494,6 +508,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 page.classList.add('hidden');
             }
         });
+        updateStepIndicators();
         setTimeout(() => {
             scrollToCurrentSubStep();
         }, 100);
