@@ -21,31 +21,25 @@ from flask_socketio import SocketIO, emit
 from dotenv import load_dotenv
 import re
 
-# 加载环境变量
 load_dotenv()
 
-# 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 音频配置
 SAMPLE_RATE = 16000
 CHUNK_SIZE = 1024
 CHANNELS = 1
 FORMAT = pyaudio.paInt16
 
-# 音量检测配置
-VOLUME_THRESHOLD = 500  # 音量阈值，可调整
-SILENCE_DURATION = 2.0  # 静音持续时间（秒）
-MIN_AUDIO_LENGTH = 1.0  # 最小音频长度（秒）
+VOLUME_THRESHOLD = 500
+SILENCE_DURATION = 2.0
+MIN_AUDIO_LENGTH = 1.0
 
-# 目录设置
 AUDIO_FOLDER = "audio"
 os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
-# 音频清理配置
-AUDIO_CLEANUP_INTERVAL = 300  # 5分钟清理一次
-AUDIO_MAX_AGE = 3600  # 音频文件最大保存1小时
+AUDIO_CLEANUP_INTERVAL = 300
+AUDIO_MAX_AGE = 3600
 
 
 class AudioFileManager:
@@ -95,7 +89,6 @@ class AudioFileManager:
             if self.delete_file(filename):
                 deleted_count += 1
 
-        # 清理会话记录
         del self.session_files[session_id]
         logger.info(f"会话 {session_id} 结束，删除了 {deleted_count} 个音频文件")
 
@@ -106,11 +99,9 @@ class AudioFileManager:
             if os.path.exists(audio_path):
                 os.remove(audio_path)
 
-                # 从记录中移除
                 if filename in self.file_timestamps:
                     del self.file_timestamps[filename]
 
-                # 从所有会话中移除
                 for session_files in self.session_files.values():
                     session_files.discard(filename)
 
@@ -157,9 +148,7 @@ class SimpleVAD:
 
     def is_speech(self, audio_data: bytes) -> bool:
         """基于音量检测是否有语音"""
-        # 将字节转换为numpy数组
         audio_np = np.frombuffer(audio_data, dtype=np.int16)
-        # 计算RMS音量
         rms = np.sqrt(np.mean(audio_np**2))
         return rms > self.threshold
 
@@ -251,16 +240,12 @@ class WhisperTranscriber:
     def transcribe_audio(self, audio_data: bytes) -> Optional[str]:
         """转录音频为文字"""
         try:
-            # 转换为numpy数组
             audio_np = (
                 np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
             )
 
-            # 检查音频长度
-            if len(audio_np) < SAMPLE_RATE * 0.5:  # 少于0.5秒
+            if len(audio_np) < SAMPLE_RATE * 0.5:
                 return None
-
-            # 使用Whisper转录
             segments, info = self.model.transcribe(
                 audio_np,
                 language="zh",  # 中文
@@ -268,7 +253,6 @@ class WhisperTranscriber:
                 vad_parameters=dict(min_silence_duration_ms=500, speech_pad_ms=400),
             )
 
-            # 合并所有片段
             text = " ".join([segment.text.strip() for segment in segments])
 
             if text.strip():

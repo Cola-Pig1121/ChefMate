@@ -299,10 +299,8 @@
         const socket = io();
         let isListening = false;
         let isAISpeaking = false;
-        let currentAIMessage = null;  // 当前活跃的AI消息元素
-        let currentAudio = null;      // 当前播放的音频元素
-
-        // DOM elements
+        let currentAIMessage = null;
+        let currentAudio = null;
         const statusDiv = document.getElementById('status');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
@@ -310,8 +308,6 @@
         const conversation = document.getElementById('conversation');
         const speechIndicator = document.getElementById('speechIndicator');
         const aiResponseIndicator = document.getElementById('aiResponseIndicator');
-
-        // Socket event handlers
         socket.on('connect', function () {
             updateStatus('已连接到服务器', 'connected');
         });
@@ -343,51 +339,33 @@
         });
 
         socket.on('transcription', function (data) {
-            // 用户开始说话时，清除之前的AI消息高亮
-            clearCurrentAIMessage();
-
             addMessage(data.text, 'transcription');
             addMessage(data.text, 'user-message');
         });
 
         socket.on('ai_thinking', function (data) {
-            // 显示AI正在思考
             aiResponseIndicator.style.display = 'block';
             aiResponseIndicator.innerHTML = '🤖 AI正在思考...';
         });
 
         socket.on('ai_response', function (data) {
-            // 清除之前的AI消息高亮
             clearCurrentAIMessage();
-
-            // 更新AI指示器
             aiResponseIndicator.innerHTML = '🎵 正在生成语音...';
-
-            // 添加新的AI消息并设为当前消息
-            currentAIMessage = addMessage(data.text, 'ai-message', true);
+            currentAIMessage = addMessage(data.text, 'ai-message', false);
         });
 
         socket.on('ai_speaking', function (data) {
             isAISpeaking = data.speaking;
             if (isAISpeaking) {
                 updateStatus('🔊 AI正在说话...', 'speaking');
-
-                // 如果有当前AI消息但还没开始播放，显示准备状态
-                if (currentAIMessage && !currentAIMessage.classList.contains('playing')) {
-                    const indicator = currentAIMessage.querySelector('.message-indicator');
-                    if (indicator) {
-                        indicator.style.background = '#FF9800'; // 橙色表示准备播放
-                    }
-                }
+                aiResponseIndicator.innerHTML = '🔊 准备播放音频...';
             } else if (isListening) {
                 updateStatus('🎙️ 正在监听语音...', 'listening');
             }
         });
 
         socket.on('play_audio', function (data) {
-            // 隐藏AI响应指示器
             aiResponseIndicator.style.display = 'none';
-
             playAudio(data.filename);
         });
 
@@ -397,8 +375,6 @@
                 addMessage(`会话 ${data.session_id} 已结束，音频文件已清理`, 'system-message');
             }
         });
-
-        // Functions
         function updateStatus(message, className) {
             statusDiv.textContent = message;
             statusDiv.className = `status ${className}`;
@@ -414,20 +390,8 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${className}`;
             messageDiv.textContent = text;
-
-            // 如果是当前AI消息，添加特殊样式和指示器
-            if (isCurrent && className === 'ai-message') {
-                messageDiv.classList.add('current');
-
-                // 添加指示器
-                const indicator = document.createElement('div');
-                indicator.className = 'message-indicator';
-                messageDiv.appendChild(indicator);
-            }
-
             conversation.appendChild(messageDiv);
             conversation.scrollTop = conversation.scrollHeight;
-
             return messageDiv;
         }
 
@@ -437,18 +401,17 @@
             audio.autoplay = true;
             audio.src = `/audio/${filename}`;
 
-            // 设置当前播放的音频
             currentAudio = audio;
             updateButtons();
 
-            // 如果有当前AI消息，标记为正在播放
             if (currentAIMessage) {
-                currentAIMessage.classList.remove('current');
                 currentAIMessage.classList.add('playing');
-
-                // 更新指示器
-                const indicator = currentAIMessage.querySelector('.message-indicator');
-                if (indicator) {
+                let indicator = currentAIMessage.querySelector('.message-indicator');
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.className = 'message-indicator playing-indicator';
+                    currentAIMessage.appendChild(indicator);
+                } else {
                     indicator.classList.add('playing-indicator');
                 }
             }
@@ -459,21 +422,16 @@
             conversation.appendChild(audioContainer);
             conversation.scrollTop = conversation.scrollHeight;
 
-            // 音频播放完毕时的处理
             audio.addEventListener('ended', function () {
-                // 清除当前AI消息的高亮
                 clearCurrentAIMessage();
                 currentAudio = null;
                 updateButtons();
-
-                // 延迟删除音频文件
                 setTimeout(() => {
                     fetch(`/api/delete_audio/${filename}`, { method: 'DELETE' })
                         .catch(err => console.log('Audio cleanup error:', err));
                 }, 5000);
             });
 
-            // 音频加载失败时的处理
             audio.addEventListener('error', function () {
                 console.error('音频播放失败:', filename);
                 clearCurrentAIMessage();
@@ -487,25 +445,22 @@
         }
 
         function stopConversation() {
-            // 清除当前AI消息高亮
-            clearCurrentAIMessage();
-
+            if (currentAudio) {
+                currentAudio.pause();
+                clearCurrentAIMessage();
+                currentAudio = null;
+            }
             socket.emit('stop_conversation');
-            // 也可以手动结束会话
             socket.emit('end_session');
         }
 
         function clearCurrentAIMessage() {
             if (currentAIMessage) {
-                // 移除所有特殊样式
                 currentAIMessage.classList.remove('current', 'playing');
-
-                // 移除指示器
                 const indicator = currentAIMessage.querySelector('.message-indicator');
                 if (indicator) {
                     indicator.remove();
                 }
-
                 currentAIMessage = null;
             }
         }
@@ -514,17 +469,14 @@
             if (currentAudio) {
                 currentAudio.pause();
                 currentAudio.currentTime = 0;
-
-                // 清除当前AI消息高亮
                 clearCurrentAIMessage();
                 currentAudio = null;
                 updateButtons();
-
                 addMessage('🛑 音频播放已停止', 'system-message');
             }
         }
 
-        // Additional functions
+
         function showAudioStats() {
             fetch('/api/audio_stats')
                 .then(response => response.json())
@@ -550,19 +502,15 @@
 
         function cleanupAllAudio() {
             if (confirm('确定要清理所有音频文件吗？这将删除所有会话的音频文件。')) {
-                // 这里可以添加清理所有音频的API调用
                 addMessage('音频清理功能开发中...', 'system-message');
             }
         }
 
-        // 页面关闭时自动结束会话
         window.addEventListener('beforeunload', function () {
             if (isListening) {
                 socket.emit('end_session');
             }
         });
-
-        // Initialize
         updateButtons();
     </script>
 </body>
