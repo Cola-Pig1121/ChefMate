@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部导航栏 -->
+            <div class="top-bar">
+                <div class="back-button" onclick="window.location.href='profile.html'">
+                    <img src="images/back.svg" alt="返回">
+                </div>
+                <div class="page-title">设置</div>
+                <div class="placeholder"></div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <!-- 音频设置 -->
+                <div class="settings-section">
+                    <h2 class="section-title">音频设置</h2>
+                    
+                    <!-- 音量控制 -->
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="setting-name">音量</span>
+                            <span class="setting-value" id="volumeValue">70%</span>
+                        </div>
+                        <div class="volume-control">
+                            <input type="range" id="volumeSlider" min="0" max="100" value="70" class="volume-slider">
+                        </div>
+                    </div>
+
+
+
+                    <!-- 语速控制 -->
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="setting-name">语速</span>
+                            <span class="setting-value" id="speedValue">正常</span>
+                        </div>
+                        <div class="speed-control">
+                            <input type="range" id="speedSlider" min="0.5" max="2" step="0.1" value="1" class="speed-slider">
+                            <div class="speed-labels">
+                                <span>慢</span>
+                                <span>正常</span>
+                                <span>快</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 通知设置 -->
+                <div class="settings-section">
+                    <h2 class="section-title">通知设置</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="setting-name">推送通知</span>
+                            <span class="setting-desc">接收新食谱和烹饪提醒</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="pushNotification" checked>
+                            <label for="pushNotification" class="switch"></label>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="setting-name">声音提醒</span>
+                            <span class="setting-desc">烹饪计时器声音提醒</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="soundAlert" checked>
+                            <label for="soundAlert" class="switch"></label>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- 其他设置 -->
+                <div class="settings-section">
+                    <h2 class="section-title">其他</h2>
+                    
+                    <div class="setting-item clickable" onclick="clearCache()">
+                        <div class="setting-label">
+                            <span class="setting-name">清除缓存</span>
+                            <span class="setting-desc">清除应用缓存数据</span>
+                        </div>
+                        <div class="setting-arrow">›</div>
+                    </div>
+
+                    <div class="setting-item clickable" onclick="showAbout()">
+                        <div class="setting-label">
+                            <span class="setting-name">关于ChefMate</span>
+                            <span class="setting-desc">版本信息和帮助</span>
+                        </div>
+                        <div class="setting-arrow">›</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="window.location.href='home.html'">
+                <img src="images/首页_home-two (1).svg" alt="主页">
+            </div>
+            <div class="nav-item" onclick="window.location.href='shopping-basket.html'">
+                <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
+            </div>
+            <div class="nav-item" onclick="window.location.href='profile.html'">
+                <img src="images/人员_people.svg" alt="个人">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+
+</html>
