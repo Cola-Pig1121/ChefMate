@@ -1,207 +1,233 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
-<head>
-    <meta charset="UTF-8">
-    <link rel="x/icon" alg="icon" href="images/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="x/icon" alg="icon" href="images/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ChefMate - 智能对话食谱iOS应用原型</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'Arial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-            background-color: #f5f5f7;
-            color: #333;
-            padding: 30px;
-        }
+      body {
+        font-family: "Arial", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Helvetica, sans-serif;
+        background-color: #f5f5f7;
+        color: #333;
+        padding: 0;
+        margin: 0;
+      }
 
-        .project-header {
-            text-align: center;
-            margin-bottom: 50px;
-            padding: 20px;
-        }
+      .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 60px;
+        min-height: 100vh;
+      }
 
-        .project-header h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
-            color: #000;
-        }
+      .project-header {
+        text-align: center;
+        margin-bottom: 60px;
+        padding: 30px 0;
+      }
 
-        .project-header p {
-            font-size: 18px;
-            color: #666;
-            max-width: 700px;
-            margin: 0 auto;
-        }
+      .project-header h1 {
+        font-size: clamp(32px, 6vw, 64px);
+        margin-bottom: 20px;
+        color: #000;
+        font-weight: 700;
+      }
 
-        .screens-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 80px;
-            justify-content: center;
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+      .project-header p {
+        font-size: clamp(20px, 4vw, 32px);
+        color: #666;
+        max-width: 900px;
+        margin: 0 auto;
+        line-height: 1.4;
+      }
 
-        .screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 40px;
-        }
+      .screens-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+      }
 
-        .screen-label {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #000;
-        }
+      .screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 40px;
+      }
 
-        .screen-description {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 20px;
-            text-align: center;
-            max-width: 300px;
+      .screen-label {
+        font-size: clamp(24px, 5vw, 36px);
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #000;
+      }
+
+      .screen-description {
+        font-size: clamp(18px, 4vw, 26px);
+        color: #666;
+        margin-bottom: 30px;
+        text-align: center;
+        max-width: 600px;
+        line-height: 1.5;
+      }
+
+      .screen-frame {
+        width: 100%;
+        max-width: 800px;
+        height: 85vh;
+        min-height: 700px;
+        background: #fff;
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        border: 2px solid #ddd;
+      }
+
+      .iframe-container {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .mockup-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        height: 36px;
+        background: #000;
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px;
+        z-index: 10;
+      }
+
+      .mockup-home-indicator {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 160px;
+        height: 6px;
+        background: #000;
+        border-radius: 6px;
+        z-index: 10;
+      }
+
+      @media (max-width: 1024px) {
+        .main-container {
+          padding: 30px 40px;
         }
 
         .screen-frame {
-            width: 375px;
-            height: 812px;
-            background: #fff;
-            border-radius: 40px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            position: relative;
-            border: 1px solid #ddd;
+          max-width: 700px;
+          height: 80vh;
+          min-height: 650px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 20px 30px;
         }
 
-        .iframe-container {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+        .screen-frame {
+          max-width: 600px;
+          height: 75vh;
+          min-height: 600px;
+          border-radius: 30px;
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+        .project-header {
+          margin-bottom: 40px;
+          padding: 20px 0;
         }
 
         .mockup-notch {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 180px;
-            height: 30px;
-            background: #000;
-            border-bottom-left-radius: 15px;
-            border-bottom-right-radius: 15px;
-            z-index: 10;
+          width: 160px;
+          height: 28px;
+          border-bottom-left-radius: 14px;
+          border-bottom-right-radius: 14px;
         }
 
         .mockup-home-indicator {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 135px;
-            height: 5px;
-            background: #000;
-            border-radius: 5px;
-            z-index: 10;
+          width: 120px;
+          height: 5px;
+          bottom: 10px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .main-container {
+          padding: 15px 20px;
         }
 
-        @media (max-width: 1700px) {
-            .screens-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .screen-frame {
+          height: 70vh;
+          min-height: 500px;
+          border-radius: 25px;
         }
 
-        @media (max-width: 900px) {
-            .screens-container {
-                grid-template-columns: 1fr;
-                gap: 60px;
-            }
-
-            .screen-frame {
-                width: 320px;
-                height: 695px;
-            }
-
-            body {
-                padding: 10px;
-            }
+        .mockup-notch {
+          width: 140px;
+          height: 24px;
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 12px;
         }
+
+        .mockup-home-indicator {
+          width: 100px;
+          height: 4px;
+          bottom: 8px;
+        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <div class="project-header">
+  <body>
+    <div class="main-container">
+      <div class="project-header">
         <h1>ChefMate 智能对话食谱应用</h1>
-        <p>基于iOS设计规范的高保真原型，包含主页、我的页面、食谱详情和食谱制作步骤四个主要界面</p>
-    </div>
+        <p>基于iOS设计规范的高保真原型，展示智能对话食谱应用的主页界面</p>
+      </div>
 
-    <div class="screens-container">
+      <div class="screens-container">
         <!-- 主页 -->
         <div class="screen">
-            <div class="screen-label"><a href="home.html" style="text-decoration: none; color: #000;">主页</a></div>
-            <div class="screen-description">展示连胜纪录和推荐食谱，集合搜索功能</div>
-            <div class="screen-frame">
-                <div class="mockup-notch"></div>
-                <div class="iframe-container">
-                    <iframe src="home.html" title="主页"></iframe>
-                </div>
-                <div class="mockup-home-indicator"></div>
+          <div class="screen-label">
+            <a href="home.html" style="text-decoration: none; color: #000"
+              >主页</a
+            >
+          </div>
+          <div class="screen-description">
+            展示连胜纪录和推荐食谱，集合搜索功能
+          </div>
+          <div class="screen-frame">
+            <div class="mockup-notch"></div>
+            <div class="iframe-container">
+              <iframe src="home.html" title="主页"></iframe>
             </div>
+            <div class="mockup-home-indicator"></div>
+          </div>
         </div>
-
-        <!-- 我的页面 -->
-        <div class="screen">
-            <div class="screen-label"><a href="profile.html" style="text-decoration: none; color: #000;">我的</a></div>
-            <div class="screen-description">个人信息展示，购菜篮，收藏的菜系</div>
-            <div class="screen-frame">
-                <div class="mockup-notch"></div>
-                <div class="iframe-container">
-                    <iframe src="profile.html" title="我的"></iframe>
-                </div>
-                <div class="mockup-home-indicator"></div>
-            </div>
-        </div>
-
-        <!-- 食谱详情页面 -->
-        <div class="screen">
-            <div class="screen-label"><a href="home.html" style="text-decoration: none; color: #000;">食谱详情</a></div>
-            <div class="screen-description">展示食谱信息、备菜清单和步骤概览</div>
-            <div class="screen-frame">
-                <div class="mockup-notch"></div>
-                <div class="iframe-container">
-                    <iframe src="recipe-detail.html?recipe=salad" title="食谱详情"></iframe>
-                </div>
-                <div class="mockup-home-indicator"></div>
-            </div>
-        </div>
-
-        <!-- 食谱制作步骤页面 -->
-        <div class="screen">
-            <div class="screen-label"><a href="home.html" style="text-decoration: none; color: #000;">制作步骤</a></div>
-            <div class="screen-description">AI辅助烹饪的详细步骤展示</div>
-            <div class="screen-frame">
-                <div class="mockup-notch"></div>
-                <div class="iframe-container">
-                    <iframe src="recipe-cooking.html?recipe=salad" title="制作步骤"></iframe>
-                </div>
-                <div class="mockup-home-indicator"></div>
-            </div>
-        </div>
+      </div>
     </div>
-</body>
-
+  </body>
 </html>
