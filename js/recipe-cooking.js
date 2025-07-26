@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => { toast.style.display = 'none'; }, 400);
-        }, 1800);
+        }, 3000);
     }
     function goToNextSubStep() {
         const currentStepData = stepData[currentStep];
