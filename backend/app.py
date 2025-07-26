@@ -17,11 +17,23 @@ app.config["JSON_AS_ASCII"] = False
 AUDIO_FOLDER = "audio"
 os.makedirs(AUDIO_FOLDER, exist_ok=True)
 
+@app.route("/")
+def health_check():
+    return jsonify({"status": "ok", "message": "ChefMate API is running"})
+
 
 async def tts_to_mp3(text, filename, rate="+0%", volume="+0%"):
-    voice = "zh-CN-XiaoxiaoNeural"
-    tts = edge_tts.Communicate(text=text, voice=voice, rate=rate, volume=volume)
-    await tts.save(filename)
+    try:
+        voice = "zh-CN-XiaoxiaoNeural"
+        tts = edge_tts.Communicate(text=text, voice=voice, rate=rate, volume=volume)
+        await tts.save(filename)
+        return True
+    except Exception as e:
+        print(f"TTS Error: {str(e)}")
+        # 创建一个空的音频文件作为fallback
+        with open(filename, 'wb') as f:
+            f.write(b'')
+        return False
 
 
 @app.route("/api/ask", methods=["POST"])
@@ -40,7 +52,7 @@ def ask():
         else:
             client = OpenAI(
                 base_url=os.getenv("BASE_URL"),
-                api_key=os.getenv("API_KEY"),
+                api_key=os.getenv("API_KEY")
             )
             response = client.chat.completions.create(
                 model="Qwen/Qwen3-Coder-480B-A35B-Instruct",
@@ -60,14 +72,22 @@ def ask():
         audio_filename = f"{uuid.uuid4().hex}.mp3"
         audio_path = os.path.join(AUDIO_FOLDER, audio_filename)
 
-        asyncio.run(tts_to_mp3(answer, audio_path))
+        tts_success = asyncio.run(tts_to_mp3(answer, audio_path))
+        
+        if tts_success and os.path.exists(audio_path) and os.path.getsize(audio_path) > 0:
+            audio_url = f"/audio/{audio_filename}"
+        else:
+            audio_url = None
+            print("TTS failed, returning text-only response")
 
-        audio_url = f"/audio/{audio_filename}"
         return jsonify({"answer": answer, "audio_url": audio_url})
 
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        print(f"Error in /api/ask: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 
 @app.route("/audio/<filename>")

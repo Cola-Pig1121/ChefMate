@@ -236,7 +236,16 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 console.error('Fetch error:', error);
-                speakResponse('服务暂时不可用，请稍后再试');
+                console.error('Error details:', error.message);
+
+                // 更详细的错误提示
+                if (error.message.includes('Failed to fetch')) {
+                    speakResponse('无法连接到服务器，请检查后端服务是否启动');
+                } else if (error.message.includes('NetworkError')) {
+                    speakResponse('网络连接异常，请检查网络设置');
+                } else {
+                    speakResponse('服务暂时不可用，请稍后再试');
+                }
             });
     }
     function speakResponse(text, audioUrl) {
