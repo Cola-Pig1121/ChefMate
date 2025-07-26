@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 尝试从API获取文件列表，如果失败则使用硬编码列表
             let recipeFiles;
             try {
-                const response = await fetch('http://localhost:3000/api/recipes');
+                const response = await fetch('/api/recipes');
                 if (response.ok) {
                     const apiData = await response.json();
                     recipeFiles = Object.keys(apiData).map(key => `${key}.json`);

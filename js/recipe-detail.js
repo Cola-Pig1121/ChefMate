@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 如果本地获取失败，尝试从API获取
         try {
-            const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
+            const response = await fetch(`/api/recipes/${recipeId}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (recipeId) {
             // 如果提供了ID，尝试从API获取数据
             try {
-                const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
+                const response = await fetch(`/api/recipes/${recipeId}`);
                 if (response.ok) {
                     const data = await response.json();
                     const recipeKey = Object.keys(data)[0];

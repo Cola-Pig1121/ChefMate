@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     async function fetchAllRecipes() {
     try {
-        const response = await fetch('http://localhost:3000/api/recipes');
+        const response = await fetch('/api/recipes');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

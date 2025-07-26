@@ -6,55 +6,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentSubStep = 0;
     let totalSteps = 0;
     let stepPages = [];
-    function getRecipeFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('recipe') || 'salad';
-    }
-    function getRecipeNameFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('name');
-    }
+    
     function getRecipeIdFromUrl() {
         const params = new URLSearchParams(window.location.search);
         return params.get('id');
     }
 
     const recipeId = getRecipeIdFromUrl();
-    const recipeType = getRecipeFromUrl();
-    const recipeName = getRecipeNameFromUrl();
-    // 根据UUID获取本地食谱数据
-    async function fetchLocalRecipeData(uuid) {
-        try {
-            const response = await fetch(`recipes/${uuid}.json`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            // 返回食谱对象（JSON文件中的第一个键）
-            const recipeKey = Object.keys(data)[0];
-            return data[recipeKey];
-        } catch (error) {
-            console.error('获取本地食谱数据失败:', error);
-            return null;
-        }
-    }
+    let stepData = null;
+    let recipeTitle = null;
 
-    // 根据UUID获取食谱数据
     async function fetchRecipeData(recipeId) {
-        // 首先尝试从本地UUID文件获取数据
-        if (recipeId && recipeId.includes('-')) {
-            const localData = await fetchLocalRecipeData(recipeId);
-            if (localData) {
-                return localData;
-            }
-        }
-
-        // 如果本地获取失败，尝试从API获取
         try {
-            const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const response = await fetch(`/api/recipes/${recipeId}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             const recipeKey = Object.keys(data)[0];
             return data[recipeKey];
@@ -64,113 +29,30 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // 默认步骤数据（向后兼容）
-    const saladStepData = [
-        {
-            name: "步骤1",
-            subtitle: "处理食材",
-            subSteps: [
-                { name: "牛油果", steps: ["对半切开", "去除中间果核", "用勺子挖3果肉", "把果肉切成一手指盖的长宽大小"] },
-                { name: "番茄", steps: ["洗干净去掉小绿帽子", "切片", "然后每片切4块"] },
-                { name: "洋葱", steps: ["去皮", "切成细条（根据个人爱好）"] }
-            ]
-        },
-        {
-            name: "步骤2",
-            subtitle: "处理料汁",
-            subSteps: [
-                { name: "料汁", steps: ["去一个柠檬", "围人一点橄榄油（笑似一个瓶盖）", "挤一片柠檬汁", "加入四分之一勺和适量黑胡椒"] }
-            ]
-        },
-        {
-            name: "步骤3",
-            subtitle: "混合食材",
-            subSteps: [
-                { name: "混合沙拉", steps: ["将牛油果、番茄、洋葱放入大碗", "倒入一勺橄榄油和黑胡椒油（笑似一个瓶盖）", "加入汁料并次搅拌，确保均匀混合上酱汁"] }
-            ]
-        }
-    ];
-    const paiguStepData = [
-        {
-            name: "步骤1",
-            subtitle: "准备排骨",
-            subSteps: [
-                { name: "排骨", steps: ["清洗排骨", "剁成小段", "冷水下锅焯水", "捞出沥干"] },
-                { name: "配料", steps: ["姜切片", "葱切段"] }
-            ]
-        },
-        {
-            name: "步骤2",
-            subtitle: "腌制排骨",
-            subSteps: [
-                { name: "腌制", steps: ["排骨加料酒、盐、胡椒粉", "腌制15分钟"] }
-            ]
-        },
-        {
-            name: "步骤3",
-            subtitle: "煎炸排骨",
-            subSteps: [
-                { name: "煎炸", steps: ["锅中倒油烧热", "排骨下锅中小火煎至两面金黄", "捞出沥油"] }
-            ]
-        },
-        {
-            name: "步骤4",
-            subtitle: "调制糖醋汁",
-            subSteps: [
-                { name: "糖醋汁", steps: ["碗中加糖、醋、生抽、老抽、清水", "搅拌均匀"] }
-            ]
-        },
-        {
-            name: "步骤5",
-            subtitle: "收汁出锅",
-            subSteps: [
-                { name: "收汁", steps: ["锅中留底油，放姜葱爆香", "倒入排骨翻炒", "倒入糖醋汁", "大火收汁至粘稠", "撒芝麻出锅"] }
-            ]
-        }
-    ];
-
-    // 将步骤数据转换为统一格式的函数
     function convertRecipeDataToSteps(recipeData) {
-        if (!recipeData) {
-            return null;
-        }
-
-        // 如果已经是正确的格式，直接返回
+        if (!recipeData) return null;
         if (recipeData.cookingSteps && Array.isArray(recipeData.cookingSteps)) {
             return recipeData.cookingSteps;
         }
+        if (!recipeData.steps || !Array.isArray(recipeData.steps)) return null;
 
-        // 如果没有步骤数据，返回null
-        if (!recipeData.steps || !Array.isArray(recipeData.steps)) {
-            return null;
-        }
-
-        // 将简单的步骤数组转换为详细的步骤格式
         const steps = recipeData.steps;
         const convertedSteps = [];
-
-        // 将步骤按逻辑分组，每组最多3个步骤
         const stepsPerGroup = Math.min(3, Math.ceil(steps.length / 3));
 
         for (let i = 0; i < steps.length; i += stepsPerGroup) {
             const groupSteps = steps.slice(i, i + stepsPerGroup);
             const stepNumber = Math.floor(i / stepsPerGroup) + 1;
-
-            // 生成更有意义的副标题
+            
             let subtitle = `第${stepNumber}阶段`;
-            if (stepNumber === 1) {
-                subtitle = "准备工作";
-            } else if (stepNumber === 2) {
-                subtitle = "制作过程";
-            } else if (stepNumber === 3) {
-                subtitle = "完成收尾";
-            }
+            if (stepNumber === 1) subtitle = "准备工作";
+            else if (stepNumber === 2) subtitle = "制作过程";
+            else if (stepNumber === 3) subtitle = "完成收尾";
 
             convertedSteps.push({
                 name: `步骤${stepNumber}`,
                 subtitle: subtitle,
                 subSteps: groupSteps.map((step, index) => {
-                    // 处理步骤文本，如果是对象则取description
                     const stepText = typeof step === 'string' ? step : (step.description || step.name || '操作步骤');
                     return {
                         name: `操作${index + 1}`,
@@ -183,35 +65,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return convertedSteps;
     }
 
-    let stepData = null;
-    let recipeTitle = null; // 存储从JSON获取的食谱标题
-
-    // 初始化步骤数据
     async function initializeStepData() {
-        try {
-            if (recipeId) {
-                // 如果有UUID，尝试获取动态数据
-                const recipeData = await fetchRecipeData(recipeId);
-                if (recipeData) {
-                    // 保存食谱标题
-                    recipeTitle = recipeData.title;
-                    const convertedSteps = convertRecipeDataToSteps(recipeData);
-                    if (convertedSteps && convertedSteps.length > 0) {
-                        stepData = convertedSteps;
-                        console.log('成功加载UUID食谱步骤数据');
-                        return;
-                    }
+        if (recipeId) {
+            const recipeData = await fetchRecipeData(recipeId);
+            if (recipeData) {
+                recipeTitle = recipeData.title;
+                const convertedSteps = convertRecipeDataToSteps(recipeData);
+                if (convertedSteps && convertedSteps.length > 0) {
+                    stepData = convertedSteps;
+                    return;
                 }
-                console.log('UUID食谱数据加载失败，使用默认数据');
             }
-
-            // 向后兼容：使用原有逻辑
-            stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
-            console.log('使用默认步骤数据:', recipeType);
-        } catch (error) {
-            console.error('初始化步骤数据时出错:', error);
-            // 出错时使用默认数据
-            stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
         }
     }
 
@@ -265,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
         stepPages = document.querySelectorAll('.step-page');
         totalSteps = stepPages.length;
     }
+    
     function generateSubSteps(subSteps) {
         let html = '';
         subSteps.forEach(subStep => {
@@ -282,9 +147,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         return html;
     }
-    // 异步初始化页面
+
     async function initializePage() {
         await initializeStepData();
+        if (!stepData) {
+            console.error('无法加载食谱数据');
+            return;
+        }
+        
         generateStepPages();
         setRecipeImage();
 
@@ -301,7 +171,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const recipeHero = document.querySelector('.recipe-hero');
         if (!recipeHero) return;
 
-        // 如果有UUID，尝试获取动态图片
         if (recipeId) {
             const recipeData = await fetchRecipeData(recipeId);
             if (recipeData && recipeData.image) {
@@ -309,55 +178,135 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
         }
-
-        // 向后兼容：使用默认图片
-        if (recipeType === 'paigu') {
-            recipeHero.style.backgroundImage = "url('images/排骨.jpg')";
-        } else {
-            recipeHero.style.backgroundImage = "url('images/沙拉.jpeg')";
-        }
     }
-    // 启动页面初始化
-    initializePage();
+
     function ensureScrollToCurrentSubStep(retry = 3) {
         scrollToCurrentSubStep();
         if (retry > 0) {
             setTimeout(() => ensureScrollToCurrentSubStep(retry - 1), 120);
         }
     }
+
     if (nextBtn) {
         nextBtn.addEventListener('click', goToNextSubStep);
     }
     if (prevBtn) {
         prevBtn.addEventListener('click', goToPrevSubStep);
     }
+
     const waveBtn = document.querySelector('.wave-btn');
     let isCommunicating = false;
-    let recognition;
-    let isFirstCommunication = true;
+    let recognition = null;
     let spokenResponses = new Set();
-    function initSpeech() {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'zh-CN';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        recognition.onresult = function (event) {
-            const speechResult = event.results[0][0].transcript;
-            processUserSpeech(speechResult);
-        };
-        recognition.onerror = function (event) {
-            stopCommunication();
-        };
-        recognition.onend = function () {
-            if (isCommunicating) {
-                recognition.start();
-            }
-        };
+
+    // 意图检测函数
+    function isConfirmationIntent(text) {
+        const confirmationWords = ['好了', '完成', '做好了', '可以', '行', 'OK', '嗯', '是的', '没问题', '对', '对的', '对了'];
+        return confirmationWords.some(word => text.includes(word));
     }
+
+    function isNextStepIntent(text) {
+        const nextStepWords = ['下一步', '继续', '往下', '下一个', '接着来', '然后呢', '接下来', '下一步是什么'];
+        return nextStepWords.some(word => text.includes(word));
+    }
+
+    function isRepeatIntent(text) {
+        const repeatWords = ['再说一遍', '没听清', '重复一下', '刚才说什么', '重说', '重复', '再说', '什么', '啥'];
+        return repeatWords.some(word => text.includes(word));
+    }
+
+    function isIngredientReplacementIntent(text) {
+        const replacementWords = ['没有', '缺', '少了', '不够', '替代', '换成', '替换', '过敏', '不能吃', '不想用'];
+        return replacementWords.some(word => text.includes(word)) && 
+               (text.includes('没有') || text.includes('缺') || text.includes('少了') || text.includes('替代') || text.includes('换成'));
+    }
+
+    function isTimeQuestionIntent(text) {
+        const timeWords = ['多久', '几分钟', '时间', '要多久', '需要多久', '还要多久', '什么时候', '何时', '几时'];
+        return timeWords.some(word => text.includes(word));
+    }
+
+    function isConfusedIntent(text) {
+        const confusedWords = ['怎么办', '怎么', '不会', '不懂', '不清楚', '不明白', '困惑', '卡住了', '停住了'];
+        return confusedWords.some(word => text.includes(word));
+    }
+
+    function extractIngredient(text) {
+        const ingredients = ['洋葱', '大蒜', '盐', '糖', '酱油', '醋', '油', '姜', '葱', '辣椒', '番茄', '牛油果', '排骨', '料酒', '胡椒粉'];
+        for (const ingredient of ingredients) {
+            if (text.includes(ingredient)) {
+                return ingredient;
+            }
+        }
+        return '该食材';
+    }
+
+    function getProgressDescription(progress) {
+        if (progress < 25) {
+            return '我们已经完成了四分之一，继续保持！';
+        } else if (progress < 50) {
+            return '已经完成近一半了，这道菜正在成形！';
+        } else if (progress < 75) {
+            return '太棒了，已经完成大部分了，很快就能享用美食了。';
+        } else {
+            return '几乎完成了！最后几步会让这道菜更加完美。';
+        }
+    }
+
+    // 智能系统提示词生成器
+    function generateSystemPrompt(userText, currentStepData, currentSubStepData, recipeDisplayName, currentStep, totalSteps) {
+        const isConfirmation = isConfirmationIntent(userText);
+        const isNextStep = isNextStepIntent(userText);
+        const isRepeat = isRepeatIntent(userText);
+        const isIngredientReplacement = isIngredientReplacementIntent(userText);
+        const isTimeQuestion = isTimeQuestionIntent(userText);
+        const isConfused = isConfusedIntent(userText);
+        
+        const progress = Math.round(((currentStep + 1) * 100) / totalSteps);
+        const progressDescription = getProgressDescription(progress);
+        
+        let systemPrompt = `你是一个友好的中文烹饪助手，正在指导用户制作「${recipeDisplayName}」。\n`;
+        
+        systemPrompt += `当前步骤：${currentStepData.name} - ${currentStepData.subtitle}。\n`;
+        systemPrompt += `具体操作：${currentSubStepData.name} - ${currentSubStepData.steps.join('，')}。\n`;
+        systemPrompt += `当前进度：${progress}%（第${currentStep + 1}步/共${totalSteps}步）。\n`;
+        
+        if (isConfirmation || isNextStep) {
+            systemPrompt += `用户表示已完成或想继续下一步，请用自然的对话方式确认完成并引导进入下一步。\n`;
+            systemPrompt += `请根据进度提供适当的鼓励，例如${progressDescription}。\n`;
+        } else if (isRepeat) {
+            systemPrompt += `用户希望重复当前步骤说明，请完整、清晰地重复当前步骤的指导。\n`;
+            systemPrompt += `可以添加小技巧或注意事项，帮助用户更好地完成这一步骤。\n`;
+        } else if (isIngredientReplacement) {
+            const ingredient = extractIngredient(userText);
+            systemPrompt += `用户表示没有「${ingredient}」或需要替换食材，请推荐1-2种常见替代食材。\n`;
+            systemPrompt += `请说明替换后的风味变化和用量调整，确保菜品整体风味平衡。\n`;
+        } else if (isTimeQuestion) {
+            systemPrompt += `用户询问关于时间的问题（如剩余时间、完成判断标准等），请提供明确的时间指导和判断标准。\n`;
+            systemPrompt += `可以给出小技巧，帮助用户更好地判断完成状态。\n`;
+        } else if (isConfused) {
+            systemPrompt += `用户表达困惑或不确定，需要更详细的解释，请提供清晰、分步骤的指导。\n`;
+            systemPrompt += `可以添加常见问题解答或小技巧，帮助用户克服困难。\n`;
+        } else {
+            systemPrompt += `请用简短、自然、鼓励的语气回答用户关于本步骤的问题。\n`;
+            systemPrompt += `如果用户询问食材替换、时间、火候等问题，请主动给出实用建议。\n`;
+        }
+        
+        systemPrompt += `回答要求：\n`;
+        systemPrompt += `- 保持回答简短（50-100字），适合语音播报\n`;
+        systemPrompt += `- 使用口语化、自然的表达，避免专业术语\n`;
+        systemPrompt += `- 添加适当的情感表达和鼓励，增强用户体验\n`;
+        systemPrompt += `- 如果是关键步骤，强调注意事项\n`;
+        systemPrompt += `- 避免一次性提供过多信息，保持步骤清晰\n`;
+        
+        return systemPrompt;
+    }
+
     function containsSensitiveWords(text) {
         const sensitiveWords = ['你妹', '妈的', '傻逼', '混蛋', 'fuck', 'shit'];
         return sensitiveWords.some(word => text.includes(word));
     }
+
     function processUserSpeech(text) {
         showStepToast(`您说: ${text}`);
         if (containsSensitiveWords(text)) {
@@ -368,9 +317,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const currentStepData = stepData[currentStep];
         const currentSubStepData = currentStepData.subSteps[currentSubStep];
-        const recipeDisplayName = recipeTitle || recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉');
-        const systemContent = `你是一个烹饪助手，正在指导用户完成${recipeDisplayName}的制作。当前是${currentStepData.name}:${currentStepData.subtitle}，具体步骤是${currentSubStepData.name}:${currentSubStepData.steps.join('，')}。请用简短易懂的中文回答用户关于当前步骤的问题。`;
-        fetch('http://127.0.0.1:5000/api/ask', {
+        const recipeDisplayName = recipeTitle || '这道菜';
+        
+        // 生成智能系统提示词
+        const systemContent = generateSystemPrompt(
+            text,
+            currentStepData,
+            currentSubStepData,
+            recipeDisplayName,
+            currentStep,
+            stepData.length
+        );
+        
+        fetch('/api/ask', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -380,31 +339,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 systemContent: systemContent
             })
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const responseText = data.answer;
-                const audioUrl = data.audio_url ? `http://127.0.0.1:5000${data.audio_url}` : null;
-                speakResponse(responseText, audioUrl);
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                console.error('Error details:', error.message);
-
-                // 更详细的错误提示
-                if (error.message.includes('Failed to fetch')) {
-                    speakResponse('无法连接到服务器，请检查后端服务是否启动');
-                } else if (error.message.includes('NetworkError')) {
-                    speakResponse('网络连接异常，请检查网络设置');
-                } else {
-                    speakResponse('服务暂时不可用，请稍后再试');
-                }
-            });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const responseText = data.answer;
+            const audioUrl = data.audio_url ? `${data.audio_url}` : null;
+            speakResponse(responseText, audioUrl);
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            if (error.message.includes('Failed to fetch')) {
+                speakResponse('无法连接到服务器，请检查后端服务是否启动');
+            } else if (error.message.includes('NetworkError')) {
+                speakResponse('网络连接异常，请检查网络设置');
+            } else {
+                speakResponse('服务暂时不可用，请稍后再试');
+            }
+        });
     }
+
     function speakResponse(text, audioUrl) {
         if (spokenResponses.has(text)) {
             return;
@@ -419,16 +376,89 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.body.appendChild(audio);
             }
             audio.src = audioUrl;
+            // === 修复：添加音频结束事件处理 ===
             audio.onended = function () {
                 const filename = audioUrl.split('/').pop();
-                fetch(`http://127.0.0.1:5000/api/delete_audio/${filename}`, { method: 'DELETE' })
-                    .catch(error => console.error('Delete audio error:', error));
+                // 使用正确的DELETE方法
+                fetch(`/api/delete_audio/${filename}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }).catch(error => console.error('Delete audio error:', error));
+            };
+            audio.onerror = function(e) {
+                console.error('Audio playback error:', e);
+                // 如果播放失败，尝试清理
+                const filename = audioUrl.split('/').pop();
+                fetch(`/api/delete_audio/${filename}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
             };
             audio.play().catch(e => {
                 showStepToast('请点击页面以播放语音');
             });
         }
     }
+
+    function initSpeech() {
+        try {
+            // === 修复：检查是否已经存在recognition对象 ===
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (e) {
+                    console.log('No recognition to stop');
+                }
+                recognition = null;
+            }
+            
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'zh-CN';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            
+            recognition.onresult = function (event) {
+                const speechResult = event.results[0][0].transcript;
+                processUserSpeech(speechResult);
+            };
+            
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                stopCommunication();
+                if (event.error === 'not-allowed') {
+                    showStepToast('请允许使用麦克风权限');
+                } else if (event.error === 'aborted') {
+                    // 忽略，可能是正常停止
+                } else {
+                    showStepToast(`语音识别错误: ${event.error}`);
+                }
+            };
+            
+            recognition.onend = function () {
+                if (isCommunicating && recognition) {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error('Error restarting recognition:', e);
+                        stopCommunication();
+                    }
+                }
+            };
+        } catch (e) {
+            console.error('Speech recognition initialization error:', e);
+            recognition = null;
+            isCommunicating = false;
+            if (waveBtn) {
+                waveBtn.classList.remove('active');
+            }
+            showStepToast('语音识别不可用，请检查浏览器支持');
+        }
+    }
+
     function toggleCommunication() {
         if (isCommunicating) {
             stopCommunication();
@@ -436,83 +466,74 @@ document.addEventListener('DOMContentLoaded', function () {
             startCommunication();
         }
     }
+
     function startCommunication() {
+        // === 修复：防止重复启动 ===
+        if (isCommunicating) {
+            return;
+        }
+        
         if (!recognition) {
             initSpeech();
         }
+        
+        if (!recognition) {
+            showStepToast('语音识别不可用');
+            return;
+        }
+        
         isCommunicating = true;
-        waveBtn.classList.add('active');
-        recognition.start();
-        if (isFirstCommunication) {
-            const initialText = `已进入沟通模式，请问关于${stepData[currentStep].subtitle}的什么问题？`;
-            fetch('http://127.0.0.1:5000/api/ask', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userText: initialText,
-                    systemContent: 'dummy',
-                    is_initial: true
-                })
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const responseText = data.answer;
-                    const audioUrl = data.audio_url ? `http://127.0.0.1:5000${data.audio_url}` : null;
-                    speakResponse(responseText, audioUrl);
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                });
-            isFirstCommunication = false;
+        if (waveBtn) {
+            waveBtn.classList.add('active');
+        }
+        
+        try {
+            recognition.start();
+        } catch (e) {
+            console.error('Error starting recognition:', e);
+            isCommunicating = false;
+            if (waveBtn) {
+                waveBtn.classList.remove('active');
+            }
+            if (e.message.includes('already started')) {
+                showStepToast('语音识别已启动');
+            } else {
+                showStepToast('语音识别启动失败');
+            }
         }
     }
+
     function stopCommunication() {
         isCommunicating = false;
-        waveBtn.classList.remove('active');
+        if (waveBtn) {
+            waveBtn.classList.remove('active');
+        }
         if (recognition) {
-            recognition.stop();
+            try {
+                recognition.stop();
+            } catch (e) {
+                console.error('Error stopping recognition:', e);
+            }
         }
     }
+
     if (waveBtn) {
         waveBtn.addEventListener('click', toggleCommunication);
     }
+
     const closeBtn = document.querySelector('.close-btn');
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
-            const from = params.get('from');
-            const name = params.get('name');
-            const recipe = params.get('recipe');
-
             let returnUrl = 'recipe-detail.html';
-
             if (id) {
-                // 如果有UUID，优先使用UUID返回
                 returnUrl = `recipe-detail.html?id=${id}`;
-            } else if (name) {
-                returnUrl = `recipe-detail.html?name=${name}`;
-            } else if (from === 'paigu' || recipe === 'paigu') {
-                returnUrl = 'recipe-detail.html?name=' + encodeURIComponent('糖醋排骨');
-            } else if (from === 'salad' || recipe === 'salad') {
-                returnUrl = 'recipe-detail.html?name=' + encodeURIComponent('牛油果番茄沙拉');
-            } else {
-                returnUrl = 'recipe-detail.html?name=' + encodeURIComponent('牛油果番茄沙拉');
             }
             window.location.href = returnUrl;
         });
     }
-    let startY = 0;
-    let currentY = 0;
-    let startTime = 0;
-    let isScrolling = false;
+
     function addTouchEvents() {
         stepPages.forEach((page, index) => {
             page.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -520,6 +541,12 @@ document.addEventListener('DOMContentLoaded', function () {
             page.addEventListener('touchend', handleTouchEnd, { passive: false });
         });
     }
+
+    let startY = 0;
+    let currentY = 0;
+    let startTime = 0;
+    let isScrolling = false;
+
     function handleTouchStart(e) {
         startY = e.touches[0].clientY;
         currentY = startY;
@@ -535,6 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
             isScrolling = false;
         }
     }
+
     function handleTouchMove(e) {
         if (!startY) return;
         currentY = e.touches[0].clientY;
@@ -554,6 +582,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
         }
     }
+
     function handleTouchEnd(e) {
         if (!startY) return;
         const deltaY = currentY - startY;
@@ -571,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentY = 0;
         isScrolling = false;
     }
+
     let scrollLimiterAttached = false;
     function limitScroll() {
         const stepsContainer = document.querySelector('.steps-container');
@@ -589,6 +619,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
     function setupScrollLimiter() {
         const stepsContainer = document.querySelector('.steps-container');
         if (stepsContainer && !scrollLimiterAttached) {
@@ -596,6 +627,7 @@ document.addEventListener('DOMContentLoaded', function () {
             scrollLimiterAttached = true;
         }
     }
+
     function scrollToCurrentSubStep() {
         const currentPage = stepPages[currentStep];
         if (!currentPage) return;
@@ -624,6 +656,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
+
     function adjustStepPageMinHeight() {
         const stepsContainer = document.querySelector('.steps-container');
         const currentPage = stepPages[currentStep];
@@ -631,9 +664,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const containerHeight = stepsContainer.clientHeight;
         currentPage.style.minHeight = containerHeight + 'px';
     }
+
     window.addEventListener('resize', () => {
         adjustStepPageMinHeight();
     });
+
     function updateStepDisplay() {
         if (!stepPages || stepPages.length === 0) return;
         stepPages.forEach((page, index) => {
@@ -662,6 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
             scrollToCurrentSubStep();
         }, 100);
     }
+
     function updateSubStepDisplay() {
         if (!stepPages || !stepPages[currentStep]) return;
         const currentPage = stepPages[currentStep];
@@ -688,6 +724,7 @@ document.addEventListener('DOMContentLoaded', function () {
             scrollToCurrentSubStep();
         }, 100);
     }
+
     function showStepToast(text) {
         const toast = document.getElementById('step-toast');
         if (!toast) return;
@@ -699,6 +736,7 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => { toast.style.display = 'none'; }, 400);
         }, 1800);
     }
+
     function goToNextSubStep() {
         if (!stepData || !stepData[currentStep]) return;
         const currentStepData = stepData[currentStep];
@@ -723,6 +761,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
     function goToPrevSubStep() {
         if (currentSubStep > 0) {
             currentSubStep--;
@@ -744,18 +783,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-    function goToStep(stepIndex) {
-        if (stepIndex >= 0 && stepIndex < totalSteps) {
-            currentStep = stepIndex;
-            currentSubStep = 0;
-            updateStepDisplay();
-            updateSubStepDisplay();
-            const stepsContainer = document.querySelector('.steps-container');
-            if (stepsContainer) {
-                stepsContainer.scrollTop = 0;
-            }
-        }
-    }
+
     function recordCookingCompletion() {
         const today = new Date();
         const dateKey = formatDateKey(today);
@@ -769,18 +797,21 @@ document.addEventListener('DOMContentLoaded', function () {
         const completedRecipes = JSON.parse(localStorage.getItem('chefmate_completed_recipes') || '[]');
         const recipeInfo = {
             date: today.toISOString(),
-            type: recipeType,
-            name: recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉'),
+            name: recipeTitle || '这道菜',
             timestamp: Date.now()
         };
         completedRecipes.push(recipeInfo);
         localStorage.setItem('chefmate_completed_recipes', JSON.stringify(completedRecipes));
         localStorage.setItem('chefmate_has_real_data', 'true');
     }
+
     function formatDateKey(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
+
+    // 启动页面初始化
+    initializePage();
 });
