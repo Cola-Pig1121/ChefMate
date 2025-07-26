@@ -6,24 +6,22 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentSubStep = 0;
     let totalSteps = 0;
     let stepPages = [];
-    let stepData = [];
-
-    // 获取URL参数
-    function getQueryParam(name) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(name);
-    }
-
     function getRecipeFromUrl() {
         const params = new URLSearchParams(window.location.search);
         return params.get('recipe') || 'salad';
     }
-    
     function getRecipeNameFromUrl() {
         const params = new URLSearchParams(window.location.search);
         return params.get('name');
     }
+    function getRecipeIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('id');
+    }
 
+    const recipeId = getRecipeIdFromUrl();
+    const recipeType = getRecipeFromUrl();
+    const recipeName = getRecipeNameFromUrl();
     // 根据UUID获取本地食谱数据
     async function fetchLocalRecipeData(uuid) {
         try {
@@ -37,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return data[recipeKey];
         } catch (error) {
             console.error('获取本地食谱数据失败:', error);
-            // 如果本地文件不可用，返回null
             return null;
         }
     }
@@ -51,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return localData;
             }
         }
-        
+
         // 如果本地获取失败，尝试从API获取
         try {
             const response = await fetch(`http://localhost:3000/api/recipes/${recipeId}`);
@@ -59,631 +56,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            // 返回食谱对象（JSON文件中的第一个键）
             const recipeKey = Object.keys(data)[0];
             return data[recipeKey];
         } catch (error) {
             console.error('获取食谱数据失败:', error);
-            // 如果API不可用，返回null
             return null;
         }
     }
 
-    // 示例食谱数据
-    const sampleRecipes = {
-        '沙拉': {
-            image: 'images/沙拉.jpeg',
-            title: '牛油果番茄沙拉',
-            steps: [
-                {
-                    description: '将西红柿、牛油果、黄瓜、洋葱洗净切块。',
-                    subSteps: [
-                        '将西红柿用清水冲洗干净，切成大小均匀的块状',
-                        '牛油果对半切开，去核后用勺子挖出果肉，切成块',
-                        '黄瓜洗净后切成厚片，再切成条状',
-                        '洋葱剥去外皮，切成细丝'
-                    ]
-                },
-                {
-                    description: '将所有蔬菜放入大碗中，加入沙拉酱。',
-                    subSteps: [
-                        '取一个大碗，将切好的所有蔬菜放入',
-                        '用量杯量取150ml沙拉酱',
-                        '将沙拉酱均匀地淋在蔬菜上'
-                    ]
-                },
-                {
-                    description: '轻轻拌匀，使酱料均匀包裹蔬菜。',
-                    subSteps: [
-                        '用大勺子或沙拉夹轻轻翻拌',
-                        '确保每一片蔬菜都沾上酱料',
-                        '避免过度搅拌导致蔬菜出水'
-                    ]
-                },
-                {
-                    description: '装盘，点缀香菜即可享用。',
-                    subSteps: [
-                        '将拌好的沙拉盛入盘中',
-                        '洗净香菜，切碎后撒在沙拉表面',
-                        '立即享用以保证最佳口感'
-                    ]
-                }
-            ]
-        },
-        '排骨': {
-            image: 'images/排骨.jpg',
-            title: '糖醋排骨',
-            steps: [
-                {
-                    description: '排骨冷水下锅，焯水去血沫，捞出沥干。',
-                    subSteps: [
-                        '将500g排骨用清水冲洗干净',
-                        '锅中加入足量冷水，放入排骨',
-                        '大火煮开后撇去浮沫',
-                        '捞出排骨用温水冲洗干净，沥干水分'
-                    ]
-                },
-                {
-                    description: '锅中加油，放入排骨煎至微黄。',
-                    subSteps: [
-                        '锅中倒入适量食用油',
-                        '油热后放入排骨，中小火煎制',
-                        '煎至排骨表面微黄，油脂渗出'
-                    ]
-                },
-                {
-                    description: '加入姜片、葱段、蒜炒香。',
-                    subSteps: [
-                        '将3片生姜切片，1根葱切段，2瓣蒜拍碎',
-                        '将调料放入锅中，与排骨一起翻炒',
-                        '炒出香味约1分钟'
-                    ]
-                },
-                {
-                    description: '倒入生抽、老抽、醋、糖、料酒，翻炒均匀。',
-                    subSteps: [
-                        '加入2勺生抽、1勺老抽调色',
-                        '加入2勺醋、3勺糖',
-                        '最后加入1勺料酒',
-                        '快速翻炒使调料均匀裹在排骨上'
-                    ]
-                },
-                {
-                    description: '加适量清水，盖锅小火炖30分钟。',
-                    subSteps: [
-                        '加入刚好没过排骨的清水',
-                        '盖上锅盖，转小火慢炖',
-                        '炖煮30分钟至排骨软烂'
-                    ]
-                },
-                {
-                    description: '大火收汁，至汤汁浓稠即可出锅。',
-                    subSteps: [
-                        '开盖转大火收汁',
-                        '用勺子不断翻动排骨防止粘锅',
-                        '待汤汁变得浓稠即可关火'
-                    ]
-                }
-            ]
-        }
-    };
-
-    // 初始化页面
-    async function initPage() {
-        // 获取参数
-        const recipeId = getQueryParam('id');
-        
-        // 根据参数获取食谱数据
-        let apiData = null;
-        
-        // 如果有recipeId，根据ID获取食谱数据
-        if (recipeId) {
-            apiData = await fetchRecipeData(recipeId);
-        }
-        
-        // 根据获取的数据或默认数据设置stepData
-        if (apiData) {
-            const convertedData = convertApiDataToStepData(apiData);
-            if (convertedData) {
-                stepData = convertedData;
-            } else {
-                stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
-            }
-        } else {
-            stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
-        }
-
-        generateStepPages();
-        setRecipeImage();
-        
-        setTimeout(() => {
-            updateStepDisplay();
-            updateSubStepDisplay();
-            setupScrollLimiter();
-            addTouchEvents();
-            ensureScrollToCurrentSubStep(4);
-        }, 100);
-    }
-
-    function generateStepPages() {
-        if (!stepsContainer) return;
-        
-        stepsContainer.innerHTML = '';
-        stepData.forEach((step, index) => {
-            const stepPage = document.createElement('div');
-            stepPage.className = 'step-page';
-            stepPage.id = 'step' + (index + 1);
-            
-            if (index > 0) {
-                const previewDiv = document.createElement('div');
-                previewDiv.className = 'next-card-preview';
-                previewDiv.innerHTML = `
-                    <div>
-                        <h3>步骤${index + 1} / ${stepData.length}</h3>
-                        <p>${step.subtitle}</p>
-                    </div>
-                `;
-                stepPage.appendChild(previewDiv);
-            }
-            
-            const contentHTML = `
-                <div class="recipe-content">
-                    <div class="content-wrapper">
-                        <div class="recipe-info-section">
-                            <div class="recipe-header">
-                                <div class="recipe-title">
-                                    <h1 class="recipe-name" style="font-size: 30px;">步骤${index + 1} <span class="step-total" style="opacity: 0.5;">/ ${stepData.length}</span></h1>
-                                    <div class="recipe-subtitle" style="opacity: 0.5; font-size: 20px;">${step.subtitle}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="process-flow">
-                            <div class="flow-line"></div>
-                            <div class="flow-steps">
-                                ${generateSubSteps(step.subSteps)}
-                                <div class="step-group">
-                                    <div class="step-header">
-                                        <div class="flow-dot end"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            stepPage.innerHTML += contentHTML;
-            stepsContainer.appendChild(stepPage);
-        });
-        stepPages = document.querySelectorAll('.step-page');
-        totalSteps = stepPages.length;
-    }
-
-    function generateSubSteps(subSteps) {
-        let html = '';
-        subSteps.forEach(subStep => {
-            html += `
-                <div class="step-group">
-                    <div class="step-header">
-                        <div class="flow-dot"></div>
-                        <div class="ingredient-name">${subStep.name}</div>
-                    </div>
-                    <div class="ingredient-steps">
-                        ${subStep.steps.map(step => `<div>${step}</div>`).join('')}
-                    </div>
-                </div>
-            `;
-        });
-        return html;
-    }
-
-    function setRecipeImage() {
-        const recipeHero = document.querySelector('.recipe-hero');
-        if (recipeHero) {
-            if (recipeType === 'paigu') {
-                recipeHero.style.backgroundImage = "url('images/排骨.jpg')";
-            } else {
-                recipeHero.style.backgroundImage = "url('images/沙拉.jpeg')";
-            }
-        }
-    }
-
-    function ensureScrollToCurrentSubStep(retry = 3) {
-        scrollToCurrentSubStep();
-        if (retry > 0) {
-            setTimeout(() => ensureScrollToCurrentSubStep(retry - 1), 120);
-        }
-    }
-    // 按钮事件绑定
-    if (nextBtn) {
-        nextBtn.addEventListener('click', goToNextSubStep);
-    }
-    if (prevBtn) {
-        prevBtn.addEventListener('click', goToPrevSubStep);
-    }
-
-    // 语音交互功能
-    const waveBtn = document.querySelector('.wave-btn');
-    let isCommunicating = false;
-    let recognition;
-    let isFirstCommunication = true;
-    let spokenResponses = new Set();
-
-    function initSpeech() {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'zh-CN';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        recognition.onresult = function (event) {
-            const speechResult = event.results[0][0].transcript;
-            processUserSpeech(speechResult);
-        };
-        recognition.onerror = function (event) {
-            stopCommunication();
-        };
-        recognition.onend = function () {
-            if (isCommunicating) {
-                recognition.start();
-            }
-        };
-    }
-
-    function containsSensitiveWords(text) {
-        const sensitiveWords = ['你妹', '妈的', '傻逼', '混蛋', 'fuck', 'shit'];
-        return sensitiveWords.some(word => text.includes(word));
-    }
-
-    function processUserSpeech(text) {
-        showStepToast(`您说: ${text}`);
-        if (containsSensitiveWords(text)) {
-            speakResponse('请使用文明用语');
-            return;
-        }
-        const currentStepData = stepData[currentStep];
-        const currentSubStepData = currentStepData.subSteps[currentSubStep];
-        const recipeDisplayName = recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉');
-        const systemContent = `你是一个烹饪助手，正在指导用户完成${recipeDisplayName}的制作。当前是${currentStepData.name}:${currentStepData.subtitle}，具体步骤是${currentSubStepData.name}:${currentSubStepData.steps.join('，')}。请用简短易懂的中文回答用户关于当前步骤的问题。`;
-        fetch('http://127.0.0.1:5000/api/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userText: text,
-                systemContent: systemContent
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const responseText = data.answer;
-                const audioUrl = data.audio_url ? `http://127.0.0.1:5000${data.audio_url}` : null;
-                speakResponse(responseText, audioUrl);
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                if (error.message.includes('Failed to fetch')) {
-                    speakResponse('无法连接到服务器，请检查后端服务是否启动');
-                } else if (error.message.includes('NetworkError')) {
-                    speakResponse('网络连接异常，请检查网络设置');
-                } else {
-                    speakResponse('服务暂时不可用，请稍后再试');
-                }
-            });
-    }
-
-    function speakResponse(text, audioUrl) {
-        if (spokenResponses.has(text)) {
-            return;
-        }
-        
-        // 更新子步骤显示
-        function updateSubStepDisplay() {
-            const currentPage = stepPages[currentStep];
-            if (!currentPage) return;
-            
-            const subSteps = currentPage.querySelectorAll('.sub-step');
-            subSteps.forEach((subStep, index) => {
-                if (index === currentSubStep) {
-                    subStep.classList.add('active');
-                } else {
-                    subStep.classList.remove('active');
-                }
-            });
-        s   
-            // 滚动到当前子步骤
-            scrollToCurrentSubStep(s);
-        }
-        
-        // 滚动到当前子步骤
-        function scrollToCurrentSubStep() {
-            const currentPage = stepPages[currentStep];
-            if (!currentPage) return;
-            
-            const activeSubStep = currentPage.querySelector('.sub-step.active');
-            if (activeSubStep) {
-                const container = document.querySelector('.steps-container');
-                // 添加检查确保container元素存在
-                if (container) {
-                    const containerRect = container.getBoundingClientRect();
-                    const subStepRect = activeSubStep.getBoundingClientRect();
-                    
-                    // 计算滚动位置，使当前子步骤位于容器中间
-                    const scrollTop = subStepRect.top - containerRect.top - containerRect.height / 2 + subStepRect.height / 2;
-                    container.scrollBy({
-                        top: scrollTop,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-        }
-        
-        // 步骤切换提示
-        function showStepToast(message) {
-            const existingToast = document.querySelector('.step-toast');
-            if (existingToast) {s
-                existingToast.remove();
-            }
-            
-            const toast = document.createElement('div');
-            toast.className = 'step-toast';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            // 添加动画类
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 100);
-            
-            // 移除提示
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }, 2000);
-        }
-        
-        // 跳转到下一步骤
-        function goToNextSubStep() {
-            const currentPage = stepPages[currentStep];
-            if (!currentPage) return;
-            
-            const subSteps = currentPage.querySelectorAll('.sub-step');
-            
-            if (currentSubStep < subSteps.length - 1) {
-                // 还有子步骤
-                currentSubStep++;
-                updateSubStepDisplay();
-            } else {
-                // 没有更多子步骤，跳转到下一个主步骤
-                if (currentStep < stepPages.length - 1) {
-                    currentStep++;
-                    currentSubStep = 0;
-                    updateStepDisplay();
-                    showStepToast(`步骤 ${currentStep + 1}`);
-                } else {
-                    // 已经是最后一个步骤
-                    showStepToast('已完成所有步骤');
-                    // 记录完成情况
-                    recordCookingCompletion(recipe);
-                }
-            }
-        }
-        
-        // 跳转到上一步骤
-        function goToPrevSubStep() {
-            if (currentSubStep > 0) {
-                // 还有子步骤可以返回
-                currentSubStep--;
-                updateSubStepDisplay();
-            } else {
-                // 需要返回到上一个主步骤
-                if (currentStep > 0) {
-                    currentStep--;
-                    // 设置为上一个步骤的最后一个子步骤
-                    const prevPage = stepPages[currentStep];
-                    const subSteps = prevPage.querySelectorAll('.sub-step');
-                    currentSubStep = subSteps.length - 1;
-                    updateStepDisplay();
-                    showStepToast(`步骤 ${currentStep + 1}`);
-                }
-            }
-        }
-        
-        // 跳转到指定步骤
-        function goToStep(stepIndex) {
-            if (stepIndex >= 0 && stepIndex < stepPages.length) {
-                currentStep = stepIndex;
-                currentSubStep = 0;
-                updateStepDisplay();
-                showStepToast(`步骤 ${currentStep + 1}`);
-            }
-        }
-        
-        // 记录烹饪完成情况
-        function recordCookingCompletion(recipeData) {
-            const completion = {
-                date: new Date().toISOString(),
-                recipeType: recipeType || 'unknown',
-                recipeName: recipeData.title || '未知食谱'
-            };
-            
-            // 从localStorage获取现有的完成记录
-            const completions = JSON.parse(localStorage.getItem('chefmate_cooking_completions') || '[]');
-            completions.push(completion);
-            localStorage.setItem('chefmate_cooking_completions', JSON.stringify(completions));
-        }
-        
-        // 按钮事件
-        const prevBtn = document.querySelector('.prev-btn');
-        const nextBtn = document.querySelector('.next-btn');
-        const closeBtn = document.querySelector('.close-btn');
-        
-        if (prevBtn) {
-            prevBtn.addEventListener('click', goToPrevSubStep);
-        }
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', goToNextSubStep);
-        }
-        
-        // 关闭按钮事件处理程序
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                // 获取来源页面参数
-                const fromPage = getQueryParam('from') || 'recipe-detail.html';
-                const recipeId = getQueryParam('id');
-                const recipeName = getQueryParam('name');
-                
-                // 构建返回URL
-                let returnUrl = fromPage;
-                if (recipeId) {
-                    returnUrl += `?id=${encodeURIComponent(recipeId)}`;
-                } else if (recipeName) {
-                    returnUrl += `?name=${encodeURIComponent(recipeName)}`;
-                }
-                
-                // 跳转回食谱详情页
-                window.location.href = returnUrl;
-            });
-        }
-        
-        // 指示器点击事件
-        const indicators = document.querySelectorAll('.indicator-dot');
-        indicators.forEach(indicator => {
-            indicator.addEventListener('click', function() {
-                const stepIndex = parseInt(this.dataset.stepIndex);
-                goToStep(stepIndex);
-            });
-        });
-        
-        // 触摸事件
-        let touchStartY = 0;
-        
-        function handleTouchStart(e) {
-            touchStartY = e.touches[0].clientY;
-        }
-        
-        function handleTouchEnd(e) {
-            if (touchStartY === 0) return;
-            
-            const touchEndY = e.changedTouches[0].clientY;
-            const deltaY = touchStartY - touchEndY;
-            
-            // 判断滑动方向
-            if (Math.abs(deltaY) > 50) { // 最小滑动距离
-                if (deltaY > 0) {
-                    // 上滑，下一页
-                    goToNextSubStep();
-                } else {
-                    // 下滑，上一页
-                    goToPrevSubStep();
-                }
-            }
-            
-            touchStartY = 0;
-        }
-        
-        // 添加触摸事件监听器
-        const touchContainer = document.querySelector('.steps-container');
-        if (touchContainer) {
-            touchContainer.addEventListener('touchstart', handleTouchStart);
-            touchContainer.addEventListener('touchend', handleTouchEnd);
-        }
-        
-        // 滚动限制器
-        function limitScroll() {
-            const container = document.querySelector('.steps-container');
-            if (!container) return;
-            
-            const scrollTop = container.scrollTop;
-            const scrollHeight = container.scrollHeight;
-            const clientHeight = container.clientHeight;
-            
-            // 如果滚动到顶部，阻止继续向下滚动
-            if (scrollTop <= 0) {
-                container.scrollTop = 1;
-            }
-            // 如果滚动到底部，阻止继续向上滚动
-            else if (scrollTop + clientHeight >= scrollHeight) {
-                container.scrollTop = scrollHeight - clientHeight - 1;
-            }
-        }
-        
-        // 设置滚动限制器
-        function setupScrollLimiter() {
-            const container = document.querySelector('.steps-container');
-            if (!container) return;
-            
-            container.addEventListener('scroll', limitScroll);
-            
-            // 初始调用一次
-            setTimeout(limitScroll, 100);
-        }
-        
-        // 调整步骤页面最小高度
-        function adjustStepPageMinHeight() {
-            const stepsContainer = document.querySelector('.steps-container');
-            const stepPages = document.querySelectorAll('.step-page');
-            
-            if (stepsContainer && stepPages.length > 0) {
-                const containerHeight = stepsContainer.clientHeight;
-                stepPages.forEach(page => {
-                    page.style.minHeight = `${containerHeight}px`;
-                });
-            }
-        }
-        
-        // 初始显示第一个步骤
-        updateStepDisplay();
-        
-        // 设置滚动限制器
-        setupScrollLimiter();
-        
-        // 调整步骤页面高度
-        adjustStepPageMinHeight();
-        
-        // 窗口大小改变时重新调整
-        window.addEventListener('resize', adjustStepPageMinHeight);
-    }
-    function formatDateKey(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    const stepsContainer = document.querySelector('.steps-container');
-    const nextBtn = document.querySelector('.next-btn');
-    const prevBtn = document.querySelector('.prev-btn');
-    let currentStep = 0;
-    let currentSubStep = 0;
-    let totalSteps = 0;
-    let stepPages = [];
-    function getRecipeFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('recipe') || 'salad';
-    }
-    function getRecipeNameFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('name');
-    }
-    const recipeType = getRecipeFromUrl();
-    const recipeName = getRecipeNameFromUrl();
+    // 默认步骤数据（向后兼容）
     const saladStepData = [
         {
             name: "步骤1",
             subtitle: "处理食材",
             subSteps: [
-                { name: "牛油果", steps: ["对半切开", "去除中间果核", "用勺子挖果肉", "把果肉切成一手指盖的长宽大小"] },
+                { name: "牛油果", steps: ["对半切开", "去除中间果核", "用勺子挖3果肉", "把果肉切成一手指盖的长宽大小"] },
                 { name: "番茄", steps: ["洗干净去掉小绿帽子", "切片", "然后每片切4块"] },
                 { name: "洋葱", steps: ["去皮", "切成细条（根据个人爱好）"] }
             ]
@@ -692,14 +79,14 @@ document.addEventListener('DOMContentLoaded', function () {
             name: "步骤2",
             subtitle: "处理料汁",
             subSteps: [
-                { name: "料汁", steps: ["去一个柠檬", "倒一点橄榄油", "挤一片柠檬汁", "加入四分之一勺和适量黑胡椒"] }
+                { name: "料汁", steps: ["去一个柠檬", "围人一点橄榄油（笑似一个瓶盖）", "挤一片柠檬汁", "加入四分之一勺和适量黑胡椒"] }
             ]
         },
         {
             name: "步骤3",
             subtitle: "混合食材",
             subSteps: [
-                { name: "混合沙拉", steps: ["将牛油果、番茄、洋葱放入大碗", "倒入一勺橄榄油和黑胡椒油", "加入汁料并搅拌，确保均匀混合上酱汁"] }
+                { name: "混合沙拉", steps: ["将牛油果、番茄、洋葱放入大碗", "倒入一勺橄榄油和黑胡椒油（笑似一个瓶盖）", "加入汁料并次搅拌，确保均匀混合上酱汁"] }
             ]
         }
     ];
@@ -741,8 +128,92 @@ document.addEventListener('DOMContentLoaded', function () {
             ]
         }
     ];
-    let stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
+
+    // 将步骤数据转换为统一格式的函数
+    function convertRecipeDataToSteps(recipeData) {
+        if (!recipeData) {
+            return null;
+        }
+
+        // 如果已经是正确的格式，直接返回
+        if (recipeData.cookingSteps && Array.isArray(recipeData.cookingSteps)) {
+            return recipeData.cookingSteps;
+        }
+
+        // 如果没有步骤数据，返回null
+        if (!recipeData.steps || !Array.isArray(recipeData.steps)) {
+            return null;
+        }
+
+        // 将简单的步骤数组转换为详细的步骤格式
+        const steps = recipeData.steps;
+        const convertedSteps = [];
+
+        // 将步骤按逻辑分组，每组最多3个步骤
+        const stepsPerGroup = Math.min(3, Math.ceil(steps.length / 3));
+
+        for (let i = 0; i < steps.length; i += stepsPerGroup) {
+            const groupSteps = steps.slice(i, i + stepsPerGroup);
+            const stepNumber = Math.floor(i / stepsPerGroup) + 1;
+
+            // 生成更有意义的副标题
+            let subtitle = `第${stepNumber}阶段`;
+            if (stepNumber === 1) {
+                subtitle = "准备工作";
+            } else if (stepNumber === 2) {
+                subtitle = "制作过程";
+            } else if (stepNumber === 3) {
+                subtitle = "完成收尾";
+            }
+
+            convertedSteps.push({
+                name: `步骤${stepNumber}`,
+                subtitle: subtitle,
+                subSteps: groupSteps.map((step, index) => {
+                    // 处理步骤文本，如果是对象则取description
+                    const stepText = typeof step === 'string' ? step : (step.description || step.name || '操作步骤');
+                    return {
+                        name: `操作${index + 1}`,
+                        steps: [stepText]
+                    };
+                })
+            });
+        }
+
+        return convertedSteps;
+    }
+
+    let stepData = null;
+    // 初始化步骤数据
+    async function initializeStepData() {
+        try {
+            if (recipeId) {
+                // 如果有UUID，尝试获取动态数据
+                const recipeData = await fetchRecipeData(recipeId);
+                if (recipeData) {
+                    const convertedSteps = convertRecipeDataToSteps(recipeData);
+                    if (convertedSteps && convertedSteps.length > 0) {
+                        stepData = convertedSteps;
+                        console.log('成功加载UUID食谱步骤数据');
+                        return;
+                    }
+                }
+                console.log('UUID食谱数据加载失败，使用默认数据');
+            }
+
+            // 向后兼容：使用原有逻辑
+            stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
+            console.log('使用默认步骤数据:', recipeType);
+        } catch (error) {
+            console.error('初始化步骤数据时出错:', error);
+            // 出错时使用默认数据
+            stepData = (recipeType === 'paigu') ? paiguStepData : saladStepData;
+        }
+    }
+
     function generateStepPages() {
+        if (!stepData) return;
+
         stepsContainer.innerHTML = '';
         stepData.forEach((step, index) => {
             const stepPage = document.createElement('div');
@@ -751,10 +222,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (index > 0) {
                 const previewDiv = document.createElement('div');
                 previewDiv.className = 'next-card-preview';
-                previewDiv.innerHTML = `<div><h3>步骤${index + 1} / ${stepData.length}</h3><p>${step.subtitle}</p></div>`;
+                previewDiv.innerHTML = `
+                    <div>
+                        <h3>步骤${index + 1} / ${stepData.length}</h3>
+                        <p>${step.subtitle}</p>
+                    </div>
+                `;
                 stepPage.appendChild(previewDiv);
             }
-            const contentHTML = `<div class="recipe-content">
+            const contentHTML = `
+                <div class="recipe-content">
                     <div class="content-wrapper">
                         <div class="recipe-info-section">
                             <div class="recipe-header">
@@ -776,7 +253,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
             stepPage.innerHTML += contentHTML;
             stepsContainer.appendChild(stepPage);
         });
@@ -786,7 +264,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function generateSubSteps(subSteps) {
         let html = '';
         subSteps.forEach(subStep => {
-            html += `<div class="step-group">
+            html += `
+                <div class="step-group">
                     <div class="step-header">
                         <div class="flow-dot"></div>
                         <div class="ingredient-name">${subStep.name}</div>
@@ -794,54 +273,48 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="ingredient-steps">
                         ${subStep.steps.map(step => `<div>${step}</div>`).join('')}
                     </div>
-                </div>`;
+                </div>
+            `;
         });
         return html;
     }
-    generateStepPages();
-    function generateStepIndicators() {
-        const indicatorContainer = document.getElementById('step-indicators');
-        if (!indicatorContainer) return;
-        indicatorContainer.innerHTML = '';
-        for (let i = 0; i < stepData.length; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'step-indicator';
-            indicatorContainer.appendChild(dot);
-        }
+    // 异步初始化页面
+    async function initializePage() {
+        await initializeStepData();
+        generateStepPages();
+        setRecipeImage();
+
+        setTimeout(() => {
+            updateStepDisplay();
+            updateSubStepDisplay();
+            setupScrollLimiter();
+            addTouchEvents();
+            ensureScrollToCurrentSubStep(4);
+        }, 100);
     }
-    function updateStepIndicators() {
-        const indicatorContainer = document.getElementById('step-indicators');
-        if (!indicatorContainer) return;
-        const dots = indicatorContainer.querySelectorAll('.step-indicator');
-        dots.forEach((dot, index) => {
-            dot.className = 'step-indicator';
-            if (index < currentStep) {
-                dot.classList.add('done');
-                dot.innerHTML = '';
-            } else if (index === currentStep) {
-                dot.classList.add('active');
-            }
-        });
-    }
-    generateStepIndicators();
-    function setRecipeImage() {
+
+    async function setRecipeImage() {
         const recipeHero = document.querySelector('.recipe-hero');
-        if (recipeHero) {
-            if (recipeType === 'paigu') {
-                recipeHero.style.backgroundImage = "url('images/排骨.jpg')";
-            } else {
-                recipeHero.style.backgroundImage = "url('images/沙拉.jpeg')";
+        if (!recipeHero) return;
+
+        // 如果有UUID，尝试获取动态图片
+        if (recipeId) {
+            const recipeData = await fetchRecipeData(recipeId);
+            if (recipeData && recipeData.image) {
+                recipeHero.style.backgroundImage = `url('${recipeData.image}')`;
+                return;
             }
         }
+
+        // 向后兼容：使用默认图片
+        if (recipeType === 'paigu') {
+            recipeHero.style.backgroundImage = "url('images/排骨.jpg')";
+        } else {
+            recipeHero.style.backgroundImage = "url('images/沙拉.jpeg')";
+        }
     }
-    setRecipeImage();
-    setTimeout(() => {
-        updateStepDisplay();
-        updateSubStepDisplay();
-        setupScrollLimiter();
-        addTouchEvents();
-        ensureScrollToCurrentSubStep(4);
-    }, 100);
+    // 启动页面初始化
+    initializePage();
     function ensureScrollToCurrentSubStep(retry = 3) {
         scrollToCurrentSubStep();
         if (retry > 0) {
@@ -887,6 +360,8 @@ document.addEventListener('DOMContentLoaded', function () {
             speakResponse('请使用文明用语');
             return;
         }
+        if (!stepData || !stepData[currentStep]) return;
+
         const currentStepData = stepData[currentStep];
         const currentSubStepData = currentStepData.subSteps[currentSubStep];
         const recipeDisplayName = recipeName || (recipeType === 'paigu' ? '糖醋排骨' : '牛油果番茄沙拉');
@@ -915,6 +390,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => {
                 console.error('Fetch error:', error);
                 console.error('Error details:', error.message);
+
+                // 更详细的错误提示
                 if (error.message.includes('Failed to fetch')) {
                     speakResponse('无法连接到服务器，请检查后端服务是否启动');
                 } else if (error.message.includes('NetworkError')) {
@@ -1006,11 +483,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
             const from = params.get('from');
             const name = params.get('name');
             const recipe = params.get('recipe');
+
             let returnUrl = 'recipe-detail.html';
-            if (name) {
+
+            if (id) {
+                // 如果有UUID，优先使用UUID返回
+                returnUrl = `recipe-detail.html?id=${id}`;
+            } else if (name) {
                 returnUrl = `recipe-detail.html?name=${name}`;
             } else if (from === 'paigu' || recipe === 'paigu') {
                 returnUrl = 'recipe-detail.html?name=' + encodeURIComponent('糖醋排骨');
@@ -1148,6 +631,7 @@ document.addEventListener('DOMContentLoaded', function () {
         adjustStepPageMinHeight();
     });
     function updateStepDisplay() {
+        if (!stepPages || stepPages.length === 0) return;
         stepPages.forEach((page, index) => {
             page.classList.remove('current', 'next', 'completed', 'hidden');
             const preview = page.querySelector('.next-card-preview');
@@ -1170,14 +654,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 page.classList.add('hidden');
             }
         });
-        updateStepIndicators();
         setTimeout(() => {
             scrollToCurrentSubStep();
         }, 100);
     }
     function updateSubStepDisplay() {
+        if (!stepPages || !stepPages[currentStep]) return;
         const currentPage = stepPages[currentStep];
-        if (!currentPage) return;
         const flowDots = currentPage.querySelectorAll('.flow-dot:not(.end)');
         const stepGroups = currentPage.querySelectorAll('.step-group');
         flowDots.forEach((dot, index) => {
@@ -1210,11 +693,11 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             toast.style.opacity = '0';
             setTimeout(() => { toast.style.display = 'none'; }, 400);
-        }, 3000);
+        }, 1800);
     }
     function goToNextSubStep() {
+        if (!stepData || !stepData[currentStep]) return;
         const currentStepData = stepData[currentStep];
-        if (!currentStepData) return;
         const totalSubSteps = currentStepData.subSteps.length;
         if (currentSubStep < totalSubSteps - 1) {
             currentSubStep++;
