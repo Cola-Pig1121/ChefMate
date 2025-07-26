@@ -1,4 +1,3 @@
-// 搜索页面功能
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -11,82 +10,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsTitle = document.getElementById('resultsTitle');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-    // 动态加载的食谱数据
     let recipeData = [];
-    
-    // 获取所有食谱文件列表
+    let searchTimer;
+    let currentKeyword = '';
+
+    init();
+
+    async function init() {
+        await loadAllRecipes();
+        loadSearchHistory();
+        bindEvents();
+        searchInput.focus();
+    }
+
     async function loadAllRecipes() {
         try {
-            // 尝试从API获取文件列表，如果失败则使用硬编码列表
-            let recipeFiles;
-            try {
-                const response = await fetch('/api/recipes');
-                if (response.ok) {
-                    const apiData = await response.json();
-                    recipeFiles = Object.keys(apiData).map(key => `${key}.json`);
-                } else {
-                    throw new Error('API不可用');
-                }
-            } catch (apiError) {
-                console.log('API获取失败，使用本地文件列表');
-                // 使用硬编码的文件列表作为后备
-                recipeFiles = [
-                    '0bcce3e6-0dbc-41f9-9716-926a20681d21.json',
-                    '0f419663-a616-417f-b92f-d8a34265bef4.json',
-                    '184f5a43-c7c3-4392-92db-16150d5c7acf.json',
-                    '1cfc1f81-5312-40ae-ba5d-536e8da78e89.json',
-                    '2f9c4071-346d-4a5b-b2c8-0020239399f9.json',
-                    '30f078f3-4207-40fc-98db-3524bb7579ee.json',
-                    '611218b4-4851-46b4-8cfe-91ae8b98360e.json',
-                    '687218b4-4851-42b4-8gfe-71ae8b98360e.json',
-                    '6def49d0-94a6-4796-8857-79ba8cab2b55.json',
-                    '73b4e9be-c822-4890-afd8-2e8ff6ab9769.json',
-                    '7819780d-2d6f-45a4-8bef-ed29eb2502a1.json',
-                    '8b001ca9-acc1-4177-a01e-dbef065273ae.json',
-                    'a0ce32cf-890c-44c4-b0da-4a254bbbe904.json',
-                    'f96157ff-1423-4487-ab07-a893f45c6e23.json',
-                    'ff644d8e-8be8-4eed-b0d0-d087c1dc1593.json',
-                    'ff714d8b-8be8-4eed-b0d0-d087c1dc4514.json'
-                ];
+            const response = await fetch('/api/recipes');
+            if (response.ok) {
+                recipeData = await response.json();
+                console.log(`成功加载 ${recipeData.length} 个食谱`);
+            } else {
+                throw new Error('API不可用');
             }
-            
-            const loadPromises = recipeFiles.map(async (filename) => {
-                try {
-                    const response = await fetch(`recipes/${filename}`);
-                    if (!response.ok) return null;
-                    
-                    const data = await response.json();
-                    const recipeKey = Object.keys(data)[0];
-                    const recipe = data[recipeKey];
-                    
-                    // 提取UUID（去掉.json扩展名）
-                    const uuid = filename.replace('.json', '');
-                    
-                    return {
-                        id: uuid,
-                        title: recipe.title || recipeKey,
-                        image: recipe.image || 'images/placeholder.jpg',
-                        time: recipe.time || '30min',
-                        likes: recipe.likes || '0',
-                        category: recipe.category || '其他',
-                        ingredients: recipe.ingredients || [],
-                        cuisine: recipe.category || '家常菜',
-                        uuid: uuid
-                    };
-                } catch (error) {
-                    console.error(`加载食谱文件 ${filename} 失败:`, error);
-                    return null;
-                }
-            });
-            
-            const results = await Promise.all(loadPromises);
-            recipeData = results.filter(recipe => recipe !== null);
-            console.log(`成功加载 ${recipeData.length} 个食谱`);
-            console.log('加载的食谱:', recipeData.map(r => r.title));
-            
         } catch (error) {
             console.error('加载食谱数据失败:', error);
-            // 如果加载失败，使用默认数据
             recipeData = [
                 {
                     id: 'salad',
@@ -112,72 +59,88 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    let searchTimer;
-    let currentKeyword = '';
-
-    // 初始化
-    init();
-
-    async function init() {
-        // 先加载所有食谱数据
-        await loadAllRecipes();
-        
-        loadSearchHistory();
-        bindEvents();
-        
-        // 自动聚焦搜索框
-        searchInput.focus();
-    }
-
     function bindEvents() {
-        // 搜索输入事件
+        // 基础事件绑定
         searchInput.addEventListener('input', handleSearchInput);
         searchInput.addEventListener('keypress', handleKeyPress);
-        
-        // 清除按钮
         clearBtn.addEventListener('click', clearSearch);
-        
-        // 建议标签点击
-        const suggestionTags = document.querySelectorAll('.suggestion-tag');
-        suggestionTags.forEach(tag => {
-            tag.addEventListener('click', function() {
-                const keyword = this.dataset.keyword;
-                searchInput.value = keyword;
-                performSearch(keyword);
-            });
-        });
-        
-        // 清空历史记录
         clearHistoryBtn.addEventListener('click', clearSearchHistory);
+        
+        // 使用事件委托处理所有动态和静态元素
+        document.addEventListener('click', handleGlobalClick);
+    }
+    
+    function handleGlobalClick(e) {
+        // 处理返回按钮
+        if (e.target.closest('.back-btn') || e.target.closest('.back-btn img')) {
+            window.location.href = 'home.html';
+            return;
+        }
+        
+        // 处理搜索建议标签
+        const suggestionTag = e.target.closest('.suggestion-tag');
+        if (suggestionTag) {
+            const keyword = suggestionTag.dataset.keyword;
+            searchInput.value = keyword;
+            performSearch(keyword);
+            return;
+        }
+        
+        // 处理清除按钮
+        if (e.target.closest('#clearBtn') || e.target.closest('#clearBtn img')) {
+            clearSearch();
+            return;
+        }
+        
+        // 处理历史记录文本
+        const historyText = e.target.closest('.history-text');
+        if (historyText) {
+            const keyword = historyText.textContent;
+            searchInput.value = keyword;
+            performSearch(keyword);
+            return;
+        }
+        
+        // 处理历史记录删除按钮
+        const deleteHistory = e.target.closest('.delete-history');
+        if (deleteHistory) {
+            const historyItem = deleteHistory.closest('.history-item');
+            const index = Array.from(historyList.children).indexOf(historyItem);
+            deleteHistoryItem(index);
+            return;
+        }
+        
+        // 处理浏览推荐按钮
+        if (e.target.closest('.browse-btn')) {
+            window.location.href = 'home.html';
+            return;
+        }
+        
+        // 处理食谱结果项
+        const resultItem = e.target.closest('.result-item');
+        if (resultItem) {
+            const recipeId = resultItem.dataset.recipeId || 
+                            resultItem.querySelector('.result-image').style.backgroundImage.match(/\/([^\/]+)\.jpg/)?.[1] ||
+                            resultItem.querySelector('.result-title').textContent;
+            goToRecipeDetail(recipeId);
+            return;
+        }
     }
 
     function handleSearchInput(e) {
         const value = e.target.value.trim();
+        clearBtn.style.display = value ? 'flex' : 'none';
         
-        // 显示/隐藏清除按钮
-        if (value) {
-            clearBtn.style.display = 'flex';
-        } else {
-            clearBtn.style.display = 'none';
-        }
-        
-        // 防抖搜索
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => {
-            if (value) {
-                performSearch(value);
-            } else {
-                showDefaultState();
-            }
+            value ? performSearch(value) : showDefaultState();
         }, 300);
     }
 
     function handleKeyPress(e) {
         if (e.key === 'Enter') {
             const value = searchInput.value.trim();
-            if (value) {
-                performSearch(value);
-            }
+            value && performSearch(value);
         }
     }
 
@@ -197,22 +160,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function performSearch(keyword) {
         currentKeyword = keyword;
-        
-        // 隐藏其他状态
         searchSuggestions.style.display = 'none';
         searchHistory.style.display = 'none';
         noResults.style.display = 'none';
         
-        // 显示加载状态
         searchResults.style.display = 'block';
         resultsList.innerHTML = '<div class="loading">搜索中...</div>';
         
-        // 模拟搜索延迟
         setTimeout(() => {
             const results = searchRecipes(keyword);
             displaySearchResults(results, keyword);
-            
-            // 保存搜索历史
             saveSearchHistory(keyword);
         }, 500);
     }
@@ -221,43 +178,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const lowerKeyword = keyword.toLowerCase();
         
         return recipeData.filter(recipe => {
-            // 搜索标题
-            if (recipe.title.toLowerCase().includes(lowerKeyword)) {
-                return true;
-            }
+            if (recipe.title.toLowerCase().includes(lowerKeyword)) return true;
+            if (recipe.category.toLowerCase().includes(lowerKeyword)) return true;
+            if (recipe.cuisine && recipe.cuisine.toLowerCase().includes(lowerKeyword)) return true;
             
-            // 搜索分类
-            if (recipe.category.toLowerCase().includes(lowerKeyword)) {
-                return true;
-            }
-            
-            // 搜索菜系
-            if (recipe.cuisine.toLowerCase().includes(lowerKeyword)) {
-                return true;
-            }
-            
-            // 搜索食材 - 支持数组和字符串格式
             if (Array.isArray(recipe.ingredients)) {
                 return recipe.ingredients.some(ingredient => {
-                    // 如果ingredient包含逗号或顿号，说明是组合的食材字符串，需要分割
-                    if (ingredient.includes('、') || ingredient.includes('，') || ingredient.includes(',')) {
-                        const splitIngredients = ingredient.split(/[、，,]/).map(item => item.trim());
-                        return splitIngredients.some(splitIngredient => {
-                            const cleanIngredient = splitIngredient.replace(/\d+[克毫升个片根颗块段汤匙]/g, '').trim();
-                            return cleanIngredient.toLowerCase().includes(lowerKeyword) || 
-                                   splitIngredient.toLowerCase().includes(lowerKeyword);
-                        });
-                    } else {
-                        // 处理带数量的食材，如"五花肉500克"
+                    if (typeof ingredient === 'string') {
                         const cleanIngredient = ingredient.replace(/\d+[克毫升个片根颗块段汤匙]/g, '').trim();
                         return cleanIngredient.toLowerCase().includes(lowerKeyword) || 
                                ingredient.toLowerCase().includes(lowerKeyword);
                     }
+                    return false;
                 });
-            } else if (typeof recipe.ingredients === 'string') {
-                return recipe.ingredients.toLowerCase().includes(lowerKeyword);
             }
-            
             return false;
         });
     }
@@ -274,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let resultsHTML = '';
         results.forEach(recipe => {
             resultsHTML += `
-                <div class="result-item" onclick="goToRecipeDetail('${recipe.id}')">
+                <div class="result-item" data-recipe-id="${recipe.id}">
                     <div class="result-image" style="background-image: url('${recipe.image}')"></div>
                     <div class="result-info">
                         <div class="result-title">${highlightKeyword(recipe.title, keyword)}</div>
@@ -298,24 +232,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function highlightKeyword(text, keyword) {
         if (!keyword) return text;
-        
         const regex = new RegExp(`(${keyword})`, 'gi');
         return text.replace(regex, '<span style="color: #FFA242; font-weight: 500;">$1</span>');
     }
 
     function saveSearchHistory(keyword) {
         let history = getSearchHistory();
-        
-        // 移除重复项
         history = history.filter(item => item.keyword !== keyword);
+        history.unshift({ keyword, timestamp: Date.now() });
         
-        // 添加到开头
-        history.unshift({
-            keyword: keyword,
-            timestamp: Date.now()
-        });
-        
-        // 限制历史记录数量
         if (history.length > 10) {
             history = history.slice(0, 10);
         }
@@ -342,10 +267,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const timeStr = formatTime(item.timestamp);
             historyHTML += `
                 <div class="history-item">
-                    <div class="history-text" onclick="searchFromHistory('${item.keyword}')">${item.keyword}</div>
+                    <div class="history-text">${item.keyword}</div>
                     <div class="history-actions">
                         <span class="history-time">${timeStr}</span>
-                        <div class="delete-history" onclick="deleteHistoryItem(${index})">
+                        <div class="delete-history">
                             <img src="images/close.svg" alt="删除">
                         </div>
                     </div>
@@ -354,8 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         historyList.innerHTML = historyHTML;
-        
-        // 只在默认状态下显示历史记录
         if (searchInput.value.trim() === '') {
             searchHistory.style.display = 'block';
         }
@@ -382,34 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         searchHistory.style.display = 'none';
     }
 
-    // 全局函数
-    window.searchFromHistory = function(keyword) {
-        searchInput.value = keyword;
-        performSearch(keyword);
-    };
-
-    window.deleteHistoryItem = function(index) {
-        let history = getSearchHistory();
-        history.splice(index, 1);
-        localStorage.setItem('chefmate_search_history', JSON.stringify(history));
-        loadSearchHistory();
-    };
-
-    window.goToRecipeDetail = function(recipeId) {
-        // 根据食谱ID跳转到详情页
-        const recipe = recipeData.find(r => r.id === recipeId);
-        if (recipe) {
-            // 如果有UUID，使用UUID跳转
-            if (recipe.uuid) {
-                window.location.href = `recipe-detail.html?id=${recipe.uuid}`;
-            } else {
-                // 向后兼容：使用旧的参数格式
-                let param = 'salad'; // 默认值
-                if (recipe.title.includes('排骨')) {
-                    param = 'paigu';
-                }
-                window.location.href = `recipe-detail.html?recipe=${param}`;
-            }
-        }
-    };
+    function goToRecipeDetail(recipeId) {
+        window.location.href = `recipe-detail.html?id=${recipeId}`;
+    }
 });
