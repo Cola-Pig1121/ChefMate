@@ -65,89 +65,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return convertedSteps;
     }
 
-    async function initializeStepData() {
-        if (recipeId) {
-            const recipeData = await fetchRecipeData(recipeId);
-            if (recipeData) {
-                recipeTitle = recipeData.title;
-                const convertedSteps = convertRecipeDataToSteps(recipeData);
-                if (convertedSteps && convertedSteps.length > 0) {
-                    stepData = convertedSteps;
-                    return;
-                }
-            }
-        }
-    }
-
-    function generateStepPages() {
-        if (!stepData) return;
-
-        stepsContainer.innerHTML = '';
-        stepData.forEach((step, index) => {
-            const stepPage = document.createElement('div');
-            stepPage.className = 'step-page';
-            stepPage.id = 'step' + (index + 1);
-            if (index > 0) {
-                const previewDiv = document.createElement('div');
-                previewDiv.className = 'next-card-preview';
-                previewDiv.innerHTML = `
-                    <div>
-                        <h3>步骤${index + 1} / ${stepData.length}</h3>
-                        <p>${step.subtitle}</p>
-                    </div>
-                `;
-                stepPage.appendChild(previewDiv);
-            }
-            const contentHTML = `
-                <div class="recipe-content">
-                    <div class="content-wrapper">
-                        <div class="recipe-info-section">
-                            <div class="recipe-header">
-                                <div class="recipe-title">
-                                    <h1 class="recipe-name" style="font-size: 30px;">步骤${index + 1} <span class="step-total" style="opacity: 0.5;">/ ${stepData.length}</span></h1>
-                                    <div class="recipe-subtitle" style="opacity: 0.5; font-size: 20px;">${step.subtitle}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="process-flow">
-                            <div class="flow-line"></div>
-                            <div class="flow-steps">
-                                ${generateSubSteps(step.subSteps)}
-                                <div class="step-group">
-                                    <div class="step-header">
-                                        <div class="flow-dot end"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            stepPage.innerHTML += contentHTML;
-            stepsContainer.appendChild(stepPage);
-        });
-        stepPages = document.querySelectorAll('.step-page');
-        totalSteps = stepPages.length;
-    }
-
-    function generateSubSteps(subSteps) {
-        let html = '';
-        subSteps.forEach(subStep => {
-            html += `
-                <div class="step-group">
-                    <div class="step-header">
-                        <div class="flow-dot"></div>
-                        <div class="ingredient-name">${subStep.name}</div>
-                    </div>
-                    <div class="ingredient-steps">
-                        ${subStep.steps.map(step => `<div>${step}</div>`).join('')}
-                    </div>
-                </div>
-            `;
-        });
-        return html;
-    }
-
     async function initializePage() {
         await initializeStepData();
         if (!stepData) {
@@ -164,6 +81,9 @@ document.addEventListener('DOMContentLoaded', function () {
             setupScrollLimiter();
             addTouchEvents();
             ensureScrollToCurrentSubStep(4);
+            
+            // --- 改动：页面加载完成后自动启动语音通信 ---
+            startCommunication();
         }, 100);
     }
 
@@ -195,390 +115,84 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const waveBtn = document.querySelector('.wave-btn');
-    let isCommunicating = false;
-    let recognition = null;
-    let spokenResponses = new Set();
+    let isCommunicating = false; // 用户意图的总开关
+    
+    // --- 语音交互状态变量 ---
+    let audioContext;
+    let stream;
+    let processor;
+    let ws;
+    const SAMPLE_RATE = 16000;
 
+    let isAiSpeaking = false;
     let audioQueue = [];
-    let currentAudioIndex = 0;
-    let isPlayingAudio = false;
-    let currentSessionId = null;
-
-    function isConfirmationIntent(text) {
-        const confirmationWords = ['好了', '完成', '做好了', '可以', '行', 'OK', '嗯', '是的', '没问题', '对', '对的', '对了'];
-        return confirmationWords.some(word => text.includes(word));
-    }
+    let currentAudioPlayer = null;
+    let userSpeaking = false;
+    let vadTimeout = null;
+    let reconnectTimeout = null; // 用于自动重连的定时器
 
     function isNextStepIntent(text) {
         const nextStepWords = ['下一步', '继续', '往下', '下一个', '接着来', '然后呢', '接下来', '下一步是什么'];
-        return nextStepWords.some(word => text.includes(word));
+        return nextStepWords.some(word => text.toLowerCase().includes(word));
     }
 
     function isPrevStepIntent(text) {
         const prevStepWords = ['上一步', '返回', '回去', '上一个', '刚才', '之前', '退回去', '退回'];
-        return prevStepWords.some(word => text.includes(word));
+        return prevStepWords.some(word => text.toLowerCase().includes(word));
     }
 
-    function isRepeatIntent(text) {
-        const repeatWords = ['再说一遍', '没听清', '重复一下', '刚才说什么', '重说', '重复', '再说', '什么', '啥'];
-        return repeatWords.some(word => text.includes(word));
-    }
-
-    function isIngredientReplacementIntent(text) {
-        const replacementWords = ['没有', '缺', '少了', '不够', '替代', '换成', '替换', '过敏', '不能吃', '不想用'];
-        return replacementWords.some(word => text.includes(word)) &&
-            (text.includes('没有') || text.includes('缺') || text.includes('少了') || text.includes('替代') || text.includes('换成'));
-    }
-
-    function isTimeQuestionIntent(text) {
-        const timeWords = ['多久', '几分钟', '时间', '要多久', '需要多久', '还要多久', '什么时候', '何时', '几时'];
-        return timeWords.some(word => text.includes(word));
-    }
-
-    function isConfusedIntent(text) {
-        const confusedWords = ['怎么办', '怎么', '不会', '不懂', '不清楚', '不明白', '困惑', '卡住了', '停住了'];
-        return confusedWords.some(word => text.includes(word));
-    }
-
-    function extractIngredient(text) {
-        const ingredients = ['洋葱', '大蒜', '盐', '糖', '酱油', '醋', '油', '姜', '葱', '辣椒', '番茄', '牛油果', '排骨', '料酒', '胡椒粉'];
-        for (const ingredient of ingredients) {
-            if (text.includes(ingredient)) {
-                return ingredient;
-            }
-        }
-        return '该食材';
-    }
-
-    function getProgressDescription(progress) {
-        if (progress < 25) {
-            return '我们已经完成了四分之一，继续保持！';
-        } else if (progress < 50) {
-            return '已经完成近一半了，这道菜正在成形！';
-        } else if (progress < 75) {
-            return '太棒了，已经完成大部分了，很快就能享用美食了。';
-        } else {
-            return '几乎完成了！最后几步会让这道菜更加完美。';
-        }
-    }
-
-    function generateSystemPrompt(userText, currentStepData, currentSubStepData, recipeDisplayName, currentStep, totalSteps) {
-        const isConfirmation = isConfirmationIntent(userText);
-        const isNextStep = isNextStepIntent(userText);
-        const isRepeat = isRepeatIntent(userText);
-        const isIngredientReplacement = isIngredientReplacementIntent(userText);
-        const isTimeQuestion = isTimeQuestionIntent(userText);
-        const isConfused = isConfusedIntent(userText);
-
-        const progress = Math.round(((currentStep + 1) * 100) / totalSteps);
-        const progressDescription = getProgressDescription(progress);
-
-        let systemPrompt = `你是一个友好的中文烹饪助手，正在指导用户制作「${recipeDisplayName}」。\n`;
-
-        systemPrompt += `当前步骤：${currentStepData.name} - ${currentStepData.subtitle}。\n`;
-        systemPrompt += `具体操作：${currentSubStepData.name} - ${currentSubStepData.steps.join('，')}。\n`;
-        systemPrompt += `当前进度：${progress}%（第${currentStep + 1}步/共${totalSteps}步）。\n`;
-
-        if (isConfirmation || isNextStep) {
-            systemPrompt += `用户表示已完成或想继续下一步，请用自然的对话方式确认完成并引导进入下一步。\n`;
-            systemPrompt += `请根据进度提供适当的鼓励，例如${progressDescription}。\n`;
-        } else if (isRepeat) {
-            systemPrompt += `用户希望重复当前步骤说明，请完整、清晰地重复当前步骤的指导。\n`;
-            systemPrompt += `可以添加小技巧或注意事项，帮助用户更好地完成这一步骤。\n`;
-        } else if (isIngredientReplacement) {
-            const ingredient = extractIngredient(userText);
-            systemPrompt += `用户表示没有「${ingredient}」或需要替换食材，请推荐1-2种常见替代食材。\n`;
-            systemPrompt += `请说明替换后的风味变化和用量调整，确保菜品整体风味平衡。\n`;
-        } else if (isTimeQuestion) {
-            systemPrompt += `用户询问关于时间的问题（如剩余时间、完成判断标准等），请提供明确的时间指导和判断标准。\n`;
-            systemPrompt += `可以给出小技巧，帮助用户更好地判断完成状态。\n`;
-        } else if (isConfused) {
-            systemPrompt += `用户表达困惑或不确定，需要更详细的解释，请提供清晰、分步骤的指导。\n`;
-            systemPrompt += `可以添加常见问题解答或小技巧，帮助用户克服困难。\n`;
-        } else {
-            systemPrompt += `请用简短、自然、鼓励的语气回答用户关于本步骤的问题。\n`;
-            systemPrompt += `如果用户询问食材替换、时间、火候等问题，请主动给出实用建议。\n`;
-        }
-
-        systemPrompt += `回答要求：\n`;
-        systemPrompt += `- 保持回答简短（50-100字），适合语音播报\n`;
-        systemPrompt += `- 使用口语化、自然的表达，避免专业术语\n`;
-        systemPrompt += `- 添加适当的情感表达和鼓励，增强用户体验\n`;
-        systemPrompt += `- 如果是关键步骤，强调注意事项\n`;
-        systemPrompt += `- 避免一次性提供过多信息，保持步骤清晰\n`;
-
-        return systemPrompt;
-    }
-
-    function containsSensitiveWords(text) {
-        const sensitiveWords = ['你妹', '妈的', '傻逼', '混蛋', 'fuck', 'shit'];
-        return sensitiveWords.some(word => text.includes(word));
-    }
-
-    function playNextAudio() {
-        if (currentAudioIndex < audioQueue.length && !isPlayingAudio) {
-            isPlayingAudio = true;
-            const audioData = audioQueue[currentAudioIndex];
-            const audio = new Audio(audioData.audio_url);
-
-            audio.onended = function () {
-                isPlayingAudio = false;
-                currentAudioIndex++;
-                const filename = audioData.audio_url.split('/').pop();
-                fetch(`/api/delete_audio/${filename}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }).catch(error => console.error('Delete audio error:', error));
-
-                playNextAudio();
-            };
-
-            audio.onerror = function (e) {
-                console.error('Audio playback error:', e);
-                isPlayingAudio = false;
-                currentAudioIndex++;
-                playNextAudio();
-            };
-
-            audio.play().catch(e => {
-                console.error('Audio play failed:', e);
-                isPlayingAudio = false;
-                showStepToast('请点击页面以播放语音');
-            });
-        }
-    }
-
-    function cleanupSession(sessionId) {
-        if (sessionId) {
-            fetch(`/api/cleanup_session/${sessionId}`, {
-                method: 'POST'
-            }).catch(error => console.error('Cleanup session error:', error));
-        }
-    }
-
-    async function processUserSpeechStream(text, systemContent) {
-        audioQueue = [];
-        currentAudioIndex = 0;
-        isPlayingAudio = false;
-        let fullText = '';
-
-        try {
-            const response = await fetch('/api/ask/stream', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userText: text,
-                    systemContent: systemContent
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const textChunk = decoder.decode(value);
-                const lines = textChunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            if (data.type === 'audio') {
-                                audioQueue.push(data);
-                                fullText += data.text;
-
-                                if (audioQueue.length === 1) {
-                                    const urlParts = data.audio_url.split('/');
-                                    const filename = urlParts[urlParts.length - 1];
-                                    currentSessionId = filename.split('_')[0];
-
-                                    playNextAudio();
-                                }
-
-                                showStepToast(`助手: ${data.text}`);
-
-                            } else if (data.type === 'end') {
-                                if (!spokenResponses.has(fullText)) {
-                                    spokenResponses.add(fullText);
-                                }
-
-                                setTimeout(() => {
-                                    cleanupSession(currentSessionId);
-                                }, 30000);
-                            }
-                        } catch (e) {
-                            console.error('解析响应失败:', e);
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Stream fetch error:', error);
-            processUserSpeechFallback(text, systemContent);
-        }
-    }
-
-    function processUserSpeechFallback(text, systemContent) {
-        fetch('/api/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userText: text,
-                systemContent: systemContent
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const responseText = data.answer;
-                const audioUrl = data.audio_url ? `${data.audio_url}` : null;
-                speakResponse(responseText, audioUrl);
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                if (error.message.includes('Failed to fetch')) {
-                    speakResponse('无法连接到服务器，请检查后端服务是否启动');
-                } else if (error.message.includes('NetworkError')) {
-                    speakResponse('网络连接异常，请检查网络设置');
-                } else {
-                    speakResponse('服务暂时不可用，请稍后再试');
-                }
-            });
-    }
-
-    function processUserSpeech(text) {
+    function processUserTranscript(text) {
         showStepToast(`您说: ${text}`);
-        if (containsSensitiveWords(text)) {
-            speakResponse('请使用文明用语');
-            return;
-        }
-        if (!stepData || !stepData[currentStep]) return;
-
         if (isNextStepIntent(text)) {
             goToNextSubStep();
-            speakResponse('好的，已进入下一步。');
             return;
         }
-
         if (isPrevStepIntent(text)) {
             goToPrevSubStep();
-            speakResponse('好的，已返回上一步。');
             return;
         }
-
-        const currentStepData = stepData[currentStep];
-        const currentSubStepData = currentStepData.subSteps[currentSubStep];
-        const recipeDisplayName = recipeTitle || '这道菜';
-
-        const systemContent = generateSystemPrompt(
-            text,
-            currentStepData,
-            currentSubStepData,
-            recipeDisplayName,
-            currentStep,
-            stepData.length
-        );
-
-        processUserSpeechStream(text, systemContent);
     }
 
-    function speakResponse(text, audioUrl) {
-        if (spokenResponses.has(text)) {
+    function playFromQueue() {
+        if (isAiSpeaking || audioQueue.length === 0) {
             return;
         }
-        spokenResponses.add(text);
-        showStepToast(`助手: ${text}`);
-        if (audioUrl) {
-            let audio = document.getElementById('tts-audio');
-            if (!audio) {
-                audio = document.createElement('audio');
-                audio.id = 'tts-audio';
-                document.body.appendChild(audio);
-            }
-            audio.src = audioUrl;
-            audio.onended = function () {
-                const filename = audioUrl.split('/').pop();
-                fetch(`/api/delete_audio/${filename}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }).catch(error => console.error('Delete audio error:', error));
-            };
-            audio.onerror = function (e) {
-                console.error('Audio playback error:', e);
-                const filename = audioUrl.split('/').pop();
-                fetch(`/api/delete_audio/${filename}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-            };
-            audio.play().catch(e => {
-                showStepToast('请点击页面以播放语音');
-            });
+        isAiSpeaking = true;
+        
+        const audioData = audioQueue.shift();
+        showStepToast(`助手: ${audioData.text}`);
+        currentAudioPlayer = new Audio(audioData.audio_url);
+        
+        currentAudioPlayer.onended = () => {
+            isAiSpeaking = false;
+            const filename = audioData.audio_url.split('/').pop();
+            fetch(`/api/delete_audio/${filename}`, { method: 'DELETE' });
+            playFromQueue();
+        };
+        
+        currentAudioPlayer.onerror = (e) => {
+            console.error('音频播放错误:', e);
+            isAiSpeaking = false;
+            playFromQueue();
+        };
+        
+        currentAudioPlayer.play().catch(e => {
+            console.error('播放失败:', e);
+            isAiSpeaking = false;
+        });
+    }
+
+    function stopAndClearAudio() {
+        if (currentAudioPlayer) {
+            currentAudioPlayer.pause();
+            currentAudioPlayer.onended = null;
+            currentAudioPlayer = null;
         }
+        audioQueue = [];
+        isAiSpeaking = false;
     }
 
-    function initSpeech() {
-        // Always create a new instance to avoid state issues
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'zh-CN';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.onresult = function (event) {
-            const speechResult = event.results[0][0].transcript;
-            processUserSpeech(speechResult);
-        };
-
-        recognition.onerror = function (event) {
-            console.error('Speech recognition error:', event.error);
-            // Don't call stopCommunication() here to avoid loops
-            if (event.error === 'not-allowed') {
-                showStepToast('请允许使用麦克风权限');
-            } else if (event.error !== 'aborted') { // 'aborted' is a normal stop
-                showStepToast(`语音识别错误: ${event.error}`);
-            }
-            // Manually ensure the state is correct
-            isCommunicating = false;
-            if (waveBtn) {
-                waveBtn.classList.remove('active');
-            }
-        };
-
-        recognition.onend = function () {
-            // This auto-restarts ONLY if communication is supposed to be active
-            if (isCommunicating) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error('Error restarting recognition:', e);
-                    stopCommunication(); // If restart fails, fully stop
-                }
-            }
-        };
-    }
-
+    // --- 核心语音通信逻辑 ---
     function toggleCommunication() {
         if (isCommunicating) {
             stopCommunication();
@@ -587,55 +201,167 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function startCommunication() {
-        if (isCommunicating) {
-            return;
-        }
+    // --- 改动：清理资源的辅助函数 ---
+    function cleanupConnection() {
+        clearTimeout(reconnectTimeout); // 清除任何待处理的重连
 
-        // Always initialize for a clean start
-        initSpeech();
-
-        if (!recognition) {
-            showStepToast('语音识别不可用');
-            return;
-        }
-
-        try {
-            recognition.start();
-            isCommunicating = true;
-            if (waveBtn) {
-                waveBtn.classList.add('active');
+        if (ws) {
+            ws.onopen = null;
+            ws.onmessage = null;
+            ws.onerror = null;
+            ws.onclose = null;
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.close();
             }
-        } catch (e) {
-            console.error('Error starting recognition:', e);
-            isCommunicating = false;
-            if (waveBtn) {
-                waveBtn.classList.remove('active');
-            }
-            showStepToast('语音识别启动失败');
+            ws = null;
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        if (processor) {
+            processor.disconnect();
+            processor = null;
+        }
+        if (audioContext && audioContext.state !== 'closed') {
+            audioContext.close();
+            audioContext = null;
         }
     }
 
+    async function startCommunication() {
+        // 如果正在连接或已连接，则不执行任何操作
+        if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+            return;
+        }
+        
+        isCommunicating = true;
+        if (waveBtn) waveBtn.classList.add('active');
+        showStepToast('正在连接语音服务...');
+
+        // 在创建新连接前，确保旧资源已清理
+        cleanupConnection();
+
+        const wsUrl = `ws://${window.location.host}/ws/transcribe`;
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = async () => {
+            showStepToast('麦克风已激活，请说话');
+            clearTimeout(reconnectTimeout); // 成功连接后，清除重连定时器
+            try {
+                const constraints = {
+                    audio: {
+                        sampleRate: SAMPLE_RATE,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+                const source = audioContext.createMediaStreamSource(stream);
+                processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                const VAD_THRESHOLD = 0.01;
+
+                processor.onaudioprocess = (e) => {
+                    if (!isCommunicating || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    
+                    let sum = 0;
+                    for (let i = 0; i < inputData.length; i++) { sum += inputData[i] * inputData[i]; }
+                    const rms = Math.sqrt(sum / inputData.length);
+
+                    if (rms > VAD_THRESHOLD) {
+                        if (!userSpeaking) {
+                            userSpeaking = true;
+                            if (isAiSpeaking) {
+                                console.log("用户打断AI！");
+                                stopAndClearAudio();
+                                if (ws && ws.readyState === WebSocket.OPEN) {
+                                    ws.send(JSON.stringify({ type: "interrupt" }));
+                                }
+                            }
+                        }
+                        clearTimeout(vadTimeout);
+                        vadTimeout = setTimeout(() => { userSpeaking = false; }, 1000);
+                    }
+                    
+                    const pcmData = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        let s = Math.max(-1, Math.min(1, inputData[i]));
+                        pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    ws.send(pcmData.buffer);
+                };
+
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+
+            } catch (err) {
+                console.error('麦克风或音频上下文初始化失败:', err);
+                showStepToast('无法访问麦克风');
+                // 即使失败，也保持 isCommunicating 为 true，以便重连
+                handleDisconnection();
+            }
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            switch (data.type) {
+                case 'transcript':
+                    processUserTranscript(data.text);
+                    break;
+                case 'audio':
+                    audioQueue.push(data);
+                    playFromQueue();
+                    break;
+                case 'end_of_response':
+                    isAiSpeaking = false;
+                    playFromQueue();
+                    break;
+                case 'error':
+                    showStepToast(`AI 遇到问题: ${data.message}`);
+                    break;
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket 错误:', error);
+            // 错误时也触发重连逻辑
+            handleDisconnection();
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket 连接已关闭');
+            // 连接关闭时触发重连逻辑
+            handleDisconnection();
+        };
+    }
+
+    // --- 改动：手动停止函数 ---
     function stopCommunication() {
-        if (!isCommunicating && !recognition) {
-            return;
-        }
+        if (!isCommunicating) return;
 
-        isCommunicating = false;
-        if (waveBtn) {
-            waveBtn.classList.remove('active');
-        }
+        isCommunicating = false; // 这是关键，设置总开关为关闭
+        if (waveBtn) waveBtn.classList.remove('active');
+        showStepToast('语音识别已停止');
 
-        if (recognition) {
-            // Crucial fix: Disable the onend handler before stopping
-            // This prevents the auto-restart from firing on a manual stop
-            recognition.onend = null;
-            recognition.stop();
-            recognition = null; // Destroy the instance
-        }
+        stopAndClearAudio();
+        cleanupConnection(); // 使用辅助函数清理所有资源
     }
 
-    // --- FIX END ---
+    // --- 改动：处理断开和自动重连的函数 ---
+    function handleDisconnection() {
+        cleanupConnection(); // 先清理旧的连接资源
+        // 只有在用户没有手动关闭总开关的情况下才重连
+        if (isCommunicating) {
+            showStepToast('连接中断，正在尝试重连...');
+            reconnectTimeout = setTimeout(startCommunication, 2000); // 2秒后尝试重连
+        }
+    }
 
     if (waveBtn) {
         waveBtn.addEventListener('click', toggleCommunication);
@@ -644,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeBtn = document.querySelector('.close-btn');
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
+            stopCommunication();
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
             let returnUrl = 'recipe-detail.html';
@@ -653,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = returnUrl;
         });
     }
-
+    
     function addTouchEvents() {
         stepPages.forEach((page, index) => {
             page.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -853,8 +580,8 @@ document.addEventListener('DOMContentLoaded', function () {
         toast.style.opacity = '1';
         setTimeout(() => {
             toast.style.opacity = '0';
-            setTimeout(() => { toast.style.display = 'none'; }, 400);
-        }, 1800);
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }, 400);
     }
 
     function goToNextSubStep() {
