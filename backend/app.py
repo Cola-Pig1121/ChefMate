@@ -382,4 +382,4 @@ if __name__ == '__main__':
         logger.warning(f"在 {WEBSITE_ROOT} 目录下未找到 index.html。")
 
     logger.info("启动 Quart 服务器...")
-    app.run(host='0.0.0.0', port=5000, use_reloader=False)
+    uvicorn.run(app, host='0.0.0.0', port=5000)
