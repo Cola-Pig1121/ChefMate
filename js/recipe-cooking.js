@@ -199,6 +199,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let recognition = null;
     let spokenResponses = new Set();
 
+    let audioQueue = [];
+    let currentAudioIndex = 0;
+    let isPlayingAudio = false;
+    let currentSessionId = null;
+
     function isConfirmationIntent(text) {
         const confirmationWords = ['好了', '完成', '做好了', '可以', '行', 'OK', '嗯', '是的', '没问题', '对', '对的', '对了'];
         return confirmationWords.some(word => text.includes(word));
@@ -310,6 +315,155 @@ document.addEventListener('DOMContentLoaded', function () {
         return sensitiveWords.some(word => text.includes(word));
     }
 
+    function playNextAudio() {
+        if (currentAudioIndex < audioQueue.length && !isPlayingAudio) {
+            isPlayingAudio = true;
+            const audioData = audioQueue[currentAudioIndex];
+            const audio = new Audio(audioData.audio_url);
+
+            audio.onended = function () {
+                isPlayingAudio = false;
+                currentAudioIndex++;
+                const filename = audioData.audio_url.split('/').pop();
+                fetch(`/api/delete_audio/${filename}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }).catch(error => console.error('Delete audio error:', error));
+
+                playNextAudio();
+            };
+
+            audio.onerror = function (e) {
+                console.error('Audio playback error:', e);
+                isPlayingAudio = false;
+                currentAudioIndex++;
+                playNextAudio();
+            };
+
+            audio.play().catch(e => {
+                console.error('Audio play failed:', e);
+                isPlayingAudio = false;
+                showStepToast('请点击页面以播放语音');
+            });
+        }
+    }
+
+    function cleanupSession(sessionId) {
+        if (sessionId) {
+            fetch(`/api/cleanup_session/${sessionId}`, {
+                method: 'POST'
+            }).catch(error => console.error('Cleanup session error:', error));
+        }
+    }
+
+    async function processUserSpeechStream(text, systemContent) {
+        audioQueue = [];
+        currentAudioIndex = 0;
+        isPlayingAudio = false;
+        let fullText = '';
+
+        try {
+            const response = await fetch('/api/ask/stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userText: text,
+                    systemContent: systemContent
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const textChunk = decoder.decode(value);
+                const lines = textChunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+
+                            if (data.type === 'audio') {
+                                audioQueue.push(data);
+                                fullText += data.text;
+
+                                if (audioQueue.length === 1) {
+                                    const urlParts = data.audio_url.split('/');
+                                    const filename = urlParts[urlParts.length - 1];
+                                    currentSessionId = filename.split('_')[0];
+
+                                    playNextAudio();
+                                }
+
+                                showStepToast(`助手: ${data.text}`);
+
+                            } else if (data.type === 'end') {
+                                if (!spokenResponses.has(fullText)) {
+                                    spokenResponses.add(fullText);
+                                }
+
+                                setTimeout(() => {
+                                    cleanupSession(currentSessionId);
+                                }, 30000);
+                            }
+                        } catch (e) {
+                            console.error('解析响应失败:', e);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Stream fetch error:', error);
+            processUserSpeechFallback(text, systemContent);
+        }
+    }
+
+    function processUserSpeechFallback(text, systemContent) {
+        fetch('/api/ask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userText: text,
+                systemContent: systemContent
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const responseText = data.answer;
+                const audioUrl = data.audio_url ? `${data.audio_url}` : null;
+                speakResponse(responseText, audioUrl);
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    speakResponse('无法连接到服务器，请检查后端服务是否启动');
+                } else if (error.message.includes('NetworkError')) {
+                    speakResponse('网络连接异常，请检查网络设置');
+                } else {
+                    speakResponse('服务暂时不可用，请稍后再试');
+                }
+            });
+    }
+
     function processUserSpeech(text) {
         showStepToast(`您说: ${text}`);
         if (containsSensitiveWords(text)) {
@@ -343,37 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
             stepData.length
         );
 
-        fetch('/api/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userText: text,
-                systemContent: systemContent
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const responseText = data.answer;
-                const audioUrl = data.audio_url ? `${data.audio_url}` : null;
-                speakResponse(responseText, audioUrl);
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                if (error.message.includes('Failed to fetch')) {
-                    speakResponse('无法连接到服务器，请检查后端服务是否启动');
-                } else if (error.message.includes('NetworkError')) {
-                    speakResponse('网络连接异常，请检查网络设置');
-                } else {
-                    speakResponse('服务暂时不可用，请稍后再试');
-                }
-            });
+        processUserSpeechStream(text, systemContent);
     }
 
     function speakResponse(text, audioUrl) {
@@ -416,15 +540,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initSpeech() {
-        if (recognition) {
-            try {
-                recognition.stop();
-            } catch (e) {
-                console.log('No recognition to stop');
-            }
-            recognition = null;
-        }
-
+        // Always create a new instance to avoid state issues
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'zh-CN';
         recognition.interimResults = false;
@@ -437,23 +553,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
         recognition.onerror = function (event) {
             console.error('Speech recognition error:', event.error);
-            stopCommunication();
+            // Don't call stopCommunication() here to avoid loops
             if (event.error === 'not-allowed') {
                 showStepToast('请允许使用麦克风权限');
-            } else if (event.error === 'aborted') {
-                // 忽略，可能是正常停止
-            } else {
+            } else if (event.error !== 'aborted') { // 'aborted' is a normal stop
                 showStepToast(`语音识别错误: ${event.error}`);
+            }
+            // Manually ensure the state is correct
+            isCommunicating = false;
+            if (waveBtn) {
+                waveBtn.classList.remove('active');
             }
         };
 
         recognition.onend = function () {
-            if (isCommunicating && recognition) {
+            // This auto-restarts ONLY if communication is supposed to be active
+            if (isCommunicating) {
                 try {
                     recognition.start();
                 } catch (e) {
                     console.error('Error restarting recognition:', e);
-                    stopCommunication();
+                    stopCommunication(); // If restart fails, fully stop
                 }
             }
         };
@@ -472,49 +592,50 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (!recognition) {
-            initSpeech();
-        }
+        // Always initialize for a clean start
+        initSpeech();
 
         if (!recognition) {
             showStepToast('语音识别不可用');
             return;
         }
 
-        isCommunicating = true;
-        if (waveBtn) {
-            waveBtn.classList.add('active');
-        }
-
         try {
             recognition.start();
+            isCommunicating = true;
+            if (waveBtn) {
+                waveBtn.classList.add('active');
+            }
         } catch (e) {
             console.error('Error starting recognition:', e);
             isCommunicating = false;
             if (waveBtn) {
                 waveBtn.classList.remove('active');
             }
-            if (e.message.includes('already started')) {
-                showStepToast('语音识别已启动');
-            } else {
-                showStepToast('语音识别启动失败');
-            }
+            showStepToast('语音识别启动失败');
         }
     }
 
     function stopCommunication() {
+        if (!isCommunicating && !recognition) {
+            return;
+        }
+
         isCommunicating = false;
         if (waveBtn) {
             waveBtn.classList.remove('active');
         }
+
         if (recognition) {
-            try {
-                recognition.stop();
-            } catch (e) {
-                console.error('Error stopping recognition:', e);
-            }
+            // Crucial fix: Disable the onend handler before stopping
+            // This prevents the auto-restart from firing on a manual stop
+            recognition.onend = null;
+            recognition.stop();
+            recognition = null; // Destroy the instance
         }
     }
+
+    // --- FIX END ---
 
     if (waveBtn) {
         waveBtn.addEventListener('click', toggleCommunication);

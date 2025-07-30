@@ -1,4 +1,5 @@
-backend\.env
-backend\audio
-backend\__pycache__
+backend/.env*.local
+backend/__pycache__
 .vscode
+backend/audio
+backend/.env 
