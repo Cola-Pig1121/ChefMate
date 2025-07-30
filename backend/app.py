@@ -31,7 +31,7 @@ MODEL_NAME_ENV = os.getenv("MODEL_NAME", "Qwen/Qwen3-32B")
 WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "base")
 WHISPER_DEVICE_TYPE = os.getenv("WHISPER_DEVICE", "cpu")
 SAMPLE_RATE = int(os.getenv("SAMPLE_RATE", 16000))
-VAD_MODE = int(os.getenv("VAD_MODE", 3)) # 最高攻击性模式，对静音更敏感
+VAD_MODE = int(os.getenv("VAD_MODE", 3))
 VAD_FRAME_DURATION_MS = int(os.getenv("VAD_FRAME_DURATION_MS", 30))
 VAD_PADDING_DURATION_MS = int(os.getenv("VAD_PADDING_DURATION_MS", 300))
 STREAM_CHUNK_SIZE = int(os.getenv("STREAM_CHUNK_SIZE", 20))
@@ -272,7 +272,7 @@ async def ws_transcribe():
     vad = WebRTCVAD(sample_rate=SAMPLE_RATE, frame_duration_ms=VAD_FRAME_DURATION_MS)
     generation_task = None
     audio_chunk_buffer = bytearray()
-    system_prompt = "你是一个友好的中文烹饪助手，你的英文名为ChefMate，中文名字叫神厨助手，昵称小厨。请用简洁、自然的中文回答。" # 默认值
+    system_prompt = "你是一个友好的中文烹饪助手。请用简洁、自然的中文回答。"
 
     try:
         while True:
@@ -295,7 +295,6 @@ async def ws_transcribe():
             if isinstance(message, bytes):
                 audio_chunk_buffer.extend(message)
                 
-                # 将接收到的音频块分解成VAD需要的帧大小
                 frame_size = vad.frame_bytes
                 while len(audio_chunk_buffer) >= frame_size:
                     frame = audio_chunk_buffer[:frame_size]
@@ -359,6 +358,17 @@ async def get_recipe(recipe_id):
     except Exception as e:
         return jsonify({'error': f'读取食谱出错: {e}'}), 500
 
+@app.route("/audio/<filename>")
+async def serve_audio_file(filename):
+    return await send_from_directory(AUDIO_FOLDER, filename, mimetype="audio/mpeg")
+
+@app.route("/api/delete_audio/<filename>", methods=["DELETE"])
+async def delete_audio(filename):
+    if audio_manager.delete_file(filename):
+        return jsonify({"success": True})
+    else:
+        return jsonify({"error": "File not found"}), 404
+
 # --- 静态文件服务 ---
 @app.route('/')
 async def serve_index():
@@ -376,11 +386,12 @@ async def shutdown():
     audio_manager.stop()
     logger.info("资源清理完成。")
 
+# --- 使用 Uvicorn 启动服务器 ---
 if __name__ == '__main__':
     if not API_KEY_ENV or not BASE_URL_ENV:
         logger.warning("环境变量 API_KEY 或 BASE_URL 未设置。")
     if not os.path.exists(os.path.join(WEBSITE_ROOT, 'index.html')):
         logger.warning(f"在 {WEBSITE_ROOT} 目录下未找到 index.html。")
 
-    logger.info("启动 Quart 服务器...")
+    logger.info("使用 Uvicorn 启动服务器...")
     uvicorn.run(app, host='0.0.0.0', port=5000)
