@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let vadTimeout = null;
     let reconnectTimeout = null; // 用于自动重连的定时器
 
-    // --- 页面和数据初始化函数 (之前缺失的部分) ---
+    // --- 页面和数据初始化函数 ---
 
     async function fetchRecipeData(recipeId) {
         try {
@@ -414,6 +414,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (waveBtn) {
         waveBtn.addEventListener('click', toggleCommunication);
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', goToNextSubStep);
+    }
+    if (prevBtn) {
+        prevBtn.addEventListener('click', goToPrevSubStep);
     }
 
     const closeBtn = document.querySelector('.close-btn');
