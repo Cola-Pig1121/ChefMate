@@ -18,6 +18,7 @@ from faster_whisper import WhisperModel
 from quart import Quart, jsonify, request, send_from_directory, Response, websocket
 from quart_cors import cors
 from openai import AsyncOpenAI
+import uvicorn
 
 # --- 环境和配置 ---
 load_dotenv()
