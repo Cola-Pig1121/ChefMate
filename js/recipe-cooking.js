@@ -16,6 +16,23 @@ document.addEventListener('DOMContentLoaded', function () {
     let stepData = null;
     let recipeTitle = null;
 
+    // --- 语音交互状态变量 ---
+    const waveBtn = document.querySelector('.wave-btn');
+    let isCommunicating = false; // 用户意图的总开关
+    let audioContext;
+    let stream;
+    let processor;
+    let ws;
+    const SAMPLE_RATE = 16000;
+    let isAiSpeaking = false;
+    let audioQueue = [];
+    let currentAudioPlayer = null;
+    let userSpeaking = false;
+    let vadTimeout = null;
+    let reconnectTimeout = null; // 用于自动重连的定时器
+
+    // --- 页面和数据初始化函数 (之前缺失的部分) ---
+
     async function fetchRecipeData(recipeId) {
         try {
             const response = await fetch(`/api/recipes/${recipeId}`);
@@ -65,26 +82,87 @@ document.addEventListener('DOMContentLoaded', function () {
         return convertedSteps;
     }
 
-    async function initializePage() {
-        await initializeStepData();
-        if (!stepData) {
-            console.error('无法加载食谱数据');
-            return;
+    async function initializeStepData() {
+        if (recipeId) {
+            const recipeData = await fetchRecipeData(recipeId);
+            if (recipeData) {
+                recipeTitle = recipeData.title;
+                const convertedSteps = convertRecipeDataToSteps(recipeData);
+                if (convertedSteps && convertedSteps.length > 0) {
+                    stepData = convertedSteps;
+                    return;
+                }
+            }
         }
+    }
 
-        generateStepPages();
-        setRecipeImage();
+    function generateStepPages() {
+        if (!stepData) return;
 
-        setTimeout(() => {
-            updateStepDisplay();
-            updateSubStepDisplay();
-            setupScrollLimiter();
-            addTouchEvents();
-            ensureScrollToCurrentSubStep(4);
-            
-            // --- 改动：页面加载完成后自动启动语音通信 ---
-            startCommunication();
-        }, 100);
+        stepsContainer.innerHTML = '';
+        stepData.forEach((step, index) => {
+            const stepPage = document.createElement('div');
+            stepPage.className = 'step-page';
+            stepPage.id = 'step' + (index + 1);
+            if (index > 0) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'next-card-preview';
+                previewDiv.innerHTML = `
+                    <div>
+                        <h3>步骤${index + 1} / ${stepData.length}</h3>
+                        <p>${step.subtitle}</p>
+                    </div>
+                `;
+                stepPage.appendChild(previewDiv);
+            }
+            const contentHTML = `
+                <div class="recipe-content">
+                    <div class="content-wrapper">
+                        <div class="recipe-info-section">
+                            <div class="recipe-header">
+                                <div class="recipe-title">
+                                    <h1 class="recipe-name" style="font-size: 30px;">步骤${index + 1} <span class="step-total" style="opacity: 0.5;">/ ${stepData.length}</span></h1>
+                                    <div class="recipe-subtitle" style="opacity: 0.5; font-size: 20px;">${step.subtitle}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="process-flow">
+                            <div class="flow-line"></div>
+                            <div class="flow-steps">
+                                ${generateSubSteps(step.subSteps)}
+                                <div class="step-group">
+                                    <div class="step-header">
+                                        <div class="flow-dot end"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            stepPage.innerHTML += contentHTML;
+            stepsContainer.appendChild(stepPage);
+        });
+        stepPages = document.querySelectorAll('.step-page');
+        totalSteps = stepPages.length;
+    }
+
+    function generateSubSteps(subSteps) {
+        let html = '';
+        subSteps.forEach(subStep => {
+            html += `
+                <div class="step-group">
+                    <div class="step-header">
+                        <div class="flow-dot"></div>
+                        <div class="ingredient-name">${subStep.name}</div>
+                    </div>
+                    <div class="ingredient-steps">
+                        ${subStep.steps.map(step => `<div>${step}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        return html;
     }
 
     async function setRecipeImage() {
@@ -107,29 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    if (nextBtn) {
-        nextBtn.addEventListener('click', goToNextSubStep);
-    }
-    if (prevBtn) {
-        prevBtn.addEventListener('click', goToPrevSubStep);
-    }
-
-    const waveBtn = document.querySelector('.wave-btn');
-    let isCommunicating = false; // 用户意图的总开关
-    
-    // --- 语音交互状态变量 ---
-    let audioContext;
-    let stream;
-    let processor;
-    let ws;
-    const SAMPLE_RATE = 16000;
-
-    let isAiSpeaking = false;
-    let audioQueue = [];
-    let currentAudioPlayer = null;
-    let userSpeaking = false;
-    let vadTimeout = null;
-    let reconnectTimeout = null; // 用于自动重连的定时器
+    // --- 语音交互核心逻辑 ---
 
     function isNextStepIntent(text) {
         const nextStepWords = ['下一步', '继续', '往下', '下一个', '接着来', '然后呢', '接下来', '下一步是什么'];
@@ -192,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function () {
         isAiSpeaking = false;
     }
 
-    // --- 核心语音通信逻辑 ---
     function toggleCommunication() {
         if (isCommunicating) {
             stopCommunication();
@@ -201,9 +256,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- 改动：清理资源的辅助函数 ---
     function cleanupConnection() {
-        clearTimeout(reconnectTimeout); // 清除任何待处理的重连
+        clearTimeout(reconnectTimeout);
 
         if (ws) {
             ws.onopen = null;
@@ -230,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function startCommunication() {
-        // 如果正在连接或已连接，则不执行任何操作
         if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
             return;
         }
@@ -239,7 +292,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (waveBtn) waveBtn.classList.add('active');
         showStepToast('正在连接语音服务...');
 
-        // 在创建新连接前，确保旧资源已清理
         cleanupConnection();
 
         const wsUrl = `ws://${window.location.host}/ws/transcribe`;
@@ -247,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         ws.onopen = async () => {
             showStepToast('麦克风已激活，请说话');
-            clearTimeout(reconnectTimeout); // 成功连接后，清除重连定时器
+            clearTimeout(reconnectTimeout);
             try {
                 const constraints = {
                     audio: {
@@ -303,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (err) {
                 console.error('麦克风或音频上下文初始化失败:', err);
                 showStepToast('无法访问麦克风');
-                // 即使失败，也保持 isCommunicating 为 true，以便重连
                 handleDisconnection();
             }
         };
@@ -330,38 +381,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
         ws.onerror = (error) => {
             console.error('WebSocket 错误:', error);
-            // 错误时也触发重连逻辑
             handleDisconnection();
         };
 
         ws.onclose = () => {
             console.log('WebSocket 连接已关闭');
-            // 连接关闭时触发重连逻辑
             handleDisconnection();
         };
     }
 
-    // --- 改动：手动停止函数 ---
     function stopCommunication() {
         if (!isCommunicating) return;
 
-        isCommunicating = false; // 这是关键，设置总开关为关闭
+        isCommunicating = false;
         if (waveBtn) waveBtn.classList.remove('active');
         showStepToast('语音识别已停止');
 
         stopAndClearAudio();
-        cleanupConnection(); // 使用辅助函数清理所有资源
+        cleanupConnection();
     }
 
-    // --- 改动：处理断开和自动重连的函数 ---
     function handleDisconnection() {
-        cleanupConnection(); // 先清理旧的连接资源
-        // 只有在用户没有手动关闭总开关的情况下才重连
+        cleanupConnection();
         if (isCommunicating) {
             showStepToast('连接中断，正在尝试重连...');
-            reconnectTimeout = setTimeout(startCommunication, 2000); // 2秒后尝试重连
+            reconnectTimeout = setTimeout(startCommunication, 2000);
         }
     }
+
+    // --- 页面UI和交互逻辑 ---
 
     if (waveBtn) {
         waveBtn.addEventListener('click', toggleCommunication);
@@ -657,6 +705,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    // --- 页面主入口 ---
+    async function initializePage() {
+        await initializeStepData();
+        if (!stepData) {
+            console.error('无法加载食谱数据');
+            return;
+        }
+
+        generateStepPages();
+        setRecipeImage();
+
+        setTimeout(() => {
+            updateStepDisplay();
+            updateSubStepDisplay();
+            setupScrollLimiter();
+            addTouchEvents();
+            ensureScrollToCurrentSubStep(4);
+            
+            startCommunication();
+        }, 100);
     }
 
     initializePage();
