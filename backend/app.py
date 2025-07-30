@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 BASE_URL_ENV = os.getenv("BASE_URL")
 API_KEY_ENV = os.getenv("API_KEY")
 MODEL_NAME_ENV = os.getenv("MODEL_NAME", "Qwen/Qwen3-32B")
-WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "base")
+WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "medium") # 建议使用 medium 或更高
 WHISPER_DEVICE_TYPE = os.getenv("WHISPER_DEVICE", "cpu")
 SAMPLE_RATE = int(os.getenv("SAMPLE_RATE", 16000))
 VAD_MODE = int(os.getenv("VAD_MODE", 3))
@@ -151,11 +151,17 @@ class WhisperTranscriber:
             logger.error(f"Whisper 模型加载失败: {e}")
             raise
 
-    def transcribe(self, audio_data: bytes) -> Optional[str]:
+    def transcribe(self, audio_data: bytes, initial_prompt: str = "", beam_size: int = 5) -> Optional[str]:
         try:
             audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
             if len(audio_np) < SAMPLE_RATE * 0.5: return None
-            segments, _ = self.model.transcribe(audio_np, language="zh", vad_filter=True)
+            segments, _ = self.model.transcribe(
+                audio_np,
+                language="zh",
+                vad_filter=True,
+                initial_prompt=initial_prompt,
+                beam_size=beam_size
+            )
             return " ".join(s.text.strip() for s in segments)
         except Exception as e:
             logger.error(f"语音识别出错: {e}")
@@ -274,6 +280,7 @@ async def ws_transcribe():
     audio_chunk_buffer = bytearray()
     system_prompt = "你是一个友好的中文烹饪助手。请用简洁、自然的中文回答。"
     WAKE_WORD = "小厨小厨"
+    COOKING_VOCAB_PROMPT = "小厨小厨，下一步，上一步，返回，确认，完成，红烧肉，糖醋排骨，可乐鸡翅，番茄炒蛋，盐，糖，酱油，醋，料酒，姜，葱，蒜。"
 
     try:
         while True:
@@ -304,12 +311,16 @@ async def ws_transcribe():
                     speech_segment = vad.process_frame(frame)
                     
                     if speech_segment:
-                        transcribed_text = transcriber.transcribe(speech_segment)
+                        transcribed_text = transcriber.transcribe(
+                            speech_segment,
+                            initial_prompt=COOKING_VOCAB_PROMPT,
+                            beam_size=5
+                        )
                         
                         if transcribed_text and transcribed_text.strip():
                             logger.info(f"Whisper 识别到文本: '{transcribed_text}'")
                             
-                            clean_text = transcribed_text.strip().replace(",", "").replace("，", "")
+                            clean_text = transcribed_text.strip().replace(",", "").replace("，", "").replace(".", "").replace("。", "")
                             
                             if clean_text.startswith(WAKE_WORD):
                                 logger.info(f"检测到唤醒词！")
