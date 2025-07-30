@@ -266,13 +266,14 @@ async def generate_ai_response_task(user_text, system_prompt):
         logger.error(f"生成AI响应时出错: {e}")
         await websocket.send(json.dumps({"type": "error", "message": "AI is a little tired."}, ensure_ascii=False))
 
-# --- WebSocket 路由 ---
+# --- WebSocket 路由 (带唤醒词逻辑) ---
 @app.websocket('/ws/transcribe')
 async def ws_transcribe():
     vad = WebRTCVAD(sample_rate=SAMPLE_RATE, frame_duration_ms=VAD_FRAME_DURATION_MS)
     generation_task = None
     audio_chunk_buffer = bytearray()
     system_prompt = "你是一个友好的中文烹饪助手。请用简洁、自然的中文回答。"
+    WAKE_WORD = "小厨小厨"
 
     try:
         while True:
@@ -289,7 +290,7 @@ async def ws_transcribe():
                     generation_task = None
                 elif data.get("type") == "system_prompt":
                     system_prompt = data.get("prompt", system_prompt)
-                    logger.info(f"System prompt set to: {system_prompt}")
+                    logger.info(f"System prompt 已更新。")
                 continue
 
             if isinstance(message, bytes):
@@ -303,21 +304,35 @@ async def ws_transcribe():
                     speech_segment = vad.process_frame(frame)
                     
                     if speech_segment:
-                        if generation_task and not generation_task.done():
-                            logger.info("检测到新语音，打断当前AI回复。")
-                            generation_task.cancel()
-                            try: await generation_task
-                            except asyncio.CancelledError: pass
-                        
                         transcribed_text = transcriber.transcribe(speech_segment)
                         
                         if transcribed_text and transcribed_text.strip():
-                            logger.info(f"Whisper 识别结果: {transcribed_text}")
-                            await websocket.send(json.dumps({"type": "transcript", "text": transcribed_text}, ensure_ascii=False))
+                            logger.info(f"Whisper 识别到文本: '{transcribed_text}'")
                             
-                            generation_task = asyncio.create_task(
-                                generate_ai_response_task(transcribed_text, system_prompt)
-                            )
+                            clean_text = transcribed_text.strip().replace(",", "").replace("，", "")
+                            
+                            if clean_text.startswith(WAKE_WORD):
+                                logger.info(f"检测到唤醒词！")
+                                
+                                if generation_task and not generation_task.done():
+                                    logger.info("打断当前AI回复。")
+                                    generation_task.cancel()
+                                    try: await generation_task
+                                    except asyncio.CancelledError: pass
+                                
+                                command = clean_text[len(WAKE_WORD):].strip()
+                                if not command:
+                                    logger.info("只有唤醒词，没有指令，不执行操作。")
+                                    continue
+
+                                await websocket.send(json.dumps({"type": "transcript", "text": command}, ensure_ascii=False))
+                                
+                                logger.info(f"执行指令: '{command}'")
+                                generation_task = asyncio.create_task(
+                                    generate_ai_response_task(command, system_prompt)
+                                )
+                            else:
+                                logger.info("未检测到唤醒词，忽略该段语音。")
 
     except asyncio.CancelledError:
         logger.info("WebSocket 连接被客户端关闭。")
