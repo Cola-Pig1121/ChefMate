@@ -294,7 +294,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         cleanupConnection();
 
-        const wsUrl = `ws://${window.location.host}/ws/transcribe`;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/transcribe`;
         ws = new WebSocket(wsUrl);
 
         ws.onopen = async () => {
