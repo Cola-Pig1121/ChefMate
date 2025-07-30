@@ -27,8 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let isAiSpeaking = false;
     let audioQueue = [];
     let currentAudioPlayer = null;
-    let userSpeaking = false;
-    let vadTimeout = null;
     let reconnectTimeout = null; // 用于自动重连的定时器
 
     // --- 页面和数据初始化函数 ---
@@ -316,31 +314,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const source = audioContext.createMediaStreamSource(stream);
                 processor = audioContext.createScriptProcessor(4096, 1, 1);
 
-                const VAD_THRESHOLD = 0.01;
-
                 processor.onaudioprocess = (e) => {
                     if (!isCommunicating || !ws || ws.readyState !== WebSocket.OPEN) return;
 
                     const inputData = e.inputBuffer.getChannelData(0);
-                    
-                    let sum = 0;
-                    for (let i = 0; i < inputData.length; i++) { sum += inputData[i] * inputData[i]; }
-                    const rms = Math.sqrt(sum / inputData.length);
-
-                    if (rms > VAD_THRESHOLD) {
-                        if (!userSpeaking) {
-                            userSpeaking = true;
-                            if (isAiSpeaking) {
-                                console.log("用户打断AI！");
-                                stopAndClearAudio();
-                                if (ws && ws.readyState === WebSocket.OPEN) {
-                                    ws.send(JSON.stringify({ type: "interrupt" }));
-                                }
-                            }
-                        }
-                        clearTimeout(vadTimeout);
-                        vadTimeout = setTimeout(() => { userSpeaking = false; }, 1000);
-                    }
                     
                     const pcmData = new Int16Array(inputData.length);
                     for (let i = 0; i < inputData.length; i++) {
