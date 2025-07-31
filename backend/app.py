@@ -25,11 +25,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-BASE_URL_ENV = os.getenv("BASE_URL")
-API_KEY_ENV = os.getenv("API_KEY")
-MODEL_NAME_ENV = os.getenv("MODEL_NAME", "Qwen/Qwen3-32B")
-WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "medium") # 使用 medium 模型
-WHISPER_DEVICE_TYPE = os.getenv("WHISPER_DEVICE", "cpu")
+BASE_URL = os.getenv("BASE_URL")
+API_KEY = os.getenv("API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen-plus")
+WHISPER_MODEL = os.getenv("WHISPER_MODEL", "medium")
+WHISPER_DEVICE = os.getenv("WHISPER_DEVICE", "cpu")
 SAMPLE_RATE = int(os.getenv("SAMPLE_RATE", 16000))
 VAD_MODE = int(os.getenv("VAD_MODE", 3))
 VAD_FRAME_DURATION_MS = int(os.getenv("VAD_FRAME_DURATION_MS", 30))
@@ -169,7 +169,7 @@ class WhisperTranscriber:
 
 class StreamingConversationManager:
     def __init__(self):
-        self.client = AsyncOpenAI(base_url=BASE_URL_ENV, api_key=API_KEY_ENV)
+        self.client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
         self.conversation_history = []
 
     async def get_streaming_response(self, user_text: str, system_prompt: str) -> AsyncGenerator[str, None]:
@@ -178,7 +178,7 @@ class StreamingConversationManager:
             if len(self.conversation_history) > 10: self.conversation_history = self.conversation_history[-8:]
             messages = [{"role": "system", "content": system_prompt}] + self.conversation_history
             stream = await self.client.chat.completions.create(
-                model=MODEL_NAME_ENV, messages=messages, temperature=0.7, max_tokens=150, stream=True
+                model=MODEL_NAME, messages=messages, temperature=0.7, max_tokens=150, stream=True
             )
             full_response = ""
             async for chunk in stream:
@@ -251,7 +251,7 @@ app.config["JSON_AS_ASCII"] = False
 app = cors(app, allow_origin="*")
 
 audio_manager = AudioFileManager()
-transcriber = WhisperTranscriber(model_size=WHISPER_MODEL_SIZE, device=WHISPER_DEVICE_TYPE)
+transcriber = WhisperTranscriber(model_size=WHISPER_MODEL, device=WHISPER_DEVICE)
 
 # --- 辅助函数：生成AI回复和TTS音频的可取消任务 ---
 async def generate_ai_response_task(user_text, system_prompt):
@@ -417,7 +417,7 @@ async def shutdown():
 
 # --- 使用 Uvicorn 启动服务器 ---
 if __name__ == '__main__':
-    if not API_KEY_ENV or not BASE_URL_ENV:
+    if not API_KEY or not BASE_URL:
         logger.warning("环境变量 API_KEY 或 BASE_URL 未设置。")
     if not os.path.exists(os.path.join(WEBSITE_ROOT, 'index.html')):
         logger.warning(f"在 {WEBSITE_ROOT} 目录下未找到 index.html。")
