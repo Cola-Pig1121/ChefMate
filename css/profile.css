@@ -1,0 +1,168 @@
+/* 个人中心专用样式 */
+
+/* 个人信息区域 */
+.profile-container {
+    background-color: #fafafa;
+    border-radius: 25px;
+    padding: 20px;
+    /* margin-bottom由统一样式控制 */
+}
+
+.profile-info-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.profile-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 32.5px;
+    overflow: hidden;
+    background: #f2f2f2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-info {
+    flex-grow: 1;
+    padding-left: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.profile-name {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.profile-email {
+    font-size: 14px;
+    color: #999;
+}
+
+.edit-profile {
+    background: #ffa242;
+    color: white;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 14px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(255, 162, 66, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.edit-profile:active {
+    background-color: #ff9020;
+    box-shadow: 0 1px 4px rgba(255, 162, 66, 0.3);
+}
+
+/* 打卡记录部分 */
+.profile-section {
+    background-color: #fafafa;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+/* 功能菜单列表样式 */
+.menu-list {
+    background-color: #fafafa;
+    border-radius: 15px;
+    margin: 15px 0;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+.menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 2px 0;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover {
+    background-color: #f9f9f9;
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item:hover .menu-text {
+    color: #FFA242;
+}
+
+.menu-item:hover .menu-arrow {
+    color: #FFA242;
+    transform: translateX(3px);
+}
+
+.menu-text {
+    font-size: 16px;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.menu-arrow {
+    color: #ccc;
+    font-size: 22px;
+    font-weight: 300;
+    transition: all 0.3s ease;
+}
+
+.menu-item:active {
+    background-color: #f5f5f5;
+    transform: translateX(2px);
+}
+
+/* 这里可以添加未来可能需要的其他样式 */
+
+/* 增加一些额外的菜单样式 */
+.menu-list + .menu-list {
+    margin-top: 20px;
+}
+
+.menu-item-highlight {
+    color: #ffa242;
+}
+
+.menu-item-badge {
+    background-color: #ff5252;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+/* 版本号样式 */
+.version-info {
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    margin-top: 30px;
+    padding-bottom: 20px;
+} 

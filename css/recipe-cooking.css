@@ -1,0 +1,431 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #fff;
+}
+
+.app-container {
+    max-width: 394px;
+    margin: 0 auto;
+    height: 100vh;
+    position: relative;
+    background: #fff;
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 固定背景图片 */
+.recipe-hero {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 394px;
+    height: 280px; /* 减小高度为卡牌留出空间 */
+    overflow: hidden;
+    z-index: 1;
+    /* 背景图片将由JavaScript动态设置 */
+    background-size: cover;
+    background-position: center;
+    transition: height 0.3s ease;
+}
+
+.recipe-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-size: cover;
+    background-position: center;
+}
+
+/* 步骤卡牌容器 */
+.steps-container {
+    position: relative;
+    height: 100vh;
+    overflow-y: auto; /* 允许整个容器滚动 */
+    -webkit-overflow-scrolling: touch; /* iOS滚动优化 */
+    z-index: 2;
+    padding-top: 200px; /* 为背景图片留出空间 */
+    padding-bottom: 100px; /* 为底部操作栏留出空间 */
+}
+
+/* 步骤卡牌样式 */
+.step-page {
+    position: absolute;
+    top: 200px; /* 设置基础top位置 */
+    left: 0;
+    width: 100%;
+    min-height: calc(100vh - 300px); /* 调整最小高度，为底部操作栏留出空间 */
+    background: transparent;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform-origin: center bottom;
+    z-index: 1;
+    overflow: visible; /* 允许内容超出 */
+    transform: translateY(100%) scale(0.8); /* 默认隐藏状态 */
+    opacity: 0;
+}
+
+/* 当前卡牌 */
+.step-page.current {
+    z-index: 10;
+    transform: translateY(0);
+    opacity: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 下一张卡牌 */
+.step-page.next {
+    z-index: 5;
+    transform: translateY(60px);
+    opacity: 1;
+}
+
+/* 完成的卡牌（堆叠效果） */
+.step-page.completed {
+    z-index: 1;
+    transform: translateY(-15px);
+    opacity: 0.8;
+}
+
+/* 隐藏的卡牌 */
+.step-page.hidden {
+    z-index: 0;
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+/* 卡牌内容 */
+.recipe-content {
+    position: relative;
+    background: #fff;
+    border-radius: 25px 25px 0 0; /* 只保留顶部圆角 */
+    min-height: calc(100vh - 300px); /* 调整最小高度 */
+    z-index: 2;
+    padding: 0;
+    margin: 0; /* 移除左右边距 */
+    /* box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.15);  去除卡片下部阴影 */
+    overflow: visible; /* 移除滚动，让内容自然展开 */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.content-wrapper {
+    padding: 25px 25px 30px 25px; /* 减少底部内边距 */
+}
+
+/* 卡牌标题区域 */
+.recipe-header {
+    margin-bottom: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.recipe-title {
+    margin-bottom: 0;
+}
+
+.recipe-name {
+    font-size: 28px !important;
+    margin-bottom: 5px;
+}
+
+.recipe-subtitle {
+    font-size: 18px !important;
+    opacity: 0.6;
+}
+
+/* 下一张卡牌标题预览 - 完全隐藏 */
+.next-card-preview {
+    display: none !important; /* 强制隐藏预览组件 */
+}
+
+/* 移除原有的下一步预览相关样式 */
+.next-step-preview {
+    display: none;
+}
+
+/* 完成的卡牌标题样式 */
+.step-page.completed .recipe-content {
+    opacity: 0.7;
+}
+
+.step-page.completed .recipe-name {
+    color: #57B400;
+}
+
+/* 流程区样式 */
+.process-flow {
+    position: relative;
+    margin: 20px 0 0 0;
+}
+
+.flow-steps {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.flow-steps::before {
+    content: '';
+    position: absolute;
+    left: 9px; /* 圆点中心-线宽/2 */
+    top: 24px;
+    width: 6px;
+    height: calc(100% - 48px);
+    background: #E0E0E0;
+    z-index: 0;
+}
+
+/* 删除每个点的短线伪元素 */
+/*
+.step-header {
+    position: relative;
+}
+.flow-dot::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 40px;
+    background: #E0E0E0;
+    z-index: 0;
+}
+.flow-dot.end::after {
+    display: none;
+}
+*/
+
+.step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px; /* 增加底部间距 */
+    min-height: 40px; /* 确保头部有足够高度 */
+}
+
+.flow-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #FFA726;
+    margin-right: 18px;
+    z-index: 1;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* 当前小步骤的绿色小点 */
+.flow-dot.active {
+    background: #4CAF50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    transform: scale(1.1);
+}
+
+/* 已完成的小步骤对勾 */
+.flow-dot.completed {
+    background: #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+}
+
+.flow-dot.completed svg {
+    width: 12px;
+    height: 12px;
+}
+
+.flow-dot.end {
+    background: #FF5252;
+}
+
+.ingredient-name {
+    font-weight: bold;
+    font-size: 25px;
+    line-height: 1.2; /* 增加行高 */
+    transition: color 0.3s ease;
+    min-height: 30px; /* 确保名称有足够高度 */
+    display: flex;
+    align-items: center;
+}
+
+/* 当前小步骤的食材名称高亮 */
+.step-group.current-substep .ingredient-name {
+    color: #FF6F00;
+    font-size: 28px; /* 当前步骤名称稍大 */
+}
+
+.ingredient-steps {
+    padding-left: 42px;
+    color: #333;
+    font-size: 20px;
+    line-height: 1.8; /* 增加行高 */
+    transition: opacity 0.3s ease;
+    min-height: 80px; /* 确保操作步骤有足够高度 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 当前小步骤的操作步骤高亮 */
+.step-group.current-substep .ingredient-steps {
+    opacity: 1;
+    color: #333;
+    font-size: 22px; /* 当前步骤文字稍大 */
+}
+
+/* 非当前小步骤的操作步骤淡化 */
+.step-group:not(.current-substep) .ingredient-steps {
+    opacity: 0.6;
+}
+
+/* 底部操作栏 */
+.bottom-action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 394px;
+    padding: 25px;
+    background: linear-gradient(0deg,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0.8) 60%,
+        rgba(255, 255, 255, 0.6) 80%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    z-index: 100;
+}
+
+.start-cooking-btn {
+    width: 100%;
+    height: 60px;
+    border: none;
+    border-radius: 50px;
+    background: #FFA242;
+    color: #fff;
+    font-size: 25px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 底部操作栏按钮样式 */
+.bottom-action-bar.flex-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.bar-btn {
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.bar-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.bar-btn svg {
+    pointer-events: none;
+}
+
+.wave-btn {
+    width: 80px;
+    height: 60px;
+    border-radius: 30px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wave-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.wave-btn svg {
+    pointer-events: none;
+}
+
+/* 沟通状态按钮动画样式 */
+.wave-btn {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.wave-btn svg rect {
+    fill: #FFA242;
+    transition: all 0.3s ease;
+}
+
+.wave-btn.active svg rect {
+    fill: #4CAF50;
+    animation: wave 1.5s infinite;
+}
+
+.wave-btn.active::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 2px solid rgba(76, 175, 80, 0.5);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes wave {
+    0%, 100% {
+        height: 8px;
+        y: 12px;
+    }
+    50% {
+        height: 16px;
+        y: 4px;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    70% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}

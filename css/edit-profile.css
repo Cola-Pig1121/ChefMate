@@ -1,0 +1,280 @@
+/* 编辑资料页面样式 */
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 25px;
+}
+
+.action-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+.save-btn {
+    background: #FFA242;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    width: auto;
+    padding: 0 20px;
+}
+
+.save-btn:active {
+    background: #ff9020;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: #000;
+}
+
+.main-content {
+    padding: 20px 25px 40px 25px;
+}
+
+/* 头像编辑区域 */
+.avatar-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.avatar-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 10px;
+    cursor: pointer;
+}
+
+.avatar-container img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50px;
+    object-fit: cover;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    background: #FFA242;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-overlay img {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) invert(1);
+}
+
+.avatar-hint {
+    font-size: 14px;
+    color: #999;
+}
+
+/* 表单样式 */
+.profile-form {
+    max-width: 100%;
+}
+
+.form-section {
+    background: #fafafa;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.form-section h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #000;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #fff;
+    transition: border-color 0.3s ease;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #FFA242;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+    max-height: 120px;
+}
+
+.char-count {
+    position: absolute;
+    bottom: 8px;
+    right: 15px;
+    font-size: 12px;
+    color: #999;
+    background: #fff;
+    padding: 2px 4px;
+}
+
+/* 偏好设置样式 */
+.preference-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.preference-item {
+    position: relative;
+}
+
+.preference-item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 400;
+    margin-bottom: 0;
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    transition: background-color 0.3s ease;
+}
+
+.preference-item label:hover {
+    background: #f8f8f8;
+}
+
+.preference-item input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.preference-item input[type="checkbox"]:checked + .checkmark {
+    background: #FFA242;
+    border-color: #FFA242;
+}
+
+.preference-item input[type="checkbox"]:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* 响应式调整 */
+@media (max-width: 400px) {
+    .preference-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .main-content {
+        padding: 20px 20px 40px 20px;
+    }
+}
+
+/* 加载状态 */
+.save-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.save-btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 成功提示 */
+.success-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-size: 16px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.success-message.show {
+    opacity: 1;
+}

@@ -1,0 +1,10 @@
+flask
+flask_cors
+flask_socketio
+python-dotenv
+openai
+faster-whisper
+pyaudio
+numpy
+edge-tts
+eventlet

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购菜篮 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/shopping-basket.css">
+
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部导航栏 -->
+            <div class="top-bar">
+                <div class="user-avatar">
+                    <img src="images/logo.svg" alt="用户头像">
+                </div>
+                <div class="notification-icon">
+                    <img src="images/notification.svg" alt="通知">
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <!-- 页面标题 -->
+                <div class="welcome-section">
+                    <div class="page-header">
+                        <h1>购菜篮</h1>
+                        <button class="select-all-btn" id="selectAllBtn">
+                            <span class="select-all-text">全选</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 购物清单区域 -->
+                <div class="basket-container">
+                    <!-- 分类标签 - 可左右滑动 -->
+                    <div class="category-tabs-container">
+                        <div class="category-tabs">
+                            <div class="tab active" data-category="all">全部</div>
+                            <div class="tab" data-category="vegetables">蔬菜</div>
+                            <div class="tab" data-category="meat">肉类</div>
+                            <div class="tab" data-category="seasoning">调料</div>
+                            <div class="tab" data-category="fruits">水果</div>
+                            <div class="tab" data-category="dairy">乳制品</div>
+                            <div class="tab" data-category="grains">谷物</div>
+                            <div class="tab" data-category="seafood">海鲜</div>
+                        </div>
+                    </div>
+
+                    <!-- 购物清单 - 可上下滚动 -->
+                    <div class="shopping-list-container">
+                        <div class="shopping-list">
+                            <div class="shopping-item" data-category="vegetables">
+                                <div class="item-check">
+                                    <input type="checkbox" id="item1">
+                                    <label for="item1"></label>
+                                </div>
+                                <div class="item-info">
+                                    <h3>番茄</h3>
+                                    <p>500g，中等大小</p>
+                                </div>
+                                <div class="item-quantity">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity">2</span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <div class="item-favorite">
+                                    <button class="favorite-btn" data-id="item1">
+                                        <img src="images/heart-empty.svg" alt="收藏">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="shopping-item" data-category="fruits">
+                                <div class="item-check">
+                                    <input type="checkbox" id="item2">
+                                    <label for="item2"></label>
+                                </div>
+                                <div class="item-info">
+                                    <h3>牛油果</h3>
+                                    <p>1个，熟透的</p>
+                                </div>
+                                <div class="item-quantity">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity">2</span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <div class="item-favorite">
+                                    <button class="favorite-btn" data-id="item2">
+                                        <img src="images/heart-empty.svg" alt="收藏">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="shopping-item" data-category="meat">
+                                <div class="item-check">
+                                    <input type="checkbox" id="item3">
+                                    <label for="item3"></label>
+                                </div>
+                                <div class="item-info">
+                                    <h3>排骨</h3>
+                                    <p>500g，新鲜</p>
+                                </div>
+                                <div class="item-quantity">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity">1</span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <div class="item-favorite">
+                                    <button class="favorite-btn" data-id="item3">
+                                        <img src="images/heart-empty.svg" alt="收藏">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="shopping-item" data-category="seasoning">
+                                <div class="item-check">
+                                    <input type="checkbox" id="item4">
+                                    <label for="item4"></label>
+                                </div>
+                                <div class="item-info">
+                                    <h3>醋</h3>
+                                    <p>100ml，米醋</p>
+                                </div>
+                                <div class="item-quantity">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity">1</span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <div class="item-favorite">
+                                    <button class="favorite-btn" data-id="item4">
+                                        <img src="images/heart-empty.svg" alt="收藏">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="shopping-item" data-category="seasoning">
+                                <div class="item-check">
+                                    <input type="checkbox" id="item5">
+                                    <label for="item5"></label>
+                                </div>
+                                <div class="item-info">
+                                    <h3>白砂糖</h3>
+                                    <p>250g</p>
+                                </div>
+                                <div class="item-quantity">
+                                    <button class="quantity-btn minus">-</button>
+                                    <span class="quantity">1</span>
+                                    <button class="quantity-btn plus">+</button>
+                                </div>
+                                <div class="item-favorite">
+                                    <button class="favorite-btn" data-id="item5">
+                                        <img src="images/heart-empty.svg" alt="收藏">
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 添加物品按钮 -->
+                        <div class="add-item-button">
+                            <div class="add-icon">+</div>
+                            <span>添加食材</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-buttons">
+                    <button class="action-btn clear-btn">清空已选</button>
+                    <button class="action-btn share-btn">分享清单</button>
+                </div>
+            </div>
+
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='home.html'">
+                    <img src="images/首页_home-two (1).svg" alt="主页">
+                </div>
+                <div class="nav-item active" onclick="window.location.href='shopping-basket.html'">
+                    <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
+                </div>
+                <div class="nav-item" onclick="window.location.href='profile.html'">
+                    <img src="images/人员_people.svg" alt="个人">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/script.js"></script>
+    <script src="js/shopping-basket.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜谱详情 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/recipe-detail.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <div class="recipe-detail">
+                <!-- 顶部图片区域 -->
+                <div class="recipe-hero">
+                    <div class="recipe-image"></div>
+                    <div class="top-actions">
+                        <div class="action-btn back-btn">
+                            <img src="images/back.svg" alt="返回">
+                        </div>
+                        <div class="action-buttons-right">
+                            <div class="action-btn favorite-btn" id="favoriteBtn">
+                                <img src="images/heart.svg" alt="收藏">
+                            </div>
+                            <div class="action-btn share-btn">
+                                <img src="images/share.svg" alt="分享">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容区域 -->
+                <div class="recipe-content">
+                    <div class="content-wrapper">
+                        <!-- 基本信息 -->
+                <div class="recipe-info-section">
+                    <div class="recipe-header">
+                        <div class="recipe-title">
+                            <div class="recipe-category"></div>
+                            <h1 class="recipe-name"></h1>
+                        </div>
+                        <div class="recipe-stats">
+                            <div class="stat-item">
+                                <img src="images/time.svg" alt="时间">
+                                <span></span>
+                            </div>
+                            <div class="stat-item">
+                                <img src="images/likes.svg" alt="点赞">
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                        <!-- 备菜清单 -->
+                        <div class="ingredients-section">
+                            <h2>备菜清单</h2>
+                            <div class="ingredients-group">
+                                <h3>主料</h3>
+                                <ul>
+                                    <!-- 主料将通过JavaScript动态生成 -->
+                                </ul>
+                            </div>
+                            <div class="ingredients-group">
+                                <h3>辅料</h3>
+                                <ul>
+                                    <!-- 辅料将通过JavaScript动态生成 -->
+                                </ul>
+                            </div>
+                            <div class="shopping-actions">
+                                <button class="add-to-cart-btn">添加到购菜篮</button>
+                                <div class="portion-control">
+                                    <button class="portion-btn decrease">-</button>
+                                    <span class="portion-count">1份</span>
+                                    <button class="portion-btn increase">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 步骤概览 -->
+                        <div class="steps-section">
+                            <h2>步骤概览</h2>
+                            <!-- 步骤将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部操作栏 -->
+                <div class="bottom-action-bar">
+                    <button class="start-cooking-btn" id="startCookingBtn">开始AI辅助烹饪</button>
+                </div>
+                
+            </div>
+            
+            <!-- 底部导航栏 -->
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="window.location.href='home.html'">
+                    <img src="images/首页_home-two (1).svg" alt="主页">
+                </div>
+                <div class="nav-item" onclick="window.location.href='shopping-basket.html'">
+                    <img src="images/菜篮子_vegetable-basket.svg" alt="购菜篮">
+                </div>
+                <div class="nav-item" onclick="window.location.href='profile.html'">
+                    <img src="images/人员_people.svg" alt="个人">
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/recipe-detail.js"></script>
+    <script>
+// 获取URL参数
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// 开始烹饪按钮事件处理
+var btn = document.getElementById('startCookingBtn');
+if(btn) {
+    btn.onclick = function(){
+        // 获取食谱ID参数
+        const recipeId = getQueryParam('id');
+        const recipeType = getQueryParam('recipe') || 'salad';
+        const recipeName = getQueryParam('name') || '';
+        
+        // 如果有ID参数，优先使用ID
+        if (recipeId) {
+            window.location.href = 'recipe-cooking.html?id=' + encodeURIComponent(recipeId);
+        } else {
+            // 向后兼容：使用原来的参数
+            window.location.href = 'recipe-cooking.html?recipe=' + encodeURIComponent(recipeType) + '&from=' + encodeURIComponent(recipeType) + (recipeName ? '&name=' + encodeURIComponent(recipeName) : '');
+        }
+    };
+}
+</script>
+</body>
+</html>

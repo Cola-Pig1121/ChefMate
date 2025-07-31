@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefMate - 智能对话食谱iOS应用原型</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Helvetica, sans-serif;
+        background-color: #f5f5f7;
+        color: #333;
+        padding: 0;
+        margin: 0;
+      }
+
+      .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 60px;
+        min-height: 100vh;
+      }
+
+      .project-header {
+        text-align: center;
+        margin-bottom: 60px;
+        padding: 30px 0;
+      }
+
+      .project-header h1 {
+        font-size: clamp(32px, 6vw, 64px);
+        margin-bottom: 20px;
+        color: #000;
+        font-weight: 700;
+      }
+
+      .project-header p {
+        font-size: clamp(20px, 4vw, 32px);
+        color: #666;
+        max-width: 900px;
+        margin: 0 auto;
+        line-height: 1.4;
+      }
+
+      .screens-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 40px;
+      }
+
+      .screen-label {
+        font-size: clamp(24px, 5vw, 36px);
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #000;
+      }
+
+      .screen-description {
+        font-size: clamp(18px, 4vw, 26px);
+        color: #666;
+        margin-bottom: 30px;
+        text-align: center;
+        max-width: 600px;
+        line-height: 1.5;
+      }
+
+      .screen-frame {
+        width: 100%;
+        max-width: 800px;
+        height: 85vh;
+        min-height: 700px;
+        background: #fff;
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        border: 2px solid #ddd;
+      }
+
+      .iframe-container {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .mockup-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        height: 36px;
+        background: #000;
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px;
+        z-index: 10;
+      }
+
+      .mockup-home-indicator {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 160px;
+        height: 6px;
+        background: #000;
+        border-radius: 6px;
+        z-index: 10;
+      }
+
+      @media (max-width: 1024px) {
+        .main-container {
+          padding: 30px 40px;
+        }
+
+        .screen-frame {
+          max-width: 700px;
+          height: 80vh;
+          min-height: 650px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 20px 30px;
+        }
+
+        .screen-frame {
+          max-width: 600px;
+          height: 75vh;
+          min-height: 600px;
+          border-radius: 30px;
+        }
+
+        .project-header {
+          margin-bottom: 40px;
+          padding: 20px 0;
+        }
+
+        .mockup-notch {
+          width: 160px;
+          height: 28px;
+          border-bottom-left-radius: 14px;
+          border-bottom-right-radius: 14px;
+        }
+
+        .mockup-home-indicator {
+          width: 120px;
+          height: 5px;
+          bottom: 10px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .main-container {
+          padding: 15px 20px;
+        }
+
+        .screen-frame {
+          height: 70vh;
+          min-height: 500px;
+          border-radius: 25px;
+        }
+
+        .mockup-notch {
+          width: 140px;
+          height: 24px;
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 12px;
+        }
+
+        .mockup-home-indicator {
+          width: 100px;
+          height: 4px;
+          bottom: 8px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <div class="project-header">
+        <h1>ChefMate 智能对话食谱应用</h1>
+        <p>基于iOS设计规范的高保真原型，展示智能对话食谱应用的主页界面</p>
+      </div>
+
+      <div class="screens-container">
+        <!-- 主页 -->
+        <div class="screen">
+          <div class="screen-label">
+            <a href="home.html" style="text-decoration: none; color: #000"
+              >主页</a
+            >
+          </div>
+          <div class="screen-description">
+            展示连胜纪录和推荐食谱，集合搜索功能
+          </div>
+          <div class="screen-frame">
+            <div class="mockup-notch"></div>
+            <div class="iframe-container">
+              <iframe src="home.html" title="主页"></iframe>
+            </div>
+            <div class="mockup-home-indicator"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

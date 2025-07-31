@@ -1,0 +1,674 @@
+/* 购菜篮页面样式 */
+
+/* 页面标题区域 */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+.select-all-btn {
+    background: #FFA242;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.select-all-btn:active {
+    background: #ff9020;
+    transform: scale(0.95);
+}
+
+.select-all-btn.deselect {
+    background: #666;
+}
+
+.select-all-btn.deselect:active {
+    background: #555;
+}
+
+/* 底部导航栏购物车图标动画 */
+.bottom-nav .nav-item.active img {
+    filter: drop-shadow(0 2px 8px #FFA242) brightness(1.2);
+    animation: bounce 1s ease-in-out;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* 分类标签容器 */
+.category-tabs-container {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* 分类标签 - 可左右滑动 */
+.category-tabs {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+    gap: 10px;
+    /* 确保PC端也能滚动 */
+    scroll-behavior: smooth;
+}
+
+/* PC端鼠标滚轮支持 */
+@media (hover: hover) {
+    .category-tabs {
+        overflow-x: scroll;
+    }
+}
+
+.category-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.category-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.category-tabs::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 2px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
+}
+
+.tab {
+    padding: 10px 20px;
+    background-color: #f5f5f5;
+    border-radius: 20px;
+    font-size: 14px;
+    white-space: nowrap;
+    color: #666;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+    min-width: fit-content;
+    position: relative;
+}
+
+.tab.active {
+    background-color: #ffa242;
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 162, 66, 0.3);
+}
+
+.tab:not(.add-category-tab):not([data-category="all"]):hover .delete-category {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.delete-category {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 18px;
+    height: 18px;
+    background: #ff5252;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.delete-category:hover {
+    background: #ff3030;
+    transform: scale(1.1);
+}
+
+/* 移动端长按显示删除按钮 */
+@media (hover: none) {
+    .tab:not(.add-category-tab):not([data-category="all"]).show-delete .delete-category {
+        opacity: 1;
+        pointer-events: all;
+    }
+}
+
+/* 购物清单容器 */
+.basket-container {
+    background-color: #fafafa;
+    border-radius: 25px;
+    padding: 20px;
+    /* margin-bottom由统一样式控制 */
+}
+
+/* 购物清单滚动容器 */
+.shopping-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+}
+
+.shopping-list-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.shopping-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.shopping-list-container::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 2px;
+}
+
+.shopping-list-container::-webkit-scrollbar-thumb:hover {
+    background: #bbb;
+}
+
+/* 购物项目 */
+.shopping-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.shopping-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.shopping-item.slide-left {
+    transform: translateX(-80px);
+    background-color: #ffe5d6;
+}
+
+.shopping-item.slide-left::after {
+    content: '删除';
+    position: absolute;
+    right: -80px;
+    top: 0;
+    width: 80px;
+    height: 100%;
+    background-color: #ff5252;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+/* 复选框样式 */
+.item-check {
+    margin-right: 15px;
+}
+
+.item-check input[type="checkbox"] {
+    display: none;
+}
+
+.item-check label {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.item-check input[type="checkbox"]:checked + label {
+    background-color: #ffa242;
+    border-color: #ffa242;
+}
+
+.item-check input[type="checkbox"]:checked + label:after {
+    content: '✓';
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+}
+
+/* 项目信息 */
+.item-info {
+    flex: 1;
+}
+
+.item-info h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+    font-weight: 400;
+}
+
+.item-info p {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 数量控制 */
+.item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 收藏按钮 */
+.item-favorite {
+    margin-left: 10px;
+}
+
+.favorite-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn:hover {
+    background: rgba(255, 162, 66, 0.1);
+}
+
+.favorite-btn:active {
+    transform: scale(0.9);
+}
+
+.favorite-btn img {
+    width: 20px;
+    height: 20px;
+    transition: all 0.3s ease;
+}
+
+.favorite-btn.favorited img {
+    filter: hue-rotate(320deg) saturate(2) brightness(1.2);
+}
+
+.favorite-btn.favorited {
+    animation: heartBeat 0.6s ease-in-out;
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* 空购菜篮状态 */
+.empty-basket-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.empty-basket-state .empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-basket-state .empty-text h3 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.empty-basket-state .empty-text p {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+}
+
+.quantity-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    border: none;
+    background-color: #f0f0f0;
+    color: #666;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quantity-btn:hover, .quantity-btn:active {
+    background-color: #e0e0e0;
+}
+
+.quantity {
+    font-size: 16px;
+    font-weight: 500;
+    width: 20px;
+    text-align: center;
+}
+
+/* 添加物品按钮 */
+.add-item-button {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 15px;
+    margin-top: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-item-button:active {
+    background-color: #f5f5f5;
+}
+
+.add-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background-color: #ffa242;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-right: 15px;
+}
+
+.add-item-button span {
+    font-size: 16px;
+    color: #666;
+}
+
+/* 操作按钮 */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clear-btn {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+.clear-btn:active {
+    background-color: #e0e0e0;
+}
+
+.share-btn {
+    background-color: #ffa242;
+    color: white;
+    box-shadow: 0 4px 10px rgba(255, 162, 66, 0.3);
+}
+
+.share-btn:active {
+    background-color: #ff9020;
+    box-shadow: 0 2px 5px rgba(255, 162, 66, 0.3);
+} 
+/* 添加食材弹
+窗样式 */
+.add-item-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 350px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 0 20px;
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+    color: #333;
+}
+
+.modal-close {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 15px;
+    font-size: 18px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:active {
+    background: #e0e0e0;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #f0f0f0;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #fafafa;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #FFA242;
+    background: white;
+}
+
+.size-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.size-option {
+    flex: 1;
+    min-width: 60px;
+    cursor: pointer;
+}
+
+.size-option input[type="radio"] {
+    display: none;
+}
+
+.size-option span {
+    display: block;
+    padding: 8px 12px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s ease;
+}
+
+.size-option input[type="radio"]:checked + span {
+    background: #FFA242;
+    color: white;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 20px 20px;
+}
+
+.btn-cancel,
+.btn-confirm {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.btn-cancel:active {
+    background: #e0e0e0;
+}
+
+.btn-confirm {
+    background: #FFA242;
+    color: white;
+}
+
+.btn-confirm:active {
+    background: #ff9020;
+}/* 添
+加分类按钮样式 */
+.add-category-tab {
+    background: #f0f0f0 !important;
+    color: #666 !important;
+    border: 2px dashed #ddd !important;
+    font-size: 13px !important;
+}
+
+.add-category-tab:hover {
+    background: #e8e8e8 !important;
+    border-color: #FFA242 !important;
+    color: #FFA242 !important;
+}/* 添加分类按钮样式
+ */
+.add-category-tab {
+    background: linear-gradient(135deg, #FFA242, #ff9020) !important;
+    color: white !important;
+    font-weight: 500;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.add-category-tab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 162, 66, 0.3);
+}
+
+.add-category-tab:active {
+    transform: scale(0.95);
+}

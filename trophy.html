@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连胜纪录 - ChefMate</title>
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .trophy-container {
+            padding: 80px 25px 120px 25px;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .trophy-card {
+            background: #fafafa;
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .trophy-title {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .trophy-icon {
+            width: 35px;
+            height: 35px;
+            background: #FFA242;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .streak-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .calendar-day.completed {
+            background: #FFA242;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid #FFA242;
+            color: #FFA242;
+        }
+        
+        .streak-progress {
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            width: 100%;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #FFA242;
+            border-radius: 5px;
+        }
+        
+        .streak-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #FFA242;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: 5px;
+        }
+        
+        .achievements {
+            margin-top: 30px;
+        }
+        
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .achievement-item:last-child {
+            border-bottom: none;
+        }
+        
+        .achievement-icon {
+            width: 45px;
+            height: 45px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .achievement-icon.unlocked {
+            background: #FFA242;
+            color: white;
+        }
+        
+        .achievement-info {
+            flex: 1;
+        }
+        
+        .achievement-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .achievement-desc {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: 2px;
+        }
+        
+        .achievement-progress {
+            font-size: 14px;
+            color: #FFA242;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-frame">
+            <!-- 顶部搜索栏 -->
+            <div class="top-bar">
+                <div class="user-avatar" onclick="window.location.href='home.html'">
+                    <img src="images/back.svg" alt="返回">
+                </div>
+                <div class="search-bar">
+                    <span class="search-placeholder">连胜纪录</span>
+                </div>
+                <div class="notification-icon">
+                    <img src="images/share.svg" alt="分享">
+                </div>
+            </div>
+
+            <!-- 主要内容区 -->
+            <div class="main-content">
+                <div class="trophy-container">
+                    <div class="header">
+                        <h1 id="headerTitle">你的烹饪连胜记录</h1>
+                        <p id="headerSubtitle">连续烹饪可以获得成就和奖励</p>
+                    </div>
+                    
+                    <!-- 完成祝贺消息 -->
+                    <div id="completionMessage" style="display: none; background: linear-gradient(135deg, #FFA242, #ff9020); color: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">🎉</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;" id="completionTitle">恭喜完成烹饪！</div>
+                        <div style="font-size: 14px; opacity: 0.9;" id="completionSubtitle">你的做菜技能又提升了</div>
+                    </div>
+                    
+                    <div class="trophy-card">
+                        <div class="trophy-title">
+                            <div class="trophy-icon" id="currentStreakIcon">0</div>
+                            <span>当前连胜</span>
+                        </div>
+                        
+                        <div class="streak-calendar" id="streakCalendar">
+                            <!-- 日历将由JavaScript动态生成 -->
+                        </div>
+                        
+                        <div class="streak-progress">
+                            <div id="progressText">距离连胜成就：7天连胜</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                            <div style="text-align: right;" id="progressCount">0/7天</div>
+                        </div>
+                        
+                        <div class="streak-stats">
+                            <div class="stat-block">
+                                <div class="stat-value" id="currentStreakStat">0</div>
+                                <div class="stat-label">当前连胜</div>
+                            </div>
+                            <div class="stat-block">
+                                <div class="stat-value" id="totalCookingStat">0</div>
+                                <div class="stat-label">总烹饪次数</div>
+                            </div>
+                            <div class="stat-block">
+                                <div class="stat-value" id="longestStreakStat">0</div>
+                                <div class="stat-label">最长连胜</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否刚完成烹饪
+            checkForRecentCompletion();
+            loadTrophyData();
+        });
+        
+        // 检查是否刚完成烹饪
+        function checkForRecentCompletion() {
+            const completedRecipes = JSON.parse(localStorage.getItem('chefmate_completed_recipes') || '[]');
+            const now = Date.now();
+            
+            // 检查最近5分钟内是否有完成的食谱
+            const recentCompletion = completedRecipes.find(recipe => {
+                return (now - recipe.timestamp) < 5 * 60 * 1000; // 5分钟内
+            });
+            
+            if (recentCompletion) {
+                showCompletionMessage(recentCompletion);
+            }
+        }
+        
+        // 显示完成消息
+        function showCompletionMessage(recipe) {
+            const messageDiv = document.getElementById('completionMessage');
+            const titleDiv = document.getElementById('completionTitle');
+            const subtitleDiv = document.getElementById('completionSubtitle');
+            
+            titleDiv.textContent = `恭喜完成《${recipe.name}》！`;
+            subtitleDiv.textContent = '你的做菜技能又提升了';
+            
+            messageDiv.style.display = 'block';
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 500);
+            }, 3000);
+        }
+        
+        // 加载奖杯页面数据
+        function loadTrophyData() {
+            const cookingFrequency = JSON.parse(localStorage.getItem('chefmate_cooking_frequency') || '{}');
+            const completedRecipes = JSON.parse(localStorage.getItem('chefmate_completed_recipes') || '[]');
+            
+            // 计算统计数据
+            const stats = calculateCookingStats(cookingFrequency);
+            
+            // 更新UI
+            updateTrophyUI(stats, cookingFrequency);
+            
+            // 生成日历
+            generateStreakCalendar(cookingFrequency, stats.currentStreak);
+        }
+        
+        // 计算做菜统计数据
+        function calculateCookingStats(cookingFrequency) {
+            const today = new Date();
+            let currentStreak = 0;
+            let longestStreak = 0;
+            let tempStreak = 0;
+            let totalCookingDays = 0;
+            let totalCookingTimes = 0;
+            
+            // 计算总做菜次数和天数
+            Object.values(cookingFrequency).forEach(count => {
+                if (count > 0) {
+                    totalCookingDays++;
+                    totalCookingTimes += count;
+                }
+            });
+            
+            // 计算当前连胜和最长连胜
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateKey = formatDateKey(date);
+                const cookingCount = cookingFrequency[dateKey] || 0;
+                
+                if (cookingCount > 0) {
+                    tempStreak++;
+                    if (i === 0) {
+                        // 如果今天有做菜，开始计算当前连胜
+                        currentStreak = tempStreak;
+                    }
+                } else {
+                    if (i === 0) {
+                        // 如果今天没做菜，当前连胜为0
+                        currentStreak = 0;
+                    } else if (currentStreak === 0) {
+                        // 如果还没开始计算当前连胜，继续寻找
+                        currentStreak = tempStreak;
+                    }
+                    longestStreak = Math.max(longestStreak, tempStreak);
+                    tempStreak = 0;
+                }
+            }
+            
+            longestStreak = Math.max(longestStreak, tempStreak);
+            
+            return {
+                currentStreak,
+                longestStreak,
+                totalCookingDays,
+                totalCookingTimes
+            };
+        }
+        
+        // 更新奖杯页面UI
+        function updateTrophyUI(stats, cookingFrequency) {
+            // 更新连胜图标和统计
+            document.getElementById('currentStreakIcon').textContent = stats.currentStreak;
+            document.getElementById('currentStreakStat').textContent = stats.currentStreak;
+            document.getElementById('totalCookingStat').textContent = stats.totalCookingTimes;
+            document.getElementById('longestStreakStat').textContent = stats.longestStreak;
+            
+            // 更新进度条
+            const nextMilestone = getNextMilestone(stats.currentStreak);
+            const progress = (stats.currentStreak / nextMilestone) * 100;
+            
+            document.getElementById('progressText').textContent = `距离连胜成就：${nextMilestone}天连胜`;
+            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('progressCount').textContent = `${stats.currentStreak}/${nextMilestone}天`;
+        }
+        
+        // 获取下一个里程碑
+        function getNextMilestone(currentStreak) {
+            const milestones = [3, 7, 14, 30, 60, 100];
+            for (let milestone of milestones) {
+                if (currentStreak < milestone) {
+                    return milestone;
+                }
+            }
+            return Math.ceil(currentStreak / 100) * 100 + 100; // 超过100后每100天一个里程碑
+        }
+        
+        // 生成连胜日历
+        function generateStreakCalendar(cookingFrequency, currentStreak) {
+            const calendar = document.getElementById('streakCalendar');
+            const today = new Date();
+            
+            // 清空现有内容
+            calendar.innerHTML = '';
+            
+            // 生成最近14天的日历
+            for (let i = 13; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateKey = formatDateKey(date);
+                const cookingCount = cookingFrequency[dateKey] || 0;
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = date.getDate();
+                
+                if (cookingCount > 0) {
+                    dayElement.classList.add('completed');
+                    if (cookingCount > 1) {
+                        // 如果做了多次，显示次数
+                        dayElement.textContent = cookingCount;
+                    }
+                }
+                
+                if (i === 0) {
+                    dayElement.classList.add('today');
+                }
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+        
+        // 格式化日期为键值（YYYY-MM-DD）
+        function formatDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    </script>
+</body>
+</html> 
