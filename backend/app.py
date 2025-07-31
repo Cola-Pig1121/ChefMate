@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 BASE_URL_ENV = os.getenv("BASE_URL")
 API_KEY_ENV = os.getenv("API_KEY")
 MODEL_NAME_ENV = os.getenv("MODEL_NAME", "Qwen/Qwen3-32B")
-WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "medium") # 建议使用 medium 或更高
+WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "medium") # 使用 medium 模型
 WHISPER_DEVICE_TYPE = os.getenv("WHISPER_DEVICE", "cpu")
 SAMPLE_RATE = int(os.getenv("SAMPLE_RATE", 16000))
 VAD_MODE = int(os.getenv("VAD_MODE", 3))
@@ -272,15 +272,15 @@ async def generate_ai_response_task(user_text, system_prompt):
         logger.error(f"生成AI响应时出错: {e}")
         await websocket.send(json.dumps({"type": "error", "message": "AI is a little tired."}, ensure_ascii=False))
 
-# --- WebSocket 路由 (带唤醒词逻辑) ---
+# --- WebSocket 路由 (带唤醒词和动态上下文逻辑) ---
 @app.websocket('/ws/transcribe')
 async def ws_transcribe():
     vad = WebRTCVAD(sample_rate=SAMPLE_RATE, frame_duration_ms=VAD_FRAME_DURATION_MS)
     generation_task = None
     audio_chunk_buffer = bytearray()
     system_prompt = "你是一个友好的中文烹饪助手。请用简洁、自然的中文回答。"
-    WAKE_WORD = "小厨小厨"
-    COOKING_VOCAB_PROMPT = "小厨小厨，下一步，上一步，返回，确认，完成，红烧肉，糖醋排骨，可乐鸡翅，番茄炒蛋，盐，糖，酱油，醋，料酒，姜，葱，蒜。"
+    WAKE_WORD = "小厨"
+    dynamic_prompt = "小厨，下一步，上一步。" # 默认提示
 
     try:
         while True:
@@ -295,6 +295,9 @@ async def ws_transcribe():
                         try: await generation_task
                         except asyncio.CancelledError: pass
                     generation_task = None
+                elif data.get("type") == "context_update":
+                    dynamic_prompt = data.get("prompt", dynamic_prompt)
+                    logger.info(f"Whisper 上下文已更新。")
                 elif data.get("type") == "system_prompt":
                     system_prompt = data.get("prompt", system_prompt)
                     logger.info(f"System prompt 已更新。")
@@ -313,7 +316,7 @@ async def ws_transcribe():
                     if speech_segment:
                         transcribed_text = transcriber.transcribe(
                             speech_segment,
-                            initial_prompt=COOKING_VOCAB_PROMPT,
+                            initial_prompt=dynamic_prompt,
                             beam_size=5
                         )
                         
