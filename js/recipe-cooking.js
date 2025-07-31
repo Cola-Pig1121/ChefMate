@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let isAiSpeaking = false;
     let audioQueue = [];
     let currentAudioPlayer = null;
+    let userSpeaking = false;
+    let vadTimeout = null;
     let reconnectTimeout = null; // 用于自动重连的定时器
 
     // --- 页面和数据初始化函数 ---
@@ -246,6 +248,26 @@ document.addEventListener('DOMContentLoaded', function () {
         isAiSpeaking = false;
     }
 
+    function sendRecipeContext() {
+        if (!ws || ws.readyState !== WebSocket.OPEN || !stepData) {
+            return;
+        }
+        let context_parts = [recipeTitle, "小厨", "下一步", "上一步"];
+        stepData.forEach(step => {
+            context_parts.push(step.subtitle);
+            step.subSteps.forEach(subStep => {
+                context_parts.push(subStep.name);
+                context_parts.push(...subStep.steps);
+            });
+        });
+        const full_prompt = context_parts.join('，');
+        ws.send(JSON.stringify({
+            type: "context_update",
+            prompt: full_prompt
+        }));
+        console.log("菜谱上下文已发送至后端。");
+    }
+
     function toggleCommunication() {
         if (isCommunicating) {
             stopCommunication();
@@ -299,6 +321,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ws.onopen = async () => {
             showStepToast('麦克风已激活，请说话');
             clearTimeout(reconnectTimeout);
+            sendRecipeContext();
             try {
                 const constraints = {
                     audio: {
@@ -316,9 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 processor.onaudioprocess = (e) => {
                     if (!isCommunicating || !ws || ws.readyState !== WebSocket.OPEN) return;
-
                     const inputData = e.inputBuffer.getChannelData(0);
-                    
                     const pcmData = new Int16Array(inputData.length);
                     for (let i = 0; i < inputData.length; i++) {
                         let s = Math.max(-1, Math.min(1, inputData[i]));
