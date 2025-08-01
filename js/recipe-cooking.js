@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let ws;
     const SAMPLE_RATE = 16000;
     let isAiSpeaking = false;
-    let audioQueue = [];
     let currentAudioPlayer = null;
     let userSpeaking = false;
     let vadTimeout = null;
@@ -209,27 +208,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function playFromQueue() {
-        if (isAiSpeaking || audioQueue.length === 0) {
-            return;
+    function playAudio(audioData) {
+        if (currentAudioPlayer) {
+            currentAudioPlayer.pause();
+            currentAudioPlayer = null;
         }
-        isAiSpeaking = true;
         
-        const audioData = audioQueue.shift();
-        showStepToast(`助手: ${audioData.text}`);
+        isAiSpeaking = true;
         currentAudioPlayer = new Audio(audioData.audio_url);
         
         currentAudioPlayer.onended = () => {
             isAiSpeaking = false;
             const filename = audioData.audio_url.split('/').pop();
             fetch(`/api/delete_audio/${filename}`, { method: 'DELETE' });
-            playFromQueue();
+            currentAudioPlayer = null;
         };
         
         currentAudioPlayer.onerror = (e) => {
             console.error('音频播放错误:', e);
             isAiSpeaking = false;
-            playFromQueue();
+            currentAudioPlayer = null;
         };
         
         currentAudioPlayer.play().catch(e => {
@@ -244,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
             currentAudioPlayer.onended = null;
             currentAudioPlayer = null;
         }
-        audioQueue = [];
         isAiSpeaking = false;
     }
 
@@ -364,13 +361,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 case 'transcript':
                     processUserTranscript(data.text);
                     break;
+                case 'full_text':
+                    // 立即显示完整的AI回复文本
+                    showStepToast(`助手: ${data.text}`, data.text.length * 2);
+                    break;
                 case 'audio':
-                    audioQueue.push(data);
-                    playFromQueue();
+                    // 不再需要队列，直接播放
+                    playAudio(data);
                     break;
                 case 'end_of_response':
                     isAiSpeaking = false;
-                    playFromQueue();
                     break;
                 case 'error':
                     showStepToast(`AI 遇到问题: ${data.message}`);
@@ -625,16 +625,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 100);
     }
 
-    function showStepToast(text) {
+    function showStepToast(text, customDuration = null) {
         const toast = document.getElementById('step-toast');
         if (!toast) return;
+        
         toast.textContent = text;
         toast.style.display = 'block';
         toast.style.opacity = '1';
+        
+        // 如果没有指定时间，根据文字长度计算（2ms每字符，最少1秒，最多10秒）
+        const duration = customDuration || Math.max(1000, Math.min(10000, text.length * 2));
+        
         setTimeout(() => {
             toast.style.opacity = '0';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
-        }, 400);
+            setTimeout(() => { 
+                toast.style.display = 'none'; 
+            }, 300); // 淡出动画时间
+        }, duration);
     }
 
     function goToNextSubStep() {

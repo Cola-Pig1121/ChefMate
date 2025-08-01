@@ -259,13 +259,41 @@ async def generate_ai_response_task(user_text, system_prompt):
         conversation = StreamingConversationManager()
         text_stream = conversation.get_streaming_response(user_text, system_prompt)
         
-        tts_manager = StreamingTTSManager(audio_manager)
-        session_id = f"stream_session_{uuid.uuid4().hex[:8]}"
+        # 收集完整的AI回复
+        full_response = ""
+        async for text_chunk in text_stream:
+            full_response += text_chunk
         
-        async for audio_chunk in tts_manager.stream_speak(text_stream, session_id):
-            await websocket.send(json.dumps(audio_chunk, ensure_ascii=False))
+        # 发送完整文本给前端显示
+        await websocket.send(json.dumps({
+            "type": "full_text", 
+            "text": full_response
+        }, ensure_ascii=False))
+        
+        # 对完整回复进行TTS合成
+        if full_response.strip():
+            session_id = f"complete_session_{uuid.uuid4().hex[:8]}"
+            text_cleaned = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9\s，。！？、；："\'（）【】《》-]', '', full_response)
+            
+            if text_cleaned:
+                try:
+                    filename = f"{session_id}_complete.mp3"
+                    path = os.path.join(AUDIO_FOLDER, filename)
+                    communicate = edge_tts.Communicate(text_cleaned, "zh-CN-XiaoxiaoNeural", rate="+10%")
+                    await communicate.save(path)
+                    
+                    if os.path.exists(path) and os.path.getsize(path) > 0:
+                        audio_manager.register_file(filename, session_id)
+                        await websocket.send(json.dumps({
+                            "type": "audio", 
+                            "text": full_response,
+                            "audio_url": f"/audio/{filename}"
+                        }, ensure_ascii=False))
+                except Exception as e:
+                    logger.error(f"TTS合成出错: {e}")
         
         await websocket.send(json.dumps({"type": "end_of_response"}, ensure_ascii=False))
+        
     except asyncio.CancelledError:
         logger.info("AI 响应任务被用户打断。")
     except Exception as e:
