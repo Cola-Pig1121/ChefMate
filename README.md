@@ -125,5 +125,5 @@ python backend/app.py
 
 ## 注意事项
 1. 应用使用localStorage存储数据，请勿清除浏览器数据
-2. 部分功能需要网络连接（如语音识别）
+2. 部分功能需要网络连接（如语音识别）python -c "import flask; print(flask.__version__)"
 3. 应用适配移动端，建议在手机上使用获得最佳体验
